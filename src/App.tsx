@@ -1,22 +1,42 @@
 import { useState } from "react";
 import "./App.css";
+import { Button } from "./components/ui/button";
+import { Card } from "./components/ui/card";
+import { Input } from "./components/ui/input";
+import { Label } from "./components/ui/label";
 import { runSimulation, type SimulationParameters } from "./engine";
 
+type ToggleValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
+
 function App() {
+  const [numAttacks, setNumAttacks] = useState<string>("10");
+  const [hit, setHit] = useState<ToggleValue>("auto");
+  const [wound, setWound] = useState<ToggleValue>("auto");
+  const [armorSave, setArmorSave] = useState<ToggleValue>("none");
+  const [specialSave, setSpecialSave] = useState<ToggleValue>("none");
   const [results, setResults] = useState<string>("");
+
+  const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+  const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+  const saveOptions: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
+
+  const cycleValue = (current: ToggleValue, options: ToggleValue[]) => {
+    const currentIndex = options.indexOf(current);
+    return options[(currentIndex + 1) % options.length];
+  };
 
   const runTestSimulation = () => {
     // Test case: 10 attacks, 4+ to hit, 4+ to wound, 4+ armor save
     const params: SimulationParameters = {
-      numAttacks: 10,
-      toHit: 4,
+      numAttacks: Number.parseInt(numAttacks) || 10,
+      toHit: hit === "auto" ? "auto" : hit,
       rerollHits: "none",
-      toWound: 4,
+      toWound: wound === "auto" ? "auto" : wound,
       rerollWounds: "none",
-      armorSave: 4,
+      armorSave: armorSave === "none" ? "none" : armorSave,
       armorPiercing: 0,
       rerollArmorSaves: "none",
-      specialSave: "none",
+      specialSave: specialSave === "none" ? "none" : specialSave,
       rerollSpecialSaves: "none",
       poison: false,
       lethalStrike: false,
@@ -59,42 +79,104 @@ ${simResults.probabilityDistribution
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <h1>T9A Dice Simulator</h1>
-      <p>Core simulation engine is ready!</p>
-
-      <button
-        type="button"
-        onClick={runTestSimulation}
-        style={{
-          padding: "0.5rem 1rem",
-          fontSize: "1rem",
-          background: "#646cff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer",
-          marginTop: "1rem",
-        }}
-      >
-        Run Test Simulation
-      </button>
-
-      {results && (
-        <pre
-          style={{
-            marginTop: "2rem",
-            padding: "1rem",
-            background: "#1a1a1a",
-            borderRadius: "8px",
-            overflow: "auto",
-            textAlign: "left",
-            fontSize: "0.9rem",
-          }}
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Title */}
+        <h1
+          className="text-6xl font-bold text-center text-brand-green"
+          style={{ fontFamily: "var(--font-display)" }}
         >
-          {results}
-        </pre>
-      )}
+          UNLUIGI
+        </h1>
+
+        {/* Input Card */}
+        <Card className="p-6 space-y-6 bg-card border-border">
+          {/* Number of Attacks */}
+          <div className="space-y-2">
+            <Label htmlFor="attacks" className="text-foreground">
+              Number of Attacks
+            </Label>
+            <Input
+              id="attacks"
+              type="text"
+              value={numAttacks}
+              onChange={(e) => setNumAttacks(e.target.value)}
+              className="text-lg bg-input border-border text-foreground placeholder:text-muted-foreground"
+              placeholder="e.g., 10 or 2d6"
+            />
+          </div>
+
+          {/* Dice Buttons Grid */}
+          <div className="grid grid-cols-4 gap-4">
+            {/* Hit Button */}
+            <div className="flex flex-col items-center space-y-2">
+              <Label className="text-xs text-muted-foreground">Hit</Label>
+              <Button
+                onClick={() => setHit(cycleValue(hit, hitOptions))}
+                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+                variant="outline"
+              >
+                {hit === "auto" ? "AUTO" : `${hit}+`}
+              </Button>
+            </div>
+
+            {/* Wound Button */}
+            <div className="flex flex-col items-center space-y-2">
+              <Label className="text-xs text-muted-foreground">Wound</Label>
+              <Button
+                onClick={() => setWound(cycleValue(wound, woundOptions))}
+                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+                variant="outline"
+              >
+                {wound === "auto" ? "AUTO" : `${wound}+`}
+              </Button>
+            </div>
+
+            {/* Armor Save Button */}
+            <div className="flex flex-col items-center space-y-2">
+              <Label className="text-xs text-muted-foreground">Armor</Label>
+              <Button
+                onClick={() => setArmorSave(cycleValue(armorSave, saveOptions))}
+                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+                variant="outline"
+              >
+                {armorSave === "none" ? "NONE" : `${armorSave}+`}
+              </Button>
+            </div>
+
+            {/* Special Save Button */}
+            <div className="flex flex-col items-center space-y-2">
+              <Label className="text-xs text-muted-foreground">Special</Label>
+              <Button
+                onClick={() =>
+                  setSpecialSave(cycleValue(specialSave, saveOptions))
+                }
+                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+                variant="outline"
+              >
+                {specialSave === "none" ? "NONE" : `${specialSave}+`}
+              </Button>
+            </div>
+          </div>
+
+          {/* Simulate Button */}
+          <Button
+            onClick={runTestSimulation}
+            className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white"
+          >
+            Simulate
+          </Button>
+        </Card>
+
+        {/* Results */}
+        {results && (
+          <Card className="p-6 bg-card border-border">
+            <pre className="text-left text-sm whitespace-pre-wrap text-foreground">
+              {results}
+            </pre>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
