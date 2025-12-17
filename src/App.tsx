@@ -1,10 +1,15 @@
 import { useState } from "react";
 import "./App.css";
+import { ProbabilityChart } from "./components/ProbabilityChart";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
-import { runSimulation, type SimulationParameters } from "./engine";
+import {
+  runSimulation,
+  type SimulationParameters,
+  type SimulationResults,
+} from "./engine";
 
 type ToggleValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
 
@@ -15,6 +20,7 @@ function App() {
   const [armorSave, setArmorSave] = useState<ToggleValue>("none");
   const [specialSave, setSpecialSave] = useState<ToggleValue>("none");
   const [results, setResults] = useState<string>("");
+  const [simResults, setSimResults] = useState<SimulationResults | null>(null);
 
   const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
   const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
@@ -26,7 +32,6 @@ function App() {
   };
 
   const runTestSimulation = () => {
-    // Test case: 10 attacks, 4+ to hit, 4+ to wound, 4+ armor save
     const params: SimulationParameters = {
       numAttacks: Number.parseInt(numAttacks) || 10,
       toHit: hit === "auto" ? "auto" : hit,
@@ -46,26 +51,26 @@ function App() {
       iterations: 10000,
     };
 
-    const simResults = runSimulation(params);
+    const simulationResults = runSimulation(params);
 
     const output = `
 Simulation Results (10,000 iterations)
 ======================================
-Mean: ${simResults.mean.toFixed(2)} wounds
-Median: ${simResults.median.toFixed(2)} wounds
-Mode: ${simResults.mode} wounds
+Mean: ${simulationResults.mean.toFixed(2)} wounds
+Median: ${simulationResults.median.toFixed(2)} wounds
+Mode: ${simulationResults.mode} wounds
 
 Percentiles:
-- 25th: ${simResults.percentile25.toFixed(2)} wounds
-- 50th: ${simResults.percentile50.toFixed(2)} wounds
-- 75th: ${simResults.percentile75.toFixed(2)} wounds
-- 95th: ${simResults.percentile95.toFixed(2)} wounds
+- 25th: ${simulationResults.percentile25.toFixed(2)} wounds
+- 50th: ${simulationResults.percentile50.toFixed(2)} wounds
+- 75th: ${simulationResults.percentile75.toFixed(2)} wounds
+- 95th: ${simulationResults.percentile95.toFixed(2)} wounds
 
-Range: ${simResults.min} - ${simResults.max} wounds
-Execution time: ${simResults.executionTimeMs.toFixed(2)}ms
+Range: ${simulationResults.min} - ${simulationResults.max} wounds
+Execution time: ${simulationResults.executionTimeMs.toFixed(2)}ms
 
 Top Results:
-${simResults.probabilityDistribution
+${simulationResults.probabilityDistribution
   .sort((a, b) => b.probability - a.probability)
   .slice(0, 5)
   .map(
@@ -76,6 +81,7 @@ ${simResults.probabilityDistribution
     `.trim();
 
     setResults(output);
+    setSimResults(simulationResults);
   };
 
   return (
@@ -176,6 +182,9 @@ ${simResults.probabilityDistribution
             </pre>
           </Card>
         )}
+
+        {/* Chart */}
+        {simResults && <ProbabilityChart results={simResults} />}
       </div>
     </div>
   );
