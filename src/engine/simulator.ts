@@ -256,12 +256,9 @@ function applyMultipleWounds(
 
   for (const _wound of woundTrackers) {
     const woundsPerHit = parseDiceExpression(params.multipleWounds);
-    totalWounds += woundsPerHit;
-
-    // Cap at target's maximum wounds
-    if (totalWounds >= params.targetMaxWounds) {
-      return params.targetMaxWounds;
-    }
+    // Cap each individual hit's wounds, but not the total across all hits
+    const cappedWounds = Math.min(woundsPerHit, params.targetMaxWounds);
+    totalWounds += cappedWounds;
   }
 
   return totalWounds;
