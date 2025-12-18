@@ -47,12 +47,11 @@ export interface SimulationResults {
   mean: number; // Average wounds dealt
   median: number; // Middle value when sorted
   mode: number; // Most common result
+  variance: number; // Variance of the distribution
 
   // Percentiles
-  percentile25: number; // 25th percentile
-  percentile50: number; // 50th percentile (same as median)
-  percentile75: number; // 75th percentile
-  percentile95: number; // 95th percentile
+  percentile10: number; // 10th percentile
+  percentile90: number; // 90th percentile
 
   // Range
   min: number; // Minimum wounds dealt
