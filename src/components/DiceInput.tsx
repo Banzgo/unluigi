@@ -22,7 +22,7 @@ export interface DiceInputState {
   lethalStrike: boolean;
   fury: boolean;
   multipleWounds: string;
-  targetMaxWounds: number;
+  targetMaxWounds: string;
 }
 
 interface DiceInputProps {
@@ -39,6 +39,7 @@ export function DiceInput({
   showRemove,
 }: DiceInputProps) {
   const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
+  const [showMultipleWounds, setShowMultipleWounds] = useState<boolean>(false);
 
   const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
   const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
@@ -97,61 +98,24 @@ export function DiceInput({
         </Button>
       )}
 
-      {/* Input Fields Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        <div className="space-y-2">
-          <Label
-            htmlFor={`attacks-${input.id}`}
-            className="text-sm text-foreground"
-          >
-            Number of Attacks
-          </Label>
-          <Input
-            id={`attacks-${input.id}`}
-            type="text"
-            value={input.numAttacks}
-            onChange={(e) => handleNumAttacksChange(e.target.value)}
-            className={`bg-input text-foreground placeholder:text-muted-foreground ${
-              isNumAttacksValid ? "border-border" : "border-red-500 border-2"
-            }`}
-            placeholder="10 or 2d6"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`mw-${input.id}`} className="text-sm text-foreground">
-            Multiple Wounds
-          </Label>
-          <Input
-            id={`mw-${input.id}`}
-            type="text"
-            value={input.multipleWounds}
-            onChange={(e) =>
-              onUpdate(input.id, { multipleWounds: e.target.value })
-            }
-            className="bg-input text-foreground"
-            placeholder="1, d3, d6+1"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label
-            htmlFor={`max-${input.id}`}
-            className="text-sm text-foreground"
-          >
-            Target Max Wounds
-          </Label>
-          <Input
-            id={`max-${input.id}`}
-            type="number"
-            value={input.targetMaxWounds}
-            onChange={(e) =>
-              onUpdate(input.id, {
-                targetMaxWounds: Number.parseInt(e.target.value) || 1,
-              })
-            }
-            className="bg-input text-foreground"
-            min="1"
-          />
-        </div>
+      {/* Number of Attacks Input */}
+      <div className="space-y-2">
+        <Label
+          htmlFor={`attacks-${input.id}`}
+          className="text-sm text-foreground"
+        >
+          Number of Attacks
+        </Label>
+        <Input
+          id={`attacks-${input.id}`}
+          type="text"
+          value={input.numAttacks}
+          onChange={(e) => handleNumAttacksChange(e.target.value)}
+          className={`bg-input text-foreground placeholder:text-gray-400 ${
+            isNumAttacksValid ? "border-border" : "border-red-500 border-2"
+          }`}
+          placeholder="10, 2d6, 2d3+1"
+        />
       </div>
 
       {/* Dice Values and Special Rules Grid */}
@@ -320,6 +284,60 @@ export function DiceInput({
             {getRerollLabel(input.rerollSpecialSaves)}
           </Button>
         </div>
+      </div>
+
+      {/* Multiple Wounds Accordion */}
+      <div className="border-t border-border pt-3">
+        <button
+          type="button"
+          onClick={() => setShowMultipleWounds(!showMultipleWounds)}
+          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors pb-2"
+        >
+          {showMultipleWounds ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-center">
+              <div className="flex items-center justify-between">
+                <span>Multiple Wounds</span>
+                <span className="text-xs sm:hidden">▼</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Target Max Wounds</span>
+                <span className="text-xs hidden sm:inline">▼</span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span>Multiple Wounds</span>
+              <span className="text-xs">▶</span>
+            </div>
+          )}
+        </button>
+
+        {showMultipleWounds && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <Input
+              id={`mw-${input.id}`}
+              type="text"
+              value={input.multipleWounds}
+              onChange={(e) =>
+                onUpdate(input.id, { multipleWounds: e.target.value })
+              }
+              className="bg-input text-foreground placeholder:text-gray-500"
+              placeholder="1, d3, d6+1"
+            />
+            <Input
+              id={`max-${input.id}`}
+              type="text"
+              value={input.targetMaxWounds}
+              onChange={(e) =>
+                onUpdate(input.id, {
+                  targetMaxWounds: e.target.value,
+                })
+              }
+              className="bg-input text-foreground placeholder:text-gray-400"
+              placeholder="e.g. 3"
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
