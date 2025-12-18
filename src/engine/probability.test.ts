@@ -38,10 +38,8 @@ describe("calculateStatistics", () => {
     const distribution = Array.from({ length: 100 }, (_, i) => i + 1);
     const results = calculateStatistics(distribution, 100, 100);
 
-    expect(results.percentile25).toBeCloseTo(25.75, 0);
-    expect(results.percentile50).toBeCloseTo(50.5, 0);
-    expect(results.percentile75).toBeCloseTo(75.25, 0);
-    expect(results.percentile95).toBeCloseTo(95.05, 0);
+    expect(results.percentile10).toBeCloseTo(10.45, 0);
+    expect(results.percentile90).toBeCloseTo(90.55, 0);
   });
 
   it("should calculate min and max correctly", () => {

@@ -17,9 +17,9 @@ function App() {
     {
       id: crypto.randomUUID(),
       numAttacks: "10",
-      hit: "auto",
-      wound: "auto",
-      armorSave: "none",
+      hit: 4,
+      wound: 4,
+      armorSave: 5,
       specialSave: "none",
       rerollHits: "none",
       rerollWounds: "none",
@@ -34,6 +34,7 @@ function App() {
   ]);
   const [results, setResults] = useState<string>("");
   const [simResults, setSimResults] = useState<SimulationResults | null>(null);
+  const [showDebug, setShowDebug] = useState<boolean>(false);
 
   const addInput = () => {
     setInputs([
@@ -41,9 +42,9 @@ function App() {
       {
         id: crypto.randomUUID(),
         numAttacks: "10",
-        hit: "auto",
-        wound: "auto",
-        armorSave: "none",
+        hit: 4,
+        wound: 4,
+        armorSave: 5,
         specialSave: "none",
         rerollHits: "none",
         rerollWounds: "none",
@@ -144,12 +145,11 @@ Combined ${inputs.length} input${inputs.length > 1 ? "s" : ""}
 Mean: ${simulationResults.mean.toFixed(2)} wounds
 Median: ${simulationResults.median.toFixed(2)} wounds
 Mode: ${simulationResults.mode} wounds
+Variance: ${simulationResults.variance.toFixed(2)}
 
 Percentiles:
-- 25th: ${simulationResults.percentile25.toFixed(2)} wounds
-- 50th: ${simulationResults.percentile50.toFixed(2)} wounds
-- 75th: ${simulationResults.percentile75.toFixed(2)} wounds
-- 95th: ${simulationResults.percentile95.toFixed(2)} wounds
+- 10th: ${simulationResults.percentile10.toFixed(2)} wounds
+- 90th: ${simulationResults.percentile90.toFixed(2)} wounds
 
 Range: ${simulationResults.min} - ${simulationResults.max} wounds
 Execution time: ${simulationResults.executionTimeMs.toFixed(2)}ms
@@ -193,35 +193,52 @@ ${simulationResults.probabilityDistribution
           ))}
         </div>
 
-        {/* Add Input Button */}
-        <Button
-          onClick={addInput}
-          className="w-full h-12 text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
-          variant="outline"
-        >
-          + Add Another Input
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          <Button
+            onClick={addInput}
+            className="flex-none w-48 h-14 text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
+            variant="outline"
+          >
+            + Add Another Input
+          </Button>
 
-        {/* Simulate Button */}
-        <Button
-          onClick={runCombinedSimulation}
-          disabled={!inputs.every(validateInput)}
-          className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Simulate
-        </Button>
+          <Button
+            onClick={runCombinedSimulation}
+            disabled={!inputs.every(validateInput)}
+            className="flex-1 h-14 text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Simulate
+          </Button>
+        </div>
 
         {/* Results */}
-        {results && (
-          <Card className="p-6 bg-card border-border">
-            <pre className="text-left text-sm whitespace-pre-wrap text-foreground">
-              {results}
-            </pre>
-          </Card>
-        )}
+        {simResults && (
+          <div className="space-y-6">
+            {/* Chart with Score */}
+            <ProbabilityChart results={simResults} />
 
-        {/* Chart */}
-        {simResults && <ProbabilityChart results={simResults} />}
+            {/* Debug Toggle */}
+            <div className="text-center">
+              <Button
+                onClick={() => setShowDebug(!showDebug)}
+                variant="outline"
+                className="text-sm"
+              >
+                {showDebug ? "Hide" : "Show"} Debug Info
+              </Button>
+            </div>
+
+            {/* Debug Info */}
+            {showDebug && results && (
+              <Card className="p-6 bg-card border-border">
+                <pre className="text-left text-sm whitespace-pre-wrap text-foreground">
+                  {results}
+                </pre>
+              </Card>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

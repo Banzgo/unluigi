@@ -23,12 +23,11 @@ export function calculateStatistics(
   const mean = calculateMean(distribution);
   const median = calculatePercentile(sorted, 50);
   const mode = calculateMode(distribution);
+  const variance = calculateVariance(distribution, mean);
 
   // Calculate percentiles
-  const percentile25 = calculatePercentile(sorted, 25);
-  const percentile50 = median;
-  const percentile75 = calculatePercentile(sorted, 75);
-  const percentile95 = calculatePercentile(sorted, 95);
+  const percentile10 = calculatePercentile(sorted, 10);
+  const percentile90 = calculatePercentile(sorted, 90);
 
   // Get range
   const min = sorted[0] || 0;
@@ -42,10 +41,9 @@ export function calculateStatistics(
     mean,
     median,
     mode,
-    percentile25,
-    percentile50,
-    percentile75,
-    percentile95,
+    variance,
+    percentile10,
+    percentile90,
     min,
     max,
     probabilityDistribution,
@@ -63,6 +61,18 @@ function calculateMean(values: number[]): number {
   if (values.length === 0) return 0;
   const sum = values.reduce((acc, val) => acc + val, 0);
   return sum / values.length;
+}
+
+/**
+ * Calculate the variance of an array of numbers
+ * @param values Array of numbers
+ * @param mean Pre-calculated mean (for efficiency)
+ * @returns Variance value
+ */
+function calculateVariance(values: number[], mean: number): number {
+  if (values.length === 0) return 0;
+  const squaredDiffs = values.map((val) => (val - mean) ** 2);
+  return squaredDiffs.reduce((acc, val) => acc + val, 0) / values.length;
 }
 
 /**
