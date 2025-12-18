@@ -170,14 +170,15 @@ ${simulationResults.probabilityDistribution
   };
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
         {/* Title */}
         <h1
-          className="text-6xl font-bold text-center text-brand-green"
+          className="text-4xl sm:text-5xl lg:text-6xl font-bold text-center"
           style={{ fontFamily: "var(--font-display)" }}
         >
-          UNLUIGI
+          <span className="text-brand-green">UNLUIGI</span>{" "}
+          <span className="text-orange-500">APP</span>
         </h1>
 
         {/* Input Cards */}
@@ -194,10 +195,10 @@ ${simulationResults.probabilityDistribution
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Button
             onClick={addInput}
-            className="flex-none w-48 h-14 text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
+            className="w-full sm:flex-none sm:w-48 h-12 sm:h-14 text-base sm:text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
             variant="outline"
           >
             + Add Another Input
@@ -206,7 +207,7 @@ ${simulationResults.probabilityDistribution
           <Button
             onClick={runCombinedSimulation}
             disabled={!inputs.every(validateInput)}
-            className="flex-1 h-14 text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:flex-1 h-12 sm:h-14 text-lg sm:text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Simulate
           </Button>
