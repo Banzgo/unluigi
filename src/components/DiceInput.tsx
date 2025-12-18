@@ -86,11 +86,11 @@ export function DiceInput({
   };
 
   return (
-    <Card className="p-6 space-y-6 bg-card border-border relative">
+    <Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-card border-border relative">
       {showRemove && (
         <Button
           onClick={() => onRemove(input.id)}
-          className="absolute top-2 right-2 h-8 w-8 p-0 bg-red-500 hover:bg-red-600 text-white"
+          className="absolute top-1 right-1 sm:top-2 sm:right-2 h-6 w-6 sm:h-8 sm:w-8 p-0 text-base sm:text-lg bg-red-500 hover:bg-red-600 text-white"
           variant="outline"
         >
           ×
@@ -98,7 +98,7 @@ export function DiceInput({
       )}
 
       {/* Input Fields Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <div className="space-y-2">
           <Label
             htmlFor={`attacks-${input.id}`}
@@ -155,7 +155,7 @@ export function DiceInput({
       </div>
 
       {/* Dice Values and Special Rules Grid */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Hit Column */}
         <div className="flex flex-col space-y-1.5">
           <Label className="text-sm text-muted-foreground text-center">
@@ -165,7 +165,7 @@ export function DiceInput({
             onClick={() =>
               onUpdate(input.id, { hit: cycleValue(input.hit, hitOptions) })
             }
-            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.hit === "auto" ? "AUTO" : `${input.hit}+`}
@@ -176,7 +176,7 @@ export function DiceInput({
                 rerollHits: cycleReroll(input.rerollHits),
               })
             }
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.rerollHits !== "none"
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -187,7 +187,7 @@ export function DiceInput({
           </Button>
           <Button
             onClick={() => onUpdate(input.id, { poison: !input.poison })}
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.poison
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -198,7 +198,7 @@ export function DiceInput({
           </Button>
           <Button
             onClick={() => onUpdate(input.id, { fury: !input.fury })}
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.fury
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -220,7 +220,7 @@ export function DiceInput({
                 wound: cycleValue(input.wound, woundOptions),
               })
             }
-            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.wound === "auto" ? "AUTO" : `${input.wound}+`}
@@ -231,7 +231,7 @@ export function DiceInput({
                 rerollWounds: cycleReroll(input.rerollWounds),
               })
             }
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.rerollWounds !== "none"
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -244,7 +244,7 @@ export function DiceInput({
             onClick={() =>
               onUpdate(input.id, { lethalStrike: !input.lethalStrike })
             }
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.lethalStrike
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -266,7 +266,7 @@ export function DiceInput({
                 armorSave: cycleValue(input.armorSave, saveOptions),
               })
             }
-            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
@@ -277,7 +277,7 @@ export function DiceInput({
                 rerollArmorSaves: cycleReroll(input.rerollArmorSaves),
               })
             }
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.rerollArmorSaves !== "none"
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"
@@ -299,7 +299,7 @@ export function DiceInput({
                 specialSave: cycleValue(input.specialSave, saveOptions),
               })
             }
-            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
@@ -310,7 +310,7 @@ export function DiceInput({
                 rerollSpecialSaves: cycleReroll(input.rerollSpecialSaves),
               })
             }
-            className={`w-full h-7 text-xs ${
+            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
               input.rerollSpecialSaves !== "none"
                 ? "bg-blue-600 hover:bg-blue-700 text-white"
                 : "bg-secondary hover:bg-secondary/80"

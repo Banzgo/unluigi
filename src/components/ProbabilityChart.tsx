@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import type { SimulationResults } from "../engine";
 import { Button } from "./ui/button";
@@ -24,6 +24,17 @@ type ChartMode = "probability" | "cumulative";
 
 export function ProbabilityChart({ results }: ProbabilityChartProps) {
   const [chartMode, setChartMode] = useState<ChartMode>("probability");
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Filter and sort data, removing results with < 0.1% probability
   const baseChartData = results.probabilityDistribution
@@ -89,13 +100,13 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
   };
 
   return (
-    <Card className="p-6 bg-card border-border">
+    <Card className="p-4 sm:p-6 bg-card border-border">
       {/* Score and Variance Header */}
-      <div className="text-center space-y-2 mb-6">
-        <h2 className="text-lg font-semibold text-muted-foreground">
+      <div className="text-center space-y-2 mb-4 sm:mb-6">
+        <h2 className="text-sm sm:text-lg font-semibold text-muted-foreground">
           EXPECTED SCORE
         </h2>
-        <div className="text-5xl font-bold text-brand-green">
+        <div className="text-4xl sm:text-5xl font-bold text-brand-green">
           {results.mean.toFixed(2)}
         </div>
         <div className="text-sm text-muted-foreground">
@@ -110,7 +121,7 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
             color: "hsl(142, 76%, 36%)",
           },
         }}
-        className="h-80 w-full"
+        className="h-64 sm:h-80 w-full"
       >
         <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -122,14 +133,19 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
             tickFormatter={formatXAxisTick}
           />
           <YAxis
-            label={{
-              value:
-                chartMode === "cumulative"
-                  ? "Cumulative (%)"
-                  : "Probability (%)",
-              angle: -90,
-              position: "insideLeft",
-            }}
+            label={
+              isMobile
+                ? undefined
+                : {
+                    value:
+                      chartMode === "cumulative"
+                        ? "Cumulative (%)"
+                        : "Probability (%)",
+                    angle: -90,
+                    position: "insideLeft",
+                  }
+            }
+            width={isMobile ? 0 : 60}
             stroke="var(--muted-foreground)"
             tick={{ fill: "var(--muted-foreground)" }}
           />
@@ -159,7 +175,7 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
         </div>
       </div>
       {/* Chart Mode Toggle */}
-      <div className="flex justify-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-center gap-2">
         <Button
           onClick={() => setChartMode("probability")}
           variant={chartMode === "probability" ? "default" : "outline"}
