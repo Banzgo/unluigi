@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import type { SimulationResults } from "../engine";
+import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { ChartContainer, ChartTooltip } from "./ui/chart";
 
@@ -13,15 +15,34 @@ interface TooltipProps {
     payload: {
       wounds: number;
       probability: number;
+      cumulative?: number;
     };
   }>;
 }
 
+type ChartMode = "probability" | "cumulative";
+
 export function ProbabilityChart({ results }: ProbabilityChartProps) {
+  const [chartMode, setChartMode] = useState<ChartMode>("probability");
+
   // Filter and sort data, removing results with < 0.1% probability
-  const chartData = results.probabilityDistribution
+  const baseChartData = results.probabilityDistribution
     .filter((d) => d.probability >= 0.1)
     .sort((a, b) => a.wounds - b.wounds);
+
+  // Calculate cumulative probability (X or more wounds)
+  const cumulativeData = baseChartData.map((point) => {
+    const cumulative = results.probabilityDistribution
+      .filter((d) => d.wounds >= point.wounds)
+      .reduce((sum, d) => sum + d.probability, 0);
+    return {
+      ...point,
+      cumulative,
+    };
+  });
+
+  const chartData = chartMode === "cumulative" ? cumulativeData : baseChartData;
+  const dataKey = chartMode === "cumulative" ? "cumulative" : "probability";
 
   const maxWounds =
     chartData.length > 0 ? chartData[chartData.length - 1].wounds : 0;
@@ -52,11 +73,15 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
   const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
+      const value =
+        chartMode === "cumulative" ? data.cumulative : data.probability;
+      const label =
+        chartMode === "cumulative"
+          ? `${data.wounds}+ wounds: ${value?.toFixed(2)}%`
+          : `${data.wounds} wounds: ${value?.toFixed(2)}%`;
       return (
         <div className="bg-card border border-border rounded-md p-2 shadow-md">
-          <p className="text-sm text-foreground">
-            {data.wounds} wounds: {data.probability.toFixed(2)}%
-          </p>
+          <p className="text-sm text-foreground">{label}</p>
         </div>
       );
     }
@@ -98,7 +123,10 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
           />
           <YAxis
             label={{
-              value: "Probability (%)",
+              value:
+                chartMode === "cumulative"
+                  ? "Cumulative (%)"
+                  : "Probability (%)",
               angle: -90,
               position: "insideLeft",
             }}
@@ -109,7 +137,7 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
             content={<CustomTooltip />}
             cursor={{ fill: "var(--muted)" }}
           />
-          <Bar dataKey="probability" radius={[4, 4, 0, 0]}>
+          <Bar dataKey={dataKey} radius={[4, 4, 0, 0]}>
             {chartData.map((entry) => (
               <Cell
                 key={`cell-${entry.wounds}`}
@@ -129,6 +157,23 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
           <div className="w-3 h-3 bg-brand-green rounded-sm" />
           <span>Luigi</span>
         </div>
+      </div>
+      {/* Chart Mode Toggle */}
+      <div className="flex justify-center gap-2 mb-4">
+        <Button
+          onClick={() => setChartMode("probability")}
+          variant={chartMode === "probability" ? "default" : "outline"}
+          size="sm"
+        >
+          Distribution
+        </Button>
+        <Button
+          onClick={() => setChartMode("cumulative")}
+          variant={chartMode === "cumulative" ? "default" : "outline"}
+          size="sm"
+        >
+          Cumulative
+        </Button>
       </div>
     </Card>
   );
