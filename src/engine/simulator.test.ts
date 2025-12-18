@@ -76,13 +76,13 @@ describe("runSimulationWithStats", () => {
   it("should handle reroll hits correctly", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
-      rerollHits: "none",
+      rerollHitFailures: "none",
       iterations: 5000,
     });
 
     const rerollFails = runSimulationWithStats({
       ...baseParams,
-      rerollHits: "fails",
+      rerollHitFailures: "all",
       iterations: 5000,
     });
 
@@ -300,7 +300,7 @@ describe("runSimulationWithStats", () => {
     const results = runSimulationWithStats({
       numAttacks: "2d6",
       toHit: 3,
-      rerollHits: "1s",
+      rerollHitFailures: "1s",
       toWound: 4,
       armorSave: 4,
       armorPiercing: 1,
@@ -319,14 +319,14 @@ describe("runSimulationWithStats", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
       toWound: 5, // Harder to wound
-      rerollWounds: "none",
+      rerollWoundFailures: "none",
       iterations: 5000,
     });
 
     const rerollFails = runSimulationWithStats({
       ...baseParams,
       toWound: 5,
-      rerollWounds: "fails",
+      rerollWoundFailures: "all",
       iterations: 5000,
     });
 
@@ -338,14 +338,14 @@ describe("runSimulationWithStats", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
       toHit: 4,
-      rerollHits: "none",
+      rerollHitFailures: "none",
       iterations: 5000,
     });
 
     const reroll1s = runSimulationWithStats({
       ...baseParams,
       toHit: 4,
-      rerollHits: "1s",
+      rerollHitFailures: "1s",
       iterations: 5000,
     });
 
@@ -357,14 +357,14 @@ describe("runSimulationWithStats", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
       toHit: 2, // Easy to hit (5/6 chance)
-      rerollHits: "none",
+      rerollHitSuccesses: "none",
       iterations: 5000,
     });
 
     const rerollSuccesses = runSimulationWithStats({
       ...baseParams,
       toHit: 2,
-      rerollHits: "successes",
+      rerollHitSuccesses: "all",
       iterations: 5000,
     });
 
@@ -376,14 +376,14 @@ describe("runSimulationWithStats", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
-      rerollArmorSaves: "none",
+      rerollArmorSaveFailures: "none",
       iterations: 5000,
     });
 
     const rerollFails = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
-      rerollArmorSaves: "fails",
+      rerollArmorSaveFailures: "all",
       iterations: 5000,
     });
 
@@ -395,14 +395,14 @@ describe("runSimulationWithStats", () => {
     const noReroll = runSimulationWithStats({
       ...baseParams,
       specialSave: 5,
-      rerollSpecialSaves: "none",
+      rerollSpecialSaveFailures: "none",
       iterations: 5000,
     });
 
     const rerollFails = runSimulationWithStats({
       ...baseParams,
       specialSave: 5,
-      rerollSpecialSaves: "fails",
+      rerollSpecialSaveFailures: "all",
       iterations: 5000,
     });
 

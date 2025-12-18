@@ -9,6 +9,7 @@ export {
   rollD3,
   rollD6,
   shouldReroll,
+  shouldRerollSplit,
 } from "./dice";
 export {
   calculateStatistics,
@@ -17,10 +18,12 @@ export {
 } from "./probability";
 export { runSimulation, runSimulationWithStats } from "./simulator";
 export type {
+  FailureRerollType,
   HitTracker,
   HitValue,
   ProbabilityPoint,
   RerollType,
   SimulationParameters,
   SimulationResults,
+  SuccessRerollType,
 } from "./types";

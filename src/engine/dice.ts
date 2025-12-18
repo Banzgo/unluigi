@@ -85,6 +85,7 @@ export function parseDiceExpression(expression: string | number): number {
  * @param target The target number needed to succeed
  * @param rerollType Type of reroll to apply
  * @returns True if the roll should be rerolled
+ * @deprecated Use shouldRerollSplit instead for the new success/failure reroll system
  */
 export function shouldReroll(
   roll: number,
@@ -117,6 +118,59 @@ export function shouldReroll(
     default:
       return false;
   }
+}
+
+/**
+ * Check if a die roll should be rerolled based on split success/failure reroll types.
+ * A die can only be rerolled once - this function determines if ANY reroll applies.
+ * @param roll The original roll value (1-6)
+ * @param target The target number needed to succeed
+ * @param failureReroll Type of failure reroll: 'none' | '1s' | 'all'
+ * @param successReroll Type of success reroll: 'none' | '6s' | 'all'
+ * @returns True if the roll should be rerolled
+ */
+export function shouldRerollSplit(
+  roll: number,
+  target: number | "auto" | "none",
+  failureReroll: "none" | "1s" | "all",
+  successReroll: "none" | "6s" | "all"
+): boolean {
+  // If both are none, no reroll
+  if (failureReroll === "none" && successReroll === "none") {
+    return false;
+  }
+
+  // Determine if this roll is a success or failure
+  let rollIsSuccess: boolean;
+  if (target === "auto") {
+    rollIsSuccess = true;
+  } else if (target === "none") {
+    rollIsSuccess = false;
+  } else {
+    rollIsSuccess = roll >= target;
+  }
+
+  // Check failure rerolls (for failed rolls)
+  if (!rollIsSuccess) {
+    if (failureReroll === "all") {
+      return true;
+    }
+    if (failureReroll === "1s" && roll === 1) {
+      return true;
+    }
+  }
+
+  // Check success rerolls (for successful rolls)
+  if (rollIsSuccess) {
+    if (successReroll === "all") {
+      return true;
+    }
+    if (successReroll === "6s" && roll === 6) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**

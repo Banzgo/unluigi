@@ -2,7 +2,7 @@
  * Core simulation engine for The Ninth Age dice simulator
  */
 
-import { isSuccess, parseDiceExpression, rollD6, shouldReroll } from "./dice";
+import { isSuccess, parseDiceExpression, rollD6, shouldRerollSplit } from "./dice";
 import { calculateStatistics } from "./probability";
 import type {
   HitTracker,
@@ -14,13 +14,17 @@ import type {
  * Default values for optional simulation parameters
  */
 const DEFAULT_PARAMS = {
-  rerollHits: "none" as const,
-  rerollWounds: "none" as const,
+  rerollHitFailures: "none" as const,
+  rerollHitSuccesses: "none" as const,
+  rerollWoundFailures: "none" as const,
+  rerollWoundSuccesses: "none" as const,
   armorSave: "none" as const,
   armorPiercing: 0,
-  rerollArmorSaves: "none" as const,
+  rerollArmorSaveFailures: "none" as const,
+  rerollArmorSaveSuccesses: "none" as const,
   specialSave: "none" as const,
-  rerollSpecialSaves: "none" as const,
+  rerollSpecialSaveFailures: "none" as const,
+  rerollSpecialSaveSuccesses: "none" as const,
   poison: false,
   lethalStrike: false,
   fury: false,
@@ -126,8 +130,8 @@ function rollToHit(
     let roll = rollD6();
     const unmodifiedRoll = roll;
 
-    // Check for rerolls
-    if (shouldReroll(roll, params.toHit, params.rerollHits)) {
+    // Check for rerolls (a die can only be rerolled once)
+    if (shouldRerollSplit(roll, params.toHit, params.rerollHitFailures, params.rerollHitSuccesses)) {
       roll = rollD6();
     }
 
@@ -172,8 +176,8 @@ function rollToWound(
     let roll = rollD6();
     const unmodifiedRoll = roll;
 
-    // Check for rerolls
-    if (shouldReroll(roll, params.toWound, params.rerollWounds)) {
+    // Check for rerolls (a die can only be rerolled once)
+    if (shouldRerollSplit(roll, params.toWound, params.rerollWoundFailures, params.rerollWoundSuccesses)) {
       roll = rollD6();
     }
 
@@ -234,8 +238,8 @@ function rollArmorSaves(
 
     let roll = rollD6();
 
-    // Check for rerolls (defender's perspective)
-    if (shouldReroll(roll, modifiedArmorSave, params.rerollArmorSaves)) {
+    // Check for rerolls (defender's perspective, a die can only be rerolled once)
+    if (shouldRerollSplit(roll, modifiedArmorSave, params.rerollArmorSaveFailures, params.rerollArmorSaveSuccesses)) {
       roll = rollD6();
     }
 
@@ -280,8 +284,8 @@ function rollSpecialSaves(
 
     let roll = rollD6();
 
-    // Check for rerolls (defender's perspective)
-    if (shouldReroll(roll, params.specialSave, params.rerollSpecialSaves)) {
+    // Check for rerolls (defender's perspective, a die can only be rerolled once)
+    if (shouldRerollSplit(roll, params.specialSave, params.rerollSpecialSaveFailures, params.rerollSpecialSaveSuccesses)) {
       roll = rollD6();
     }
 
