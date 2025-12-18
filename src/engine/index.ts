@@ -11,6 +11,13 @@ export {
 	shouldReroll,
 	shouldRerollSplit,
 } from "./dice";
+export { runMagicSimulation } from "./magic-simulator";
+export type {
+	CastingRerollType,
+	DispelRerollType,
+	MagicSimulationParameters,
+	MagicSimulationResults,
+} from "./magic-simulator";
 export {
 	calculateStatistics,
 	getProbabilityAtLeast,
