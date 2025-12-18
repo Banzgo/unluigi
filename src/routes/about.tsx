@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Github, Heart } from "lucide-react";
+import { Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/about")({
