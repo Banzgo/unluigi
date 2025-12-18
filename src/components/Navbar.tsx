@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Sparkles, Swords, X, Info } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Menu, Sparkles, Swords, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -86,7 +86,8 @@ export function Navbar() {
 					{/* Logo */}
 					<Link to="/" className="flex items-center">
 						<span className="text-xl font-bold" style={{ fontFamily: "var(--font-display)" }}>
-							<span className="text-brand-green">UNLUIGI</span>
+							<span className="text-brand-green">UNLUIGI</span>{" "}
+							<span className="text-orange-500 group-hover:text-orange-500-dark transition-colors">APP</span>
 						</span>
 					</Link>
 

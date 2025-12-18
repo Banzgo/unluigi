@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { parseDiceExpression, type SuccessRerollType, type FailureRerollType } from "../engine";
+import { type FailureRerollType, parseDiceExpression, type SuccessRerollType } from "../engine";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
