@@ -13,11 +13,9 @@ import type {
 /**
  * Run the complete simulation with the given parameters
  * @param params Simulation parameters
- * @returns Simulation results with statistics and distribution
+ * @returns Raw distribution array
  */
-export function runSimulation(params: SimulationParameters): SimulationResults {
-  const startTime = performance.now();
-
+export function runSimulation(params: SimulationParameters): number[] {
   const distribution: number[] = [];
 
   for (let i = 0; i < params.iterations; i++) {
@@ -25,6 +23,19 @@ export function runSimulation(params: SimulationParameters): SimulationResults {
     distribution.push(wounds);
   }
 
+  return distribution;
+}
+
+/**
+ * Run simulation and calculate statistics
+ * @param params Simulation parameters
+ * @returns Simulation results with statistics and distribution
+ */
+export function runSimulationWithStats(
+  params: SimulationParameters
+): SimulationResults {
+  const startTime = performance.now();
+  const distribution = runSimulation(params);
   const endTime = performance.now();
   const executionTimeMs = endTime - startTime;
 

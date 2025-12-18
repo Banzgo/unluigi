@@ -1,84 +1,128 @@
 import { useState } from "react";
 import "./App.css";
+import { DiceInput, type DiceInputState } from "./components/DiceInput";
 import { ProbabilityChart } from "./components/ProbabilityChart";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
-import { Input } from "./components/ui/input";
-import { Label } from "./components/ui/label";
 import {
+  calculateStatistics,
   parseDiceExpression,
   runSimulation,
   type SimulationParameters,
   type SimulationResults,
 } from "./engine";
 
-type ToggleValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
-
 function App() {
-  const [numAttacks, setNumAttacks] = useState<string>("10");
-  const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
-  const [hit, setHit] = useState<ToggleValue>("auto");
-  const [wound, setWound] = useState<ToggleValue>("auto");
-  const [armorSave, setArmorSave] = useState<ToggleValue>("none");
-  const [specialSave, setSpecialSave] = useState<ToggleValue>("none");
+  const [inputs, setInputs] = useState<DiceInputState[]>([
+    {
+      id: crypto.randomUUID(),
+      numAttacks: "10",
+      hit: "auto",
+      wound: "auto",
+      armorSave: "none",
+      specialSave: "none",
+    },
+  ]);
   const [results, setResults] = useState<string>("");
   const [simResults, setSimResults] = useState<SimulationResults | null>(null);
 
-  const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-  const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-  const saveOptions: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
-
-  const cycleValue = (current: ToggleValue, options: ToggleValue[]) => {
-    const currentIndex = options.indexOf(current);
-    return options[(currentIndex + 1) % options.length];
+  const addInput = () => {
+    setInputs([
+      ...inputs,
+      {
+        id: crypto.randomUUID(),
+        numAttacks: "10",
+        hit: "auto",
+        wound: "auto",
+        armorSave: "none",
+        specialSave: "none",
+      },
+    ]);
   };
 
-  const validateNumAttacks = (value: string): boolean => {
-    if (!value || value.trim() === "") {
+  const removeInput = (id: string) => {
+    setInputs(inputs.filter((input) => input.id !== id));
+  };
+
+  const updateInput = (id: string, updates: Partial<DiceInputState>) => {
+    setInputs(
+      inputs.map((input) =>
+        input.id === id ? { ...input, ...updates } : input
+      )
+    );
+  };
+
+  const validateInput = (input: DiceInputState): boolean => {
+    if (!input.numAttacks || input.numAttacks.trim() === "") {
       return false;
     }
     try {
-      parseDiceExpression(value);
+      parseDiceExpression(input.numAttacks);
       return true;
     } catch {
       return false;
     }
   };
 
-  const handleNumAttacksChange = (value: string) => {
-    setNumAttacks(value);
-    setIsNumAttacksValid(validateNumAttacks(value));
-  };
-
-  const runTestSimulation = () => {
-    if (!isNumAttacksValid) {
+  const runCombinedSimulation = () => {
+    // Validate all inputs
+    const allValid = inputs.every(validateInput);
+    if (!allValid) {
       return;
     }
 
-    const params: SimulationParameters = {
-      numAttacks: numAttacks,
-      toHit: hit === "auto" ? "auto" : hit,
-      rerollHits: "none",
-      toWound: wound === "auto" ? "auto" : wound,
-      rerollWounds: "none",
-      armorSave: armorSave === "none" ? "none" : armorSave,
-      armorPiercing: 0,
-      rerollArmorSaves: "none",
-      specialSave: specialSave === "none" ? "none" : specialSave,
-      rerollSpecialSaves: "none",
-      poison: false,
-      lethalStrike: false,
-      fury: false,
-      multipleWounds: 1,
-      targetMaxWounds: Number.MAX_SAFE_INTEGER,
-      iterations: 10000,
-    };
+    const startTime = performance.now();
+    const iterations = 10000;
 
-    const simulationResults = runSimulation(params);
+    // Run simulations for each input and collect distributions
+    const distributions: number[][] = inputs.map((input) => {
+      const params: SimulationParameters = {
+        numAttacks: input.numAttacks,
+        toHit: input.hit === "auto" ? "auto" : input.hit,
+        rerollHits: "none",
+        toWound: input.wound === "auto" ? "auto" : input.wound,
+        rerollWounds: "none",
+        armorSave: input.armorSave === "none" ? "none" : input.armorSave,
+        armorPiercing: 0,
+        rerollArmorSaves: "none",
+        specialSave: input.specialSave === "none" ? "none" : input.specialSave,
+        rerollSpecialSaves: "none",
+        poison: false,
+        lethalStrike: false,
+        fury: false,
+        multipleWounds: 1,
+        targetMaxWounds: Number.MAX_SAFE_INTEGER,
+        iterations,
+      };
+
+      return runSimulation(params);
+    });
+
+    // Combine distributions by summing wounds for each iteration
+    const combinedDistribution: number[] = [];
+    for (let i = 0; i < iterations; i++) {
+      let totalWounds = 0;
+      for (const dist of distributions) {
+        totalWounds += dist[i];
+      }
+      combinedDistribution.push(totalWounds);
+    }
+
+    const endTime = performance.now();
+    const executionTimeMs = endTime - startTime;
+
+    // Calculate statistics on combined distribution
+    const simulationResults = calculateStatistics(
+      combinedDistribution,
+      iterations,
+      executionTimeMs
+    );
 
     const output = `
 Simulation Results (10,000 iterations)
 ======================================
+Combined ${inputs.length} input${inputs.length > 1 ? "s" : ""}
+
 Mean: ${simulationResults.mean.toFixed(2)} wounds
 Median: ${simulationResults.median.toFixed(2)} wounds
 Mode: ${simulationResults.mode} wounds
@@ -118,87 +162,36 @@ ${simulationResults.probabilityDistribution
           UNLUIGI
         </h1>
 
-        {/* Input Card */}
-        <Card className="p-6 space-y-6 bg-card border-border">
-          {/* Number of Attacks */}
-          <div className="space-y-2">
-            <Label htmlFor="attacks" className="text-foreground">
-              Number of Attacks
-            </Label>
-            <Input
-              id="attacks"
-              type="text"
-              value={numAttacks}
-              onChange={(e) => handleNumAttacksChange(e.target.value)}
-              className={`text-lg bg-input text-foreground placeholder:text-muted-foreground ${
-                isNumAttacksValid ? "border-border" : "border-red-500 border-2"
-              }`}
-              placeholder="e.g., 10 or 2d6"
+        {/* Input Cards */}
+        <div className="space-y-4">
+          {inputs.map((input) => (
+            <DiceInput
+              key={input.id}
+              input={input}
+              onUpdate={updateInput}
+              onRemove={removeInput}
+              showRemove={inputs.length > 1}
             />
-          </div>
+          ))}
+        </div>
 
-          {/* Dice Buttons Grid */}
-          <div className="grid grid-cols-4 gap-4">
-            {/* Hit Button */}
-            <div className="flex flex-col items-center space-y-2">
-              <Label className="text-xs text-muted-foreground">Hit</Label>
-              <Button
-                onClick={() => setHit(cycleValue(hit, hitOptions))}
-                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
-                variant="outline"
-              >
-                {hit === "auto" ? "AUTO" : `${hit}+`}
-              </Button>
-            </div>
+        {/* Add Input Button */}
+        <Button
+          onClick={addInput}
+          className="w-full h-12 text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
+          variant="outline"
+        >
+          + Add Another Input
+        </Button>
 
-            {/* Wound Button */}
-            <div className="flex flex-col items-center space-y-2">
-              <Label className="text-xs text-muted-foreground">Wound</Label>
-              <Button
-                onClick={() => setWound(cycleValue(wound, woundOptions))}
-                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
-                variant="outline"
-              >
-                {wound === "auto" ? "AUTO" : `${wound}+`}
-              </Button>
-            </div>
-
-            {/* Armor Save Button */}
-            <div className="flex flex-col items-center space-y-2">
-              <Label className="text-xs text-muted-foreground">Armor</Label>
-              <Button
-                onClick={() => setArmorSave(cycleValue(armorSave, saveOptions))}
-                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
-                variant="outline"
-              >
-                {armorSave === "none" ? "NONE" : `${armorSave}+`}
-              </Button>
-            </div>
-
-            {/* Special Save Button */}
-            <div className="flex flex-col items-center space-y-2">
-              <Label className="text-xs text-muted-foreground">Special</Label>
-              <Button
-                onClick={() =>
-                  setSpecialSave(cycleValue(specialSave, saveOptions))
-                }
-                className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
-                variant="outline"
-              >
-                {specialSave === "none" ? "NONE" : `${specialSave}+`}
-              </Button>
-            </div>
-          </div>
-
-          {/* Simulate Button */}
-          <Button
-            onClick={runTestSimulation}
-            disabled={!isNumAttacksValid}
-            className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Simulate
-          </Button>
-        </Card>
+        {/* Simulate Button */}
+        <Button
+          onClick={runCombinedSimulation}
+          disabled={!inputs.every(validateInput)}
+          className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Simulate
+        </Button>
 
         {/* Results */}
         {results && (
