@@ -4,33 +4,29 @@
 
 import { isSuccess, parseDiceExpression, rollD6, shouldRerollSplit } from "./dice";
 import { calculateStatistics } from "./probability";
-import type {
-  HitTracker,
-  SimulationParameters,
-  SimulationResults,
-} from "./types";
+import type { HitTracker, SimulationParameters, SimulationResults } from "./types";
 
 /**
  * Default values for optional simulation parameters
  */
 const DEFAULT_PARAMS = {
-  rerollHitFailures: "none" as const,
-  rerollHitSuccesses: "none" as const,
-  rerollWoundFailures: "none" as const,
-  rerollWoundSuccesses: "none" as const,
-  armorSave: "none" as const,
-  armorPiercing: 0,
-  rerollArmorSaveFailures: "none" as const,
-  rerollArmorSaveSuccesses: "none" as const,
-  specialSave: "none" as const,
-  rerollSpecialSaveFailures: "none" as const,
-  rerollSpecialSaveSuccesses: "none" as const,
-  poison: false,
-  lethalStrike: false,
-  fury: false,
-  multipleWounds: 1,
-  targetMaxWounds: 3,
-  iterations: 10000,
+	rerollHitFailures: "none" as const,
+	rerollHitSuccesses: "none" as const,
+	rerollWoundFailures: "none" as const,
+	rerollWoundSuccesses: "none" as const,
+	armorSave: "none" as const,
+	armorPiercing: 0,
+	rerollArmorSaveFailures: "none" as const,
+	rerollArmorSaveSuccesses: "none" as const,
+	specialSave: "none" as const,
+	rerollSpecialSaveFailures: "none" as const,
+	rerollSpecialSaveSuccesses: "none" as const,
+	poison: false,
+	lethalStrike: false,
+	fury: false,
+	multipleWounds: 1,
+	targetMaxWounds: 3,
+	iterations: 10000,
 };
 
 /**
@@ -38,13 +34,11 @@ const DEFAULT_PARAMS = {
  * @param params User-provided simulation parameters
  * @returns Complete simulation parameters with defaults applied
  */
-function applyDefaults(
-  params: SimulationParameters
-): Required<SimulationParameters> {
-  return {
-    ...DEFAULT_PARAMS,
-    ...params,
-  } as Required<SimulationParameters>;
+function applyDefaults(params: SimulationParameters): Required<SimulationParameters> {
+	return {
+		...DEFAULT_PARAMS,
+		...params,
+	} as Required<SimulationParameters>;
 }
 
 /**
@@ -53,15 +47,15 @@ function applyDefaults(
  * @returns Raw distribution array
  */
 export function runSimulation(params: SimulationParameters): number[] {
-  const fullParams = applyDefaults(params);
-  const distribution: number[] = [];
+	const fullParams = applyDefaults(params);
+	const distribution: number[] = [];
 
-  for (let i = 0; i < fullParams.iterations; i++) {
-    const wounds = simulateSingleSequence(fullParams);
-    distribution.push(wounds);
-  }
+	for (let i = 0; i < fullParams.iterations; i++) {
+		const wounds = simulateSingleSequence(fullParams);
+		distribution.push(wounds);
+	}
 
-  return distribution;
+	return distribution;
 }
 
 /**
@@ -69,20 +63,14 @@ export function runSimulation(params: SimulationParameters): number[] {
  * @param params Simulation parameters
  * @returns Simulation results with statistics and distribution
  */
-export function runSimulationWithStats(
-  params: SimulationParameters
-): SimulationResults {
-  const fullParams = applyDefaults(params);
-  const startTime = performance.now();
-  const distribution = runSimulation(params);
-  const endTime = performance.now();
-  const executionTimeMs = endTime - startTime;
+export function runSimulationWithStats(params: SimulationParameters): SimulationResults {
+	const fullParams = applyDefaults(params);
+	const startTime = performance.now();
+	const distribution = runSimulation(params);
+	const endTime = performance.now();
+	const executionTimeMs = endTime - startTime;
 
-  return calculateStatistics(
-    distribution,
-    fullParams.iterations,
-    executionTimeMs
-  );
+	return calculateStatistics(distribution, fullParams.iterations, executionTimeMs);
 }
 
 /**
@@ -90,28 +78,26 @@ export function runSimulationWithStats(
  * @param params Complete simulation parameters with defaults applied
  * @returns Number of wounds dealt
  */
-function simulateSingleSequence(
-  params: Required<SimulationParameters>
-): number {
-  // Phase 0: Determine number of attacks
-  const numAttacks = parseDiceExpression(params.numAttacks);
+function simulateSingleSequence(params: Required<SimulationParameters>): number {
+	// Phase 0: Determine number of attacks
+	const numAttacks = parseDiceExpression(params.numAttacks);
 
-  // Phase 1: To-Hit Rolls
-  const hitTrackers = rollToHit(numAttacks, params);
+	// Phase 1: To-Hit Rolls
+	const hitTrackers = rollToHit(numAttacks, params);
 
-  // Phase 2: To-Wound Rolls
-  const woundTrackers = rollToWound(hitTrackers, params);
+	// Phase 2: To-Wound Rolls
+	const woundTrackers = rollToWound(hitTrackers, params);
 
-  // Phase 3: Armor Saves
-  const unsavedAfterArmor = rollArmorSaves(woundTrackers, params);
+	// Phase 3: Armor Saves
+	const unsavedAfterArmor = rollArmorSaves(woundTrackers, params);
 
-  // Phase 4: Special Saves (Ward/Regen)
-  const unsavedAfterSpecial = rollSpecialSaves(unsavedAfterArmor, params);
+	// Phase 4: Special Saves (Ward/Regen)
+	const unsavedAfterSpecial = rollSpecialSaves(unsavedAfterArmor, params);
 
-  // Phase 5: Apply Multiple Wounds
-  const totalWounds = applyMultipleWounds(unsavedAfterSpecial, params);
+	// Phase 5: Apply Multiple Wounds
+	const totalWounds = applyMultipleWounds(unsavedAfterSpecial, params);
 
-  return totalWounds;
+	return totalWounds;
 }
 
 /**
@@ -120,38 +106,35 @@ function simulateSingleSequence(
  * @param params Complete simulation parameters with defaults applied
  * @returns Array of hit trackers for successful hits
  */
-function rollToHit(
-  numAttacks: number,
-  params: Required<SimulationParameters>
-): HitTracker[] {
-  const hits: HitTracker[] = [];
+function rollToHit(numAttacks: number, params: Required<SimulationParameters>): HitTracker[] {
+	const hits: HitTracker[] = [];
 
-  for (let i = 0; i < numAttacks; i++) {
-    let roll = rollD6();
-    const unmodifiedRoll = roll;
+	for (let i = 0; i < numAttacks; i++) {
+		let roll = rollD6();
+		const unmodifiedRoll = roll;
 
-    // Check for rerolls (a die can only be rerolled once)
-    if (shouldRerollSplit(roll, params.toHit, params.rerollHitFailures, params.rerollHitSuccesses)) {
-      roll = rollD6();
-    }
+		// Check for rerolls (a die can only be rerolled once)
+		if (shouldRerollSplit(roll, params.toHit, params.rerollHitFailures, params.rerollHitSuccesses)) {
+			roll = rollD6();
+		}
 
-    // Check if hit succeeded
-    if (isSuccess(roll, params.toHit)) {
-      const tracker: HitTracker = {
-        isPoison: params.poison && unmodifiedRoll === 6,
-        isLethal: false, // Set during wound phase
-      };
+		// Check if hit succeeded
+		if (isSuccess(roll, params.toHit)) {
+			const tracker: HitTracker = {
+				isPoison: params.poison && unmodifiedRoll === 6,
+				isLethal: false, // Set during wound phase
+			};
 
-      hits.push(tracker);
+			hits.push(tracker);
 
-      // Fury: 6s generate an additional hit
-      if (params.fury && unmodifiedRoll === 6) {
-        hits.push({ isPoison: false, isLethal: false });
-      }
-    }
-  }
+			// Fury: 6s generate an additional hit
+			if (params.fury && unmodifiedRoll === 6) {
+				hits.push({ isPoison: false, isLethal: false });
+			}
+		}
+	}
 
-  return hits;
+	return hits;
 }
 
 /**
@@ -160,38 +143,35 @@ function rollToHit(
  * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers for successful wounds
  */
-function rollToWound(
-  hitTrackers: HitTracker[],
-  params: Required<SimulationParameters>
-): HitTracker[] {
-  const wounds: HitTracker[] = [];
+function rollToWound(hitTrackers: HitTracker[], params: Required<SimulationParameters>): HitTracker[] {
+	const wounds: HitTracker[] = [];
 
-  for (const hit of hitTrackers) {
-    // Poison hits auto-wound
-    if (hit.isPoison) {
-      wounds.push(hit);
-      continue;
-    }
+	for (const hit of hitTrackers) {
+		// Poison hits auto-wound
+		if (hit.isPoison) {
+			wounds.push(hit);
+			continue;
+		}
 
-    let roll = rollD6();
-    const unmodifiedRoll = roll;
+		let roll = rollD6();
+		const unmodifiedRoll = roll;
 
-    // Check for rerolls (a die can only be rerolled once)
-    if (shouldRerollSplit(roll, params.toWound, params.rerollWoundFailures, params.rerollWoundSuccesses)) {
-      roll = rollD6();
-    }
+		// Check for rerolls (a die can only be rerolled once)
+		if (shouldRerollSplit(roll, params.toWound, params.rerollWoundFailures, params.rerollWoundSuccesses)) {
+			roll = rollD6();
+		}
 
-    // Check if wound succeeded
-    if (isSuccess(roll, params.toWound)) {
-      const tracker: HitTracker = {
-        isPoison: hit.isPoison,
-        isLethal: params.lethalStrike && unmodifiedRoll === 6,
-      };
-      wounds.push(tracker);
-    }
-  }
+		// Check if wound succeeded
+		if (isSuccess(roll, params.toWound)) {
+			const tracker: HitTracker = {
+				isPoison: hit.isPoison,
+				isLethal: params.lethalStrike && unmodifiedRoll === 6,
+			};
+			wounds.push(tracker);
+		}
+	}
 
-  return wounds;
+	return wounds;
 }
 
 /**
@@ -200,56 +180,50 @@ function rollToWound(
  * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers that failed armor saves
  */
-function rollArmorSaves(
-  woundTrackers: HitTracker[],
-  params: Required<SimulationParameters>
-): HitTracker[] {
-  const unsavedWounds: HitTracker[] = [];
+function rollArmorSaves(woundTrackers: HitTracker[], params: Required<SimulationParameters>): HitTracker[] {
+	const unsavedWounds: HitTracker[] = [];
 
-  for (const wound of woundTrackers) {
-    // Lethal Strike bypasses all saves
-    if (wound.isLethal) {
-      unsavedWounds.push(wound);
-      continue;
-    }
+	for (const wound of woundTrackers) {
+		// Lethal Strike bypasses all saves
+		if (wound.isLethal) {
+			unsavedWounds.push(wound);
+			continue;
+		}
 
-    // Check if armor save is possible
-    if (params.armorSave === "none") {
-      unsavedWounds.push(wound);
-      continue;
-    }
+		// Check if armor save is possible
+		if (params.armorSave === "none") {
+			unsavedWounds.push(wound);
+			continue;
+		}
 
-    if (params.armorSave === "auto") {
-      // Auto-save, wound is negated
-      continue;
-    }
+		if (params.armorSave === "auto") {
+			// Auto-save, wound is negated
+			continue;
+		}
 
-    // Calculate modified armor save
-    const modifiedArmorSave = Math.min(
-      7,
-      params.armorSave + params.armorPiercing
-    );
+		// Calculate modified armor save
+		const modifiedArmorSave = Math.min(7, params.armorSave + params.armorPiercing);
 
-    // If modified save is 7+, it's impossible
-    if (modifiedArmorSave > 6) {
-      unsavedWounds.push(wound);
-      continue;
-    }
+		// If modified save is 7+, it's impossible
+		if (modifiedArmorSave > 6) {
+			unsavedWounds.push(wound);
+			continue;
+		}
 
-    let roll = rollD6();
+		let roll = rollD6();
 
-    // Check for rerolls (defender's perspective, a die can only be rerolled once)
-    if (shouldRerollSplit(roll, modifiedArmorSave, params.rerollArmorSaveFailures, params.rerollArmorSaveSuccesses)) {
-      roll = rollD6();
-    }
+		// Check for rerolls (defender's perspective, a die can only be rerolled once)
+		if (shouldRerollSplit(roll, modifiedArmorSave, params.rerollArmorSaveFailures, params.rerollArmorSaveSuccesses)) {
+			roll = rollD6();
+		}
 
-    // Check if save failed
-    if (!isSuccess(roll, modifiedArmorSave)) {
-      unsavedWounds.push(wound);
-    }
-  }
+		// Check if save failed
+		if (!isSuccess(roll, modifiedArmorSave)) {
+			unsavedWounds.push(wound);
+		}
+	}
 
-  return unsavedWounds;
+	return unsavedWounds;
 }
 
 /**
@@ -258,44 +232,43 @@ function rollArmorSaves(
  * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers that failed special saves
  */
-function rollSpecialSaves(
-  woundTrackers: HitTracker[],
-  params: Required<SimulationParameters>
-): HitTracker[] {
-  const unsavedWounds: HitTracker[] = [];
+function rollSpecialSaves(woundTrackers: HitTracker[], params: Required<SimulationParameters>): HitTracker[] {
+	const unsavedWounds: HitTracker[] = [];
 
-  for (const wound of woundTrackers) {
-    // Lethal Strike bypasses all saves (including special)
-    if (wound.isLethal) {
-      unsavedWounds.push(wound);
-      continue;
-    }
+	for (const wound of woundTrackers) {
+		// Lethal Strike bypasses all saves (including special)
+		if (wound.isLethal) {
+			unsavedWounds.push(wound);
+			continue;
+		}
 
-    // Check if special save is possible
-    if (params.specialSave === "none") {
-      unsavedWounds.push(wound);
-      continue;
-    }
+		// Check if special save is possible
+		if (params.specialSave === "none") {
+			unsavedWounds.push(wound);
+			continue;
+		}
 
-    if (params.specialSave === "auto") {
-      // Auto-save, wound is negated
-      continue;
-    }
+		if (params.specialSave === "auto") {
+			// Auto-save, wound is negated
+			continue;
+		}
 
-    let roll = rollD6();
+		let roll = rollD6();
 
-    // Check for rerolls (defender's perspective, a die can only be rerolled once)
-    if (shouldRerollSplit(roll, params.specialSave, params.rerollSpecialSaveFailures, params.rerollSpecialSaveSuccesses)) {
-      roll = rollD6();
-    }
+		// Check for rerolls (defender's perspective, a die can only be rerolled once)
+		if (
+			shouldRerollSplit(roll, params.specialSave, params.rerollSpecialSaveFailures, params.rerollSpecialSaveSuccesses)
+		) {
+			roll = rollD6();
+		}
 
-    // Check if save failed
-    if (!isSuccess(roll, params.specialSave)) {
-      unsavedWounds.push(wound);
-    }
-  }
+		// Check if save failed
+		if (!isSuccess(roll, params.specialSave)) {
+			unsavedWounds.push(wound);
+		}
+	}
 
-  return unsavedWounds;
+	return unsavedWounds;
 }
 
 /**
@@ -304,18 +277,15 @@ function rollSpecialSaves(
  * @param params Complete simulation parameters with defaults applied
  * @returns Total number of wounds dealt
  */
-function applyMultipleWounds(
-  woundTrackers: HitTracker[],
-  params: Required<SimulationParameters>
-): number {
-  let totalWounds = 0;
+function applyMultipleWounds(woundTrackers: HitTracker[], params: Required<SimulationParameters>): number {
+	let totalWounds = 0;
 
-  for (const _wound of woundTrackers) {
-    const woundsPerHit = parseDiceExpression(params.multipleWounds);
-    // Cap each individual hit's wounds, but not the total across all hits
-    const cappedWounds = Math.min(woundsPerHit, params.targetMaxWounds);
-    totalWounds += cappedWounds;
-  }
+	for (const _wound of woundTrackers) {
+		const woundsPerHit = parseDiceExpression(params.multipleWounds);
+		// Cap each individual hit's wounds, but not the total across all hits
+		const cappedWounds = Math.min(woundsPerHit, params.targetMaxWounds);
+		totalWounds += cappedWounds;
+	}
 
-  return totalWounds;
+	return totalWounds;
 }
