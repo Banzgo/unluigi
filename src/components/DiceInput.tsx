@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { parseDiceExpression, type RerollType } from "../engine";
+import { parseDiceExpression, type SuccessRerollType, type FailureRerollType } from "../engine";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
@@ -14,10 +14,14 @@ export interface DiceInputState {
   wound: ToggleValue;
   armorSave: ToggleValue;
   specialSave: ToggleValue;
-  rerollHits: RerollType;
-  rerollWounds: RerollType;
-  rerollArmorSaves: RerollType;
-  rerollSpecialSaves: RerollType;
+  rerollHitFailures: FailureRerollType;
+  rerollHitSuccesses: SuccessRerollType;
+  rerollWoundFailures: FailureRerollType;
+  rerollWoundSuccesses: SuccessRerollType;
+  rerollArmorSaveFailures: FailureRerollType;
+  rerollArmorSaveSuccesses: SuccessRerollType;
+  rerollSpecialSaveFailures: FailureRerollType;
+  rerollSpecialSaveSuccesses: SuccessRerollType;
   poison: boolean;
   lethalStrike: boolean;
   fury: boolean;
@@ -44,28 +48,43 @@ export function DiceInput({
   const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
   const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
   const saveOptions: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
-  const rerollOptions: RerollType[] = ["none", "1s", "fails", "successes"];
+  const failureRerollOptions: FailureRerollType[] = ["none", "1s", "all"];
+  const successRerollOptions: SuccessRerollType[] = ["none", "6s", "all"];
 
   const cycleValue = (current: ToggleValue, options: ToggleValue[]) => {
     const currentIndex = options.indexOf(current);
     return options[(currentIndex + 1) % options.length];
   };
 
-  const cycleReroll = (current: RerollType) => {
-    const currentIndex = rerollOptions.indexOf(current);
-    return rerollOptions[(currentIndex + 1) % rerollOptions.length];
+  const cycleFailureReroll = (current: FailureRerollType): FailureRerollType => {
+    const currentIndex = failureRerollOptions.indexOf(current);
+    return failureRerollOptions[(currentIndex + 1) % failureRerollOptions.length];
   };
 
-  const getRerollLabel = (reroll: RerollType) => {
+  const cycleSuccessReroll = (current: SuccessRerollType): SuccessRerollType => {
+    const currentIndex = successRerollOptions.indexOf(current);
+    return successRerollOptions[(currentIndex + 1) % successRerollOptions.length];
+  };
+
+  const getFailureRerollLabel = (reroll: FailureRerollType) => {
     switch (reroll) {
       case "none":
-        return "No Reroll";
+        return "No fail rerolls";
       case "1s":
         return "Reroll 1s";
-      case "fails":
-        return "Reroll Fails";
-      case "successes":
-        return "Reroll Successes";
+      case "all":
+        return "Reroll fails";
+    }
+  };
+
+  const getSuccessRerollLabel = (reroll: SuccessRerollType) => {
+    switch (reroll) {
+      case "none":
+        return "No success rerolls";
+      case "6s":
+        return "Reroll 6s";
+      case "all":
+        return "Reroll successes";
     }
   };
 
@@ -134,21 +153,38 @@ export function DiceInput({
           >
             {input.hit === "auto" ? "AUTO" : `${input.hit}+`}
           </Button>
-          <Button
-            onClick={() =>
-              onUpdate(input.id, {
-                rerollHits: cycleReroll(input.rerollHits),
-              })
-            }
-            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-              input.rerollHits !== "none"
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-secondary hover:bg-secondary/80"
-            }`}
-            variant="outline"
-          >
-            {getRerollLabel(input.rerollHits)}
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollHitFailures: cycleFailureReroll(input.rerollHitFailures),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollHitFailures !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getFailureRerollLabel(input.rerollHitFailures)}
+            </Button>
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollHitSuccesses: cycleSuccessReroll(input.rerollHitSuccesses),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollHitSuccesses !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getSuccessRerollLabel(input.rerollHitSuccesses)}
+            </Button>
+          </div>
           <Button
             onClick={() => onUpdate(input.id, { poison: !input.poison })}
             className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
@@ -189,21 +225,38 @@ export function DiceInput({
           >
             {input.wound === "auto" ? "AUTO" : `${input.wound}+`}
           </Button>
-          <Button
-            onClick={() =>
-              onUpdate(input.id, {
-                rerollWounds: cycleReroll(input.rerollWounds),
-              })
-            }
-            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-              input.rerollWounds !== "none"
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-secondary hover:bg-secondary/80"
-            }`}
-            variant="outline"
-          >
-            {getRerollLabel(input.rerollWounds)}
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollWoundFailures: cycleFailureReroll(input.rerollWoundFailures),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollWoundFailures !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getFailureRerollLabel(input.rerollWoundFailures)}
+            </Button>
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollWoundSuccesses: cycleSuccessReroll(input.rerollWoundSuccesses),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollWoundSuccesses !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getSuccessRerollLabel(input.rerollWoundSuccesses)}
+            </Button>
+          </div>
           <Button
             onClick={() =>
               onUpdate(input.id, { lethalStrike: !input.lethalStrike })
@@ -235,21 +288,38 @@ export function DiceInput({
           >
             {input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
           </Button>
-          <Button
-            onClick={() =>
-              onUpdate(input.id, {
-                rerollArmorSaves: cycleReroll(input.rerollArmorSaves),
-              })
-            }
-            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-              input.rerollArmorSaves !== "none"
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-secondary hover:bg-secondary/80"
-            }`}
-            variant="outline"
-          >
-            {getRerollLabel(input.rerollArmorSaves)}
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollArmorSaveFailures: cycleFailureReroll(input.rerollArmorSaveFailures),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollArmorSaveFailures !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getFailureRerollLabel(input.rerollArmorSaveFailures)}
+            </Button>
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollArmorSaveSuccesses: cycleSuccessReroll(input.rerollArmorSaveSuccesses),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollArmorSaveSuccesses !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getSuccessRerollLabel(input.rerollArmorSaveSuccesses)}
+            </Button>
+          </div>
         </div>
 
         {/* Special Save Column */}
@@ -268,21 +338,38 @@ export function DiceInput({
           >
             {input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
           </Button>
-          <Button
-            onClick={() =>
-              onUpdate(input.id, {
-                rerollSpecialSaves: cycleReroll(input.rerollSpecialSaves),
-              })
-            }
-            className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-              input.rerollSpecialSaves !== "none"
-                ? "bg-blue-600 hover:bg-blue-700 text-white"
-                : "bg-secondary hover:bg-secondary/80"
-            }`}
-            variant="outline"
-          >
-            {getRerollLabel(input.rerollSpecialSaves)}
-          </Button>
+          <div className="flex gap-1">
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollSpecialSaveFailures: cycleFailureReroll(input.rerollSpecialSaveFailures),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollSpecialSaveFailures !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getFailureRerollLabel(input.rerollSpecialSaveFailures)}
+            </Button>
+            <Button
+              onClick={() =>
+                onUpdate(input.id, {
+                  rerollSpecialSaveSuccesses: cycleSuccessReroll(input.rerollSpecialSaveSuccesses),
+                })
+              }
+              className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+                input.rerollSpecialSaveSuccesses !== "none"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-secondary hover:bg-secondary/80"
+              }`}
+              variant="outline"
+            >
+              {getSuccessRerollLabel(input.rerollSpecialSaveSuccesses)}
+            </Button>
+          </div>
         </div>
       </div>
 

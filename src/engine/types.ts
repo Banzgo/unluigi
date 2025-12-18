@@ -1,6 +1,14 @@
 // Type definitions for The Ninth Age Dice Simulator
 
 export type HitValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
+
+// Success rerolls: reroll dice that succeeded
+export type SuccessRerollType = "none" | "6s" | "all";
+
+// Failure rerolls: reroll dice that failed
+export type FailureRerollType = "none" | "1s" | "all";
+
+// Legacy type for backwards compatibility
 export type RerollType = "none" | "1s" | "successes" | "fails";
 
 /**
@@ -11,19 +19,23 @@ export interface SimulationParameters {
   // Attack Phase
   numAttacks: string | number; // Number or dice expression: 10, "d6", "2d6+3", "d3"
   toHit: HitValue; // 2-6, 'auto', or 'none' (auto-hit or impossible)
-  rerollHits?: RerollType; // 'none' | '1s' | 'successes' | 'fails'
+  rerollHitFailures?: FailureRerollType; // 'none' | '1s' | 'all' - reroll failed hit rolls
+  rerollHitSuccesses?: SuccessRerollType; // 'none' | '6s' | 'all' - reroll successful hit rolls
 
   // Wound Phase
   toWound: HitValue; // 2-6, 'auto', or 'none'
-  rerollWounds?: RerollType; // 'none' | '1s' | 'successes' | 'fails'
+  rerollWoundFailures?: FailureRerollType; // 'none' | '1s' | 'all' - reroll failed wound rolls
+  rerollWoundSuccesses?: SuccessRerollType; // 'none' | '6s' | 'all' - reroll successful wound rolls
 
   // Save Phase
   armorSave?: HitValue; // 2-6, 'auto' (no wound gets through), or 'none' (no save)
   armorPiercing?: number; // AP value (reduces armor, 0-6)
-  rerollArmorSaves?: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
+  rerollArmorSaveFailures?: FailureRerollType; // 'none' | '1s' | 'all' - reroll failed saves (for defender)
+  rerollArmorSaveSuccesses?: SuccessRerollType; // 'none' | '6s' | 'all' - reroll successful saves (for defender)
 
   specialSave?: HitValue; // Ward/regen save: 2-6, 'auto', or 'none'
-  rerollSpecialSaves?: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
+  rerollSpecialSaveFailures?: FailureRerollType; // 'none' | '1s' | 'all' - reroll failed saves (for defender)
+  rerollSpecialSaveSuccesses?: SuccessRerollType; // 'none' | '6s' | 'all' - reroll successful saves (for defender)
 
   // Special Rules
   poison?: boolean; // 6s to hit auto-wound (skip wound roll)

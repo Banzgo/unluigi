@@ -9,6 +9,7 @@ import {
   rollD3,
   rollD6,
   shouldReroll,
+  shouldRerollSplit,
 } from "./dice";
 
 describe("rollD6", () => {
@@ -213,5 +214,97 @@ describe("isSuccess", () => {
     expect(isSuccess(1, 2)).toBe(false);
     expect(isSuccess(6, 6)).toBe(true);
     expect(isSuccess(5, 6)).toBe(false);
+  });
+});
+
+describe("shouldRerollSplit", () => {
+  describe("both none", () => {
+    it("should never reroll when both are none", () => {
+      expect(shouldRerollSplit(1, 4, "none", "none")).toBe(false);
+      expect(shouldRerollSplit(6, 4, "none", "none")).toBe(false);
+      expect(shouldRerollSplit(3, 4, "none", "none")).toBe(false);
+      expect(shouldRerollSplit(4, 4, "none", "none")).toBe(false);
+    });
+  });
+
+  describe("failure rerolls only", () => {
+    it("should reroll 1s when failure reroll is 1s", () => {
+      expect(shouldRerollSplit(1, 4, "1s", "none")).toBe(true);
+      expect(shouldRerollSplit(2, 4, "1s", "none")).toBe(false);
+      expect(shouldRerollSplit(3, 4, "1s", "none")).toBe(false);
+      expect(shouldRerollSplit(4, 4, "1s", "none")).toBe(false); // success, not 1
+      expect(shouldRerollSplit(6, 4, "1s", "none")).toBe(false); // success, not 1
+    });
+
+    it("should reroll all fails when failure reroll is all", () => {
+      expect(shouldRerollSplit(1, 4, "all", "none")).toBe(true);
+      expect(shouldRerollSplit(2, 4, "all", "none")).toBe(true);
+      expect(shouldRerollSplit(3, 4, "all", "none")).toBe(true);
+      expect(shouldRerollSplit(4, 4, "all", "none")).toBe(false); // success
+      expect(shouldRerollSplit(5, 4, "all", "none")).toBe(false); // success
+      expect(shouldRerollSplit(6, 4, "all", "none")).toBe(false); // success
+    });
+  });
+
+  describe("success rerolls only", () => {
+    it("should reroll 6s when success reroll is 6s", () => {
+      expect(shouldRerollSplit(1, 4, "none", "6s")).toBe(false); // fail, not 6
+      expect(shouldRerollSplit(4, 4, "none", "6s")).toBe(false); // success but not 6
+      expect(shouldRerollSplit(5, 4, "none", "6s")).toBe(false); // success but not 6
+      expect(shouldRerollSplit(6, 4, "none", "6s")).toBe(true);  // success and 6
+    });
+
+    it("should reroll all successes when success reroll is all", () => {
+      expect(shouldRerollSplit(1, 4, "none", "all")).toBe(false); // fail
+      expect(shouldRerollSplit(2, 4, "none", "all")).toBe(false); // fail
+      expect(shouldRerollSplit(3, 4, "none", "all")).toBe(false); // fail
+      expect(shouldRerollSplit(4, 4, "none", "all")).toBe(true);  // success
+      expect(shouldRerollSplit(5, 4, "none", "all")).toBe(true);  // success
+      expect(shouldRerollSplit(6, 4, "none", "all")).toBe(true);  // success
+    });
+  });
+
+  describe("combined rerolls", () => {
+    it("should reroll both 1s and 6s when both are set", () => {
+      expect(shouldRerollSplit(1, 4, "1s", "6s")).toBe(true);  // 1 is a fail
+      expect(shouldRerollSplit(2, 4, "1s", "6s")).toBe(false); // fail but not 1
+      expect(shouldRerollSplit(4, 4, "1s", "6s")).toBe(false); // success but not 6
+      expect(shouldRerollSplit(6, 4, "1s", "6s")).toBe(true);  // 6 is a success
+    });
+
+    it("should reroll all dice when both are all", () => {
+      expect(shouldRerollSplit(1, 4, "all", "all")).toBe(true);  // fail -> reroll
+      expect(shouldRerollSplit(2, 4, "all", "all")).toBe(true);  // fail -> reroll
+      expect(shouldRerollSplit(3, 4, "all", "all")).toBe(true);  // fail -> reroll
+      expect(shouldRerollSplit(4, 4, "all", "all")).toBe(true);  // success -> reroll
+      expect(shouldRerollSplit(5, 4, "all", "all")).toBe(true);  // success -> reroll
+      expect(shouldRerollSplit(6, 4, "all", "all")).toBe(true);  // success -> reroll
+    });
+
+    it("should handle reroll fails and 6s together", () => {
+      expect(shouldRerollSplit(1, 4, "all", "6s")).toBe(true);  // fail -> reroll
+      expect(shouldRerollSplit(3, 4, "all", "6s")).toBe(true);  // fail -> reroll
+      expect(shouldRerollSplit(4, 4, "all", "6s")).toBe(false); // success but not 6
+      expect(shouldRerollSplit(6, 4, "all", "6s")).toBe(true);  // 6 -> reroll
+    });
+  });
+
+  describe("auto and none targets", () => {
+    it("should handle auto-success targets", () => {
+      // All rolls are successes when target is auto
+      expect(shouldRerollSplit(1, "auto", "all", "none")).toBe(false);  // no fails
+      expect(shouldRerollSplit(1, "auto", "none", "all")).toBe(true);   // all are successes
+      expect(shouldRerollSplit(6, "auto", "none", "6s")).toBe(true);    // 6 is a success
+      expect(shouldRerollSplit(3, "auto", "none", "6s")).toBe(false);   // success but not 6
+    });
+
+    it("should handle auto-fail targets", () => {
+      // All rolls are failures when target is none
+      expect(shouldRerollSplit(1, "none", "all", "none")).toBe(true);   // all are fails
+      expect(shouldRerollSplit(6, "none", "all", "none")).toBe(true);   // all are fails
+      expect(shouldRerollSplit(1, "none", "1s", "none")).toBe(true);    // 1 is a fail
+      expect(shouldRerollSplit(6, "none", "1s", "none")).toBe(false);   // fail but not 1
+      expect(shouldRerollSplit(6, "none", "none", "all")).toBe(false);  // no successes
+    });
   });
 });
