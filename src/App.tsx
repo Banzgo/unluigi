@@ -29,7 +29,7 @@ function App() {
       lethalStrike: false,
       fury: false,
       multipleWounds: "1",
-      targetMaxWounds: 1,
+      targetMaxWounds: "1",
     },
   ]);
   const [results, setResults] = useState<string>("");
@@ -54,7 +54,7 @@ function App() {
         lethalStrike: false,
         fury: false,
         multipleWounds: "1",
-        targetMaxWounds: 1,
+        targetMaxWounds: "1",
       },
     ]);
   };
@@ -109,8 +109,8 @@ function App() {
         poison: input.poison,
         lethalStrike: input.lethalStrike,
         fury: input.fury,
-        multipleWounds: input.multipleWounds,
-        targetMaxWounds: input.targetMaxWounds,
+        multipleWounds: input.multipleWounds || "1",
+        targetMaxWounds: Number.parseInt(input.targetMaxWounds, 10) || 1,
         iterations,
       };
 
