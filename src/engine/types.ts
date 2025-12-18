@@ -5,34 +5,35 @@ export type RerollType = "none" | "1s" | "successes" | "fails";
 
 /**
  * Parameters for simulating an attack sequence
+ * All fields are optional except numAttacks, toHit, and toWound
  */
 export interface SimulationParameters {
   // Attack Phase
   numAttacks: string | number; // Number or dice expression: 10, "d6", "2d6+3", "d3"
   toHit: HitValue; // 2-6, 'auto', or 'none' (auto-hit or impossible)
-  rerollHits: RerollType; // 'none' | '1s' | 'successes' | 'fails'
+  rerollHits?: RerollType; // 'none' | '1s' | 'successes' | 'fails'
 
   // Wound Phase
   toWound: HitValue; // 2-6, 'auto', or 'none'
-  rerollWounds: RerollType; // 'none' | '1s' | 'successes' | 'fails'
+  rerollWounds?: RerollType; // 'none' | '1s' | 'successes' | 'fails'
 
   // Save Phase
-  armorSave: HitValue; // 2-6, 'auto' (no wound gets through), or 'none' (no save)
-  armorPiercing: number; // AP value (reduces armor, 0-6)
-  rerollArmorSaves: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
+  armorSave?: HitValue; // 2-6, 'auto' (no wound gets through), or 'none' (no save)
+  armorPiercing?: number; // AP value (reduces armor, 0-6)
+  rerollArmorSaves?: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
 
-  specialSave: HitValue; // Ward/regen save: 2-6, 'auto', or 'none'
-  rerollSpecialSaves: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
+  specialSave?: HitValue; // Ward/regen save: 2-6, 'auto', or 'none'
+  rerollSpecialSaves?: RerollType; // 'none' | '1s' | 'successes' | 'fails' (for defender)
 
   // Special Rules
-  poison: boolean; // 6s to hit auto-wound (skip wound roll)
-  lethalStrike: boolean; // 6s to wound ignore armor AND special saves
-  fury: boolean; // 6s to hit generate 2 hits instead of 1
-  multipleWounds: string | number; // Wounds per unsaved wound: 1, "d3", "d6+1", etc.
-  targetMaxWounds: number; // Maximum wounds target model has (caps multiple wounds)
+  poison?: boolean; // 6s to hit auto-wound (skip wound roll)
+  lethalStrike?: boolean; // 6s to wound ignore armor AND special saves
+  fury?: boolean; // 6s to hit generate 2 hits instead of 1
+  multipleWounds?: string | number; // Wounds per unsaved wound: 1, "d3", "d6+1", etc.
+  targetMaxWounds?: number; // Maximum wounds target model has (caps multiple wounds)
 
   // Simulation Settings
-  iterations: number; // Number of simulations to run (default 10000)
+  iterations?: number; // Number of simulations to run (default 10000)
 }
 
 /**

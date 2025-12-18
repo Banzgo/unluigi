@@ -3,30 +3,19 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { runSimulation, type SimulationParameters } from "./index";
+import { runSimulationWithStats, type SimulationParameters } from "./index";
 
-describe("runSimulation", () => {
+describe("runSimulationWithStats", () => {
+  // Base params with only required fields - testing the new optional interface
   const baseParams: SimulationParameters = {
     numAttacks: 10,
     toHit: 4,
-    rerollHits: "none",
     toWound: 4,
-    rerollWounds: "none",
-    armorSave: "none",
-    armorPiercing: 0,
-    rerollArmorSaves: "none",
-    specialSave: "none",
-    rerollSpecialSaves: "none",
-    poison: false,
-    lethalStrike: false,
-    fury: false,
-    multipleWounds: 1,
-    targetMaxWounds: 10,
     iterations: 1000,
   };
 
   it("should return valid simulation results", () => {
-    const results = runSimulation(baseParams);
+    const results = runSimulationWithStats(baseParams);
 
     expect(results).toBeDefined();
     expect(results.distribution).toHaveLength(1000);
@@ -38,7 +27,7 @@ describe("runSimulation", () => {
     // 10 attacks, 4+ to hit (50%), 4+ to wound (50%), no saves
     // Expected: ~2.5 wounds average
     const params = { ...baseParams, iterations: 5000 };
-    const results = runSimulation(params);
+    const results = runSimulationWithStats(params);
 
     expect(results.mean).toBeGreaterThan(2);
     expect(results.mean).toBeLessThan(3);
@@ -47,13 +36,13 @@ describe("runSimulation", () => {
   });
 
   it("should account for armor saves", () => {
-    const withoutArmor = runSimulation({
+    const withoutArmor = runSimulationWithStats({
       ...baseParams,
       armorSave: "none",
       iterations: 5000,
     });
 
-    const withArmor = runSimulation({
+    const withArmor = runSimulationWithStats({
       ...baseParams,
       armorSave: 4, // 4+ armor save (50% save)
       iterations: 5000,
@@ -66,14 +55,14 @@ describe("runSimulation", () => {
   });
 
   it("should handle armor piercing correctly", () => {
-    const noAP = runSimulation({
+    const noAP = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
       armorPiercing: 0,
       iterations: 5000,
     });
 
-    const withAP = runSimulation({
+    const withAP = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
       armorPiercing: 1, // Makes save 5+ instead of 4+
@@ -85,13 +74,13 @@ describe("runSimulation", () => {
   });
 
   it("should handle reroll hits correctly", () => {
-    const noReroll = runSimulation({
+    const noReroll = runSimulationWithStats({
       ...baseParams,
       rerollHits: "none",
       iterations: 5000,
     });
 
-    const rerollFails = runSimulation({
+    const rerollFails = runSimulationWithStats({
       ...baseParams,
       rerollHits: "fails",
       iterations: 5000,
@@ -102,14 +91,14 @@ describe("runSimulation", () => {
   });
 
   it("should handle poison correctly", () => {
-    const noPoison = runSimulation({
+    const noPoison = runSimulationWithStats({
       ...baseParams,
       toWound: 6, // Hard to wound
       poison: false,
       iterations: 5000,
     });
 
-    const withPoison = runSimulation({
+    const withPoison = runSimulationWithStats({
       ...baseParams,
       toWound: 6,
       poison: true, // 6s to hit auto-wound
@@ -121,13 +110,13 @@ describe("runSimulation", () => {
   });
 
   it("should handle fury correctly", () => {
-    const noFury = runSimulation({
+    const noFury = runSimulationWithStats({
       ...baseParams,
       fury: false,
       iterations: 5000,
     });
 
-    const withFury = runSimulation({
+    const withFury = runSimulationWithStats({
       ...baseParams,
       fury: true, // 6s to hit generate 2 hits
       iterations: 5000,
@@ -138,7 +127,7 @@ describe("runSimulation", () => {
   });
 
   it("should handle lethal strike correctly", () => {
-    const noLethal = runSimulation({
+    const noLethal = runSimulationWithStats({
       ...baseParams,
       armorSave: 2, // Very good armor
       specialSave: 4, // Ward save
@@ -146,7 +135,7 @@ describe("runSimulation", () => {
       iterations: 5000,
     });
 
-    const withLethal = runSimulation({
+    const withLethal = runSimulationWithStats({
       ...baseParams,
       armorSave: 2,
       specialSave: 4,
@@ -159,13 +148,13 @@ describe("runSimulation", () => {
   });
 
   it("should handle multiple wounds correctly", () => {
-    const singleWound = runSimulation({
+    const singleWound = runSimulationWithStats({
       ...baseParams,
       multipleWounds: 1,
       iterations: 5000,
     });
 
-    const doubleWound = runSimulation({
+    const doubleWound = runSimulationWithStats({
       ...baseParams,
       multipleWounds: 2,
       iterations: 5000,
@@ -177,25 +166,28 @@ describe("runSimulation", () => {
   });
 
   it("should respect target max wounds", () => {
-    const results = runSimulation({
-      ...baseParams,
+    const results = runSimulationWithStats({
+      numAttacks: 1, // Single attack to test capping
+      toHit: "auto",
+      toWound: "auto",
       multipleWounds: 10, // Try to deal 10 wounds per hit
       targetMaxWounds: 3, // But target only has 3 wounds
       iterations: 1000,
     });
 
-    // Should never exceed target max wounds
+    // With 1 auto-hit, auto-wound, should cap at 3 wounds
     expect(results.max).toBeLessThanOrEqual(3);
+    expect(results.mean).toBe(3);
   });
 
   it("should handle dice expressions for attacks", () => {
-    const fixed = runSimulation({
+    const fixed = runSimulationWithStats({
       ...baseParams,
       numAttacks: 10,
       iterations: 5000,
     });
 
-    const variable = runSimulation({
+    const variable = runSimulationWithStats({
       ...baseParams,
       numAttacks: "2d6", // 2-12 attacks
       iterations: 5000,
@@ -210,7 +202,7 @@ describe("runSimulation", () => {
   });
 
   it("should handle dice expressions for multiple wounds", () => {
-    const results = runSimulation({
+    const results = runSimulationWithStats({
       ...baseParams,
       numAttacks: 1,
       toHit: "auto",
@@ -226,7 +218,7 @@ describe("runSimulation", () => {
   });
 
   it("should handle auto-hit and auto-wound", () => {
-    const results = runSimulation({
+    const results = runSimulationWithStats({
       ...baseParams,
       numAttacks: 10,
       toHit: "auto",
@@ -242,7 +234,7 @@ describe("runSimulation", () => {
   });
 
   it("should handle impossible scenarios", () => {
-    const results = runSimulation({
+    const results = runSimulationWithStats({
       ...baseParams,
       toHit: "none", // Can't hit
       iterations: 1000,
@@ -255,7 +247,7 @@ describe("runSimulation", () => {
 
   it("should run efficiently", () => {
     const startTime = performance.now();
-    runSimulation({
+    runSimulationWithStats({
       ...baseParams,
       iterations: 10000,
     });
@@ -267,8 +259,14 @@ describe("runSimulation", () => {
 
   it("should produce consistent results with same parameters", () => {
     // Run multiple times with high iteration count
-    const results1 = runSimulation({ ...baseParams, iterations: 10000 });
-    const results2 = runSimulation({ ...baseParams, iterations: 10000 });
+    const results1 = runSimulationWithStats({
+      ...baseParams,
+      iterations: 10000,
+    });
+    const results2 = runSimulationWithStats({
+      ...baseParams,
+      iterations: 10000,
+    });
 
     // Means should be very close (within 10%)
     const diff = Math.abs(results1.mean - results2.mean);
@@ -279,14 +277,14 @@ describe("runSimulation", () => {
   });
 
   it("should handle special saves separately from armor", () => {
-    const onlyArmor = runSimulation({
+    const onlyArmor = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
       specialSave: "none",
       iterations: 5000,
     });
 
-    const both = runSimulation({
+    const both = runSimulationWithStats({
       ...baseParams,
       armorSave: 4,
       specialSave: 4,
@@ -299,27 +297,176 @@ describe("runSimulation", () => {
 
   it("should handle complex scenario correctly", () => {
     // Complex realistic scenario
-    const results = runSimulation({
+    const results = runSimulationWithStats({
       numAttacks: "2d6",
       toHit: 3,
       rerollHits: "1s",
       toWound: 4,
-      rerollWounds: "none",
       armorSave: 4,
       armorPiercing: 1,
-      rerollArmorSaves: "none",
       specialSave: 5,
-      rerollSpecialSaves: "none",
-      poison: false,
       lethalStrike: true,
-      fury: false,
-      multipleWounds: 1,
-      targetMaxWounds: 10,
       iterations: 5000,
     });
 
     expect(results.mean).toBeGreaterThan(0);
     expect(results.mean).toBeLessThan(10);
     expect(results.distribution).toHaveLength(5000);
+  });
+
+  // Additional tests for comprehensive special rule coverage
+  it("should handle reroll wounds correctly", () => {
+    const noReroll = runSimulationWithStats({
+      ...baseParams,
+      toWound: 5, // Harder to wound
+      rerollWounds: "none",
+      iterations: 5000,
+    });
+
+    const rerollFails = runSimulationWithStats({
+      ...baseParams,
+      toWound: 5,
+      rerollWounds: "fails",
+      iterations: 5000,
+    });
+
+    // Rerolling failed wounds should increase average wounds
+    expect(rerollFails.mean).toBeGreaterThan(noReroll.mean);
+  });
+
+  it("should handle reroll 1s for hits", () => {
+    const noReroll = runSimulationWithStats({
+      ...baseParams,
+      toHit: 4,
+      rerollHits: "none",
+      iterations: 5000,
+    });
+
+    const reroll1s = runSimulationWithStats({
+      ...baseParams,
+      toHit: 4,
+      rerollHits: "1s",
+      iterations: 5000,
+    });
+
+    // Rerolling 1s should increase wounds
+    expect(reroll1s.mean).toBeGreaterThan(noReroll.mean);
+  });
+
+  it("should handle reroll successes for hits", () => {
+    const noReroll = runSimulationWithStats({
+      ...baseParams,
+      toHit: 2, // Easy to hit (5/6 chance)
+      rerollHits: "none",
+      iterations: 5000,
+    });
+
+    const rerollSuccesses = runSimulationWithStats({
+      ...baseParams,
+      toHit: 2,
+      rerollHits: "successes",
+      iterations: 5000,
+    });
+
+    // Rerolling successes should decrease wounds
+    expect(rerollSuccesses.mean).toBeLessThan(noReroll.mean);
+  });
+
+  it("should handle reroll armor saves correctly", () => {
+    const noReroll = runSimulationWithStats({
+      ...baseParams,
+      armorSave: 4,
+      rerollArmorSaves: "none",
+      iterations: 5000,
+    });
+
+    const rerollFails = runSimulationWithStats({
+      ...baseParams,
+      armorSave: 4,
+      rerollArmorSaves: "fails",
+      iterations: 5000,
+    });
+
+    // Defender rerolling failed saves should reduce wounds dealt
+    expect(rerollFails.mean).toBeLessThan(noReroll.mean);
+  });
+
+  it("should handle reroll special saves correctly", () => {
+    const noReroll = runSimulationWithStats({
+      ...baseParams,
+      specialSave: 5,
+      rerollSpecialSaves: "none",
+      iterations: 5000,
+    });
+
+    const rerollFails = runSimulationWithStats({
+      ...baseParams,
+      specialSave: 5,
+      rerollSpecialSaves: "fails",
+      iterations: 5000,
+    });
+
+    // Defender rerolling failed special saves should reduce wounds dealt
+    expect(rerollFails.mean).toBeLessThan(noReroll.mean);
+  });
+
+  it("should combine poison and fury correctly", () => {
+    const results = runSimulationWithStats({
+      numAttacks: 10,
+      toHit: 4,
+      toWound: 5, // Hard to wound
+      poison: true, // 6s to hit auto-wound
+      fury: true, // 6s to hit generate extra hits
+      iterations: 5000,
+    });
+
+    // With both poison and fury, 6s should auto-wound and generate extra hits
+    expect(results.mean).toBeGreaterThan(1);
+  });
+
+  it("should handle lethal strike with armor piercing", () => {
+    const results = runSimulationWithStats({
+      numAttacks: 10,
+      toHit: 4,
+      toWound: 4,
+      armorSave: 2, // Very good armor
+      armorPiercing: 2, // AP helps but not enough
+      specialSave: 4, // Ward save
+      lethalStrike: true, // 6s to wound bypass everything
+      iterations: 5000,
+    });
+
+    // Should still deal some wounds despite good saves
+    expect(results.mean).toBeGreaterThan(0.5);
+  });
+
+  it("should handle variable multiple wounds with dice expressions", () => {
+    const results = runSimulationWithStats({
+      numAttacks: 5,
+      toHit: "auto",
+      toWound: "auto",
+      multipleWounds: "d3+1", // 2-4 wounds per hit
+      targetMaxWounds: 10,
+      iterations: 5000,
+    });
+
+    // 5 hits with d3+1 wounds each = 10-20 wounds
+    expect(results.mean).toBeGreaterThan(10);
+    expect(results.mean).toBeLessThan(20);
+    expect(results.min).toBeGreaterThanOrEqual(10); // 5 * 2
+    expect(results.max).toBeLessThanOrEqual(20); // 5 * 4
+  });
+
+  it("should verify all optional parameters work with minimal config", () => {
+    // Test that we can call with just the required fields
+    const results = runSimulationWithStats({
+      numAttacks: 10,
+      toHit: 4,
+      toWound: 4,
+    });
+
+    // Should use defaults and work correctly
+    expect(results.mean).toBeGreaterThan(0);
+    expect(results.distribution).toHaveLength(10000); // Default iterations
   });
 });

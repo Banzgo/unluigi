@@ -11,15 +11,49 @@ import type {
 } from "./types";
 
 /**
+ * Default values for optional simulation parameters
+ */
+const DEFAULT_PARAMS = {
+  rerollHits: "none" as const,
+  rerollWounds: "none" as const,
+  armorSave: "none" as const,
+  armorPiercing: 0,
+  rerollArmorSaves: "none" as const,
+  specialSave: "none" as const,
+  rerollSpecialSaves: "none" as const,
+  poison: false,
+  lethalStrike: false,
+  fury: false,
+  multipleWounds: 1,
+  targetMaxWounds: 3,
+  iterations: 10000,
+};
+
+/**
+ * Merge user parameters with defaults
+ * @param params User-provided simulation parameters
+ * @returns Complete simulation parameters with defaults applied
+ */
+function applyDefaults(
+  params: SimulationParameters
+): Required<SimulationParameters> {
+  return {
+    ...DEFAULT_PARAMS,
+    ...params,
+  } as Required<SimulationParameters>;
+}
+
+/**
  * Run the complete simulation with the given parameters
  * @param params Simulation parameters
  * @returns Raw distribution array
  */
 export function runSimulation(params: SimulationParameters): number[] {
+  const fullParams = applyDefaults(params);
   const distribution: number[] = [];
 
-  for (let i = 0; i < params.iterations; i++) {
-    const wounds = simulateSingleSequence(params);
+  for (let i = 0; i < fullParams.iterations; i++) {
+    const wounds = simulateSingleSequence(fullParams);
     distribution.push(wounds);
   }
 
@@ -34,20 +68,27 @@ export function runSimulation(params: SimulationParameters): number[] {
 export function runSimulationWithStats(
   params: SimulationParameters
 ): SimulationResults {
+  const fullParams = applyDefaults(params);
   const startTime = performance.now();
   const distribution = runSimulation(params);
   const endTime = performance.now();
   const executionTimeMs = endTime - startTime;
 
-  return calculateStatistics(distribution, params.iterations, executionTimeMs);
+  return calculateStatistics(
+    distribution,
+    fullParams.iterations,
+    executionTimeMs
+  );
 }
 
 /**
  * Simulate a single attack sequence
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Number of wounds dealt
  */
-function simulateSingleSequence(params: SimulationParameters): number {
+function simulateSingleSequence(
+  params: Required<SimulationParameters>
+): number {
   // Phase 0: Determine number of attacks
   const numAttacks = parseDiceExpression(params.numAttacks);
 
@@ -72,12 +113,12 @@ function simulateSingleSequence(params: SimulationParameters): number {
 /**
  * Phase 1: Roll to hit
  * @param numAttacks Number of attacks
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Array of hit trackers for successful hits
  */
 function rollToHit(
   numAttacks: number,
-  params: SimulationParameters
+  params: Required<SimulationParameters>
 ): HitTracker[] {
   const hits: HitTracker[] = [];
 
@@ -112,12 +153,12 @@ function rollToHit(
 /**
  * Phase 2: Roll to wound
  * @param hitTrackers Array of hit trackers from to-hit phase
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers for successful wounds
  */
 function rollToWound(
   hitTrackers: HitTracker[],
-  params: SimulationParameters
+  params: Required<SimulationParameters>
 ): HitTracker[] {
   const wounds: HitTracker[] = [];
 
@@ -152,12 +193,12 @@ function rollToWound(
 /**
  * Phase 3: Roll armor saves
  * @param woundTrackers Array of wound trackers from to-wound phase
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers that failed armor saves
  */
 function rollArmorSaves(
   woundTrackers: HitTracker[],
-  params: SimulationParameters
+  params: Required<SimulationParameters>
 ): HitTracker[] {
   const unsavedWounds: HitTracker[] = [];
 
@@ -210,12 +251,12 @@ function rollArmorSaves(
 /**
  * Phase 4: Roll special saves (Ward/Regen)
  * @param woundTrackers Array of wound trackers that failed armor saves
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Array of wound trackers that failed special saves
  */
 function rollSpecialSaves(
   woundTrackers: HitTracker[],
-  params: SimulationParameters
+  params: Required<SimulationParameters>
 ): HitTracker[] {
   const unsavedWounds: HitTracker[] = [];
 
@@ -256,12 +297,12 @@ function rollSpecialSaves(
 /**
  * Phase 5: Apply multiple wounds
  * @param woundTrackers Array of wound trackers that passed all saves
- * @param params Simulation parameters
+ * @param params Complete simulation parameters with defaults applied
  * @returns Total number of wounds dealt
  */
 function applyMultipleWounds(
   woundTrackers: HitTracker[],
-  params: SimulationParameters
+  params: Required<SimulationParameters>
 ): number {
   let totalWounds = 0;
 
