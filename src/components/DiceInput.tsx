@@ -294,16 +294,21 @@ export function DiceInput({
           className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors pb-2"
         >
           {showMultipleWounds ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-center">
-              <div className="flex items-center justify-between">
+            <>
+              <div className="flex items-center justify-between sm:hidden">
                 <span>Multiple Wounds</span>
-                <span className="text-xs sm:hidden">▼</span>
+                <span className="text-xs">▼</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span>Target Max Wounds</span>
-                <span className="text-xs hidden sm:inline">▼</span>
+              <div className="hidden sm:grid sm:grid-cols-2 gap-3 sm:gap-4 items-center">
+                <div className="flex items-center justify-between">
+                  <span>Multiple Wounds</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Target Max Wounds</span>
+                  <span className="text-xs">▼</span>
+                </div>
               </div>
-            </div>
+            </>
           ) : (
             <div className="flex items-center justify-between">
               <span>Multiple Wounds</span>
@@ -314,28 +319,38 @@ export function DiceInput({
 
         {showMultipleWounds && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <Input
-              id={`mw-${input.id}`}
-              type="text"
-              value={input.multipleWounds}
-              onChange={(e) =>
-                onUpdate(input.id, { multipleWounds: e.target.value })
-              }
-              className="bg-input text-foreground placeholder:text-gray-500"
-              placeholder="1, d3, d6+1"
-            />
-            <Input
-              id={`max-${input.id}`}
-              type="text"
-              value={input.targetMaxWounds}
-              onChange={(e) =>
-                onUpdate(input.id, {
-                  targetMaxWounds: e.target.value,
-                })
-              }
-              className="bg-input text-foreground placeholder:text-gray-400"
-              placeholder="e.g. 3"
-            />
+            <div className="space-y-2">
+              <Input
+                id={`mw-${input.id}`}
+                type="text"
+                value={input.multipleWounds}
+                onChange={(e) =>
+                  onUpdate(input.id, { multipleWounds: e.target.value })
+                }
+                className="bg-input text-foreground placeholder:text-gray-500"
+                placeholder="1, d3, d6+1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor={`max-${input.id}`}
+                className="text-sm text-foreground sm:hidden"
+              >
+                Target Max Wounds
+              </Label>
+              <Input
+                id={`max-${input.id}`}
+                type="text"
+                value={input.targetMaxWounds}
+                onChange={(e) =>
+                  onUpdate(input.id, {
+                    targetMaxWounds: e.target.value,
+                  })
+                }
+                className="bg-input text-foreground placeholder:text-gray-400"
+                placeholder="e.g. 3"
+              />
+            </div>
           </div>
         )}
       </div>
