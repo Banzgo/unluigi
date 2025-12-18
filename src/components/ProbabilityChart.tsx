@@ -159,7 +159,7 @@ export function ProbabilityChart({ results }: ProbabilityChartProps) {
         </div>
       </div>
       {/* Chart Mode Toggle */}
-      <div className="flex justify-center gap-2 mb-4">
+      <div className="flex justify-center gap-2">
         <Button
           onClick={() => setChartMode("probability")}
           variant={chartMode === "probability" ? "default" : "outline"}

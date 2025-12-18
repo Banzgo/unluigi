@@ -165,7 +165,7 @@ export function DiceInput({
             onClick={() =>
               onUpdate(input.id, { hit: cycleValue(input.hit, hitOptions) })
             }
-            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.hit === "auto" ? "AUTO" : `${input.hit}+`}
@@ -220,7 +220,7 @@ export function DiceInput({
                 wound: cycleValue(input.wound, woundOptions),
               })
             }
-            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.wound === "auto" ? "AUTO" : `${input.wound}+`}
@@ -266,7 +266,7 @@ export function DiceInput({
                 armorSave: cycleValue(input.armorSave, saveOptions),
               })
             }
-            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
@@ -299,7 +299,7 @@ export function DiceInput({
                 specialSave: cycleValue(input.specialSave, saveOptions),
               })
             }
-            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            className="w-full h-24 text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
             variant="outline"
           >
             {input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
