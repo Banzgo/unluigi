@@ -43,8 +43,8 @@ export function parseDiceExpression(expression: string | number): number {
     return expression;
   }
 
-  // Remove whitespace
-  const expr = expression.trim().toLowerCase();
+  // Remove all whitespace
+  const expr = expression.replace(/\s+/g, "").toLowerCase();
 
   // If it's just a plain number string
   if (/^\d+$/.test(expr)) {

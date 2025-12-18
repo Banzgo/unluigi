@@ -6,6 +6,7 @@ import { Card } from "./components/ui/card";
 import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import {
+  parseDiceExpression,
   runSimulation,
   type SimulationParameters,
   type SimulationResults,
@@ -15,6 +16,7 @@ type ToggleValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
 
 function App() {
   const [numAttacks, setNumAttacks] = useState<string>("10");
+  const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
   const [hit, setHit] = useState<ToggleValue>("auto");
   const [wound, setWound] = useState<ToggleValue>("auto");
   const [armorSave, setArmorSave] = useState<ToggleValue>("none");
@@ -31,9 +33,30 @@ function App() {
     return options[(currentIndex + 1) % options.length];
   };
 
+  const validateNumAttacks = (value: string): boolean => {
+    if (!value || value.trim() === "") {
+      return false;
+    }
+    try {
+      parseDiceExpression(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleNumAttacksChange = (value: string) => {
+    setNumAttacks(value);
+    setIsNumAttacksValid(validateNumAttacks(value));
+  };
+
   const runTestSimulation = () => {
+    if (!isNumAttacksValid) {
+      return;
+    }
+
     const params: SimulationParameters = {
-      numAttacks: Number.parseInt(numAttacks) || 10,
+      numAttacks: numAttacks,
       toHit: hit === "auto" ? "auto" : hit,
       rerollHits: "none",
       toWound: wound === "auto" ? "auto" : wound,
@@ -47,7 +70,7 @@ function App() {
       lethalStrike: false,
       fury: false,
       multipleWounds: 1,
-      targetMaxWounds: 10,
+      targetMaxWounds: Number.MAX_SAFE_INTEGER,
       iterations: 10000,
     };
 
@@ -106,8 +129,10 @@ ${simulationResults.probabilityDistribution
               id="attacks"
               type="text"
               value={numAttacks}
-              onChange={(e) => setNumAttacks(e.target.value)}
-              className="text-lg bg-input border-border text-foreground placeholder:text-muted-foreground"
+              onChange={(e) => handleNumAttacksChange(e.target.value)}
+              className={`text-lg bg-input text-foreground placeholder:text-muted-foreground ${
+                isNumAttacksValid ? "border-border" : "border-red-500 border-2"
+              }`}
               placeholder="e.g., 10 or 2d6"
             />
           </div>
@@ -168,7 +193,8 @@ ${simulationResults.probabilityDistribution
           {/* Simulate Button */}
           <Button
             onClick={runTestSimulation}
-            className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white"
+            disabled={!isNumAttacksValid}
+            className="w-full h-16 text-2xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Simulate
           </Button>
