@@ -4,26 +4,26 @@
  */
 
 export {
-  isSuccess,
-  parseDiceExpression,
-  rollD3,
-  rollD6,
-  shouldReroll,
-  shouldRerollSplit,
+	isSuccess,
+	parseDiceExpression,
+	rollD3,
+	rollD6,
+	shouldReroll,
+	shouldRerollSplit,
 } from "./dice";
 export {
-  calculateStatistics,
-  getProbabilityAtLeast,
-  getProbabilityExact,
+	calculateStatistics,
+	getProbabilityAtLeast,
+	getProbabilityExact,
 } from "./probability";
 export { runSimulation, runSimulationWithStats } from "./simulator";
 export type {
-  FailureRerollType,
-  HitTracker,
-  HitValue,
-  ProbabilityPoint,
-  RerollType,
-  SimulationParameters,
-  SimulationResults,
-  SuccessRerollType,
+	FailureRerollType,
+	HitTracker,
+	HitValue,
+	ProbabilityPoint,
+	RerollType,
+	SimulationParameters,
+	SimulationResults,
+	SuccessRerollType,
 } from "./types";
