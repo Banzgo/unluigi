@@ -1,0 +1,155 @@
+import { useState } from "react";
+import { parseDiceExpression } from "../engine";
+import { Button } from "./ui/button";
+import { Card } from "./ui/card";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+
+type ToggleValue = 2 | 3 | 4 | 5 | 6 | "auto" | "none";
+
+export interface DiceInputState {
+  id: string;
+  numAttacks: string;
+  hit: ToggleValue;
+  wound: ToggleValue;
+  armorSave: ToggleValue;
+  specialSave: ToggleValue;
+}
+
+interface DiceInputProps {
+  input: DiceInputState;
+  onUpdate: (id: string, updates: Partial<DiceInputState>) => void;
+  onRemove: (id: string) => void;
+  showRemove: boolean;
+}
+
+export function DiceInput({
+  input,
+  onUpdate,
+  onRemove,
+  showRemove,
+}: DiceInputProps) {
+  const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
+
+  const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+  const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+  const saveOptions: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
+
+  const cycleValue = (current: ToggleValue, options: ToggleValue[]) => {
+    const currentIndex = options.indexOf(current);
+    return options[(currentIndex + 1) % options.length];
+  };
+
+  const validateNumAttacks = (value: string): boolean => {
+    if (!value || value.trim() === "") {
+      return false;
+    }
+    try {
+      parseDiceExpression(value);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleNumAttacksChange = (value: string) => {
+    onUpdate(input.id, { numAttacks: value });
+    setIsNumAttacksValid(validateNumAttacks(value));
+  };
+
+  return (
+    <Card className="p-6 space-y-6 bg-card border-border relative">
+      {showRemove && (
+        <Button
+          onClick={() => onRemove(input.id)}
+          className="absolute top-2 right-2 h-8 w-8 p-0 bg-red-500 hover:bg-red-600 text-white"
+          variant="outline"
+        >
+          ×
+        </Button>
+      )}
+
+      {/* Number of Attacks */}
+      <div className="space-y-2">
+        <Label htmlFor={`attacks-${input.id}`} className="text-foreground">
+          Number of Attacks
+        </Label>
+        <Input
+          id={`attacks-${input.id}`}
+          type="text"
+          value={input.numAttacks}
+          onChange={(e) => handleNumAttacksChange(e.target.value)}
+          className={`text-lg bg-input text-foreground placeholder:text-muted-foreground ${
+            isNumAttacksValid ? "border-border" : "border-red-500 border-2"
+          }`}
+          placeholder="e.g., 10 or 2d6"
+        />
+      </div>
+
+      {/* Dice Buttons Grid */}
+      <div className="grid grid-cols-4 gap-4">
+        {/* Hit Button */}
+        <div className="flex flex-col items-center space-y-2">
+          <Label className="text-xs text-muted-foreground">Hit</Label>
+          <Button
+            onClick={() =>
+              onUpdate(input.id, { hit: cycleValue(input.hit, hitOptions) })
+            }
+            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            variant="outline"
+          >
+            {input.hit === "auto" ? "AUTO" : `${input.hit}+`}
+          </Button>
+        </div>
+
+        {/* Wound Button */}
+        <div className="flex flex-col items-center space-y-2">
+          <Label className="text-xs text-muted-foreground">Wound</Label>
+          <Button
+            onClick={() =>
+              onUpdate(input.id, {
+                wound: cycleValue(input.wound, woundOptions),
+              })
+            }
+            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            variant="outline"
+          >
+            {input.wound === "auto" ? "AUTO" : `${input.wound}+`}
+          </Button>
+        </div>
+
+        {/* Armor Save Button */}
+        <div className="flex flex-col items-center space-y-2">
+          <Label className="text-xs text-muted-foreground">Armor</Label>
+          <Button
+            onClick={() =>
+              onUpdate(input.id, {
+                armorSave: cycleValue(input.armorSave, saveOptions),
+              })
+            }
+            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            variant="outline"
+          >
+            {input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
+          </Button>
+        </div>
+
+        {/* Special Save Button */}
+        <div className="flex flex-col items-center space-y-2">
+          <Label className="text-xs text-muted-foreground">Special</Label>
+          <Button
+            onClick={() =>
+              onUpdate(input.id, {
+                specialSave: cycleValue(input.specialSave, saveOptions),
+              })
+            }
+            className="w-full aspect-square text-3xl font-bold bg-primary border-border hover:bg-secondary text-foreground"
+            variant="outline"
+          >
+            {input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
+          </Button>
+        </div>
+      </div>
+    </Card>
+  );
+}

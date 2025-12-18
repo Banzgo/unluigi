@@ -15,7 +15,7 @@ export {
   getProbabilityAtLeast,
   getProbabilityExact,
 } from "./probability";
-export { runSimulation } from "./simulator";
+export { runSimulation, runSimulationWithStats } from "./simulator";
 export type {
   HitTracker,
   HitValue,
