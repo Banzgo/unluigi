@@ -19,7 +19,7 @@ export type DispelRerollType = "none" | "all";
  */
 export interface MagicSimulationParameters {
 	castingDice: number; // 2-5 dice
-	dispelDice: number; // 1-7 dice
+	dispelDice: number; // 0-7 dice
 	castingValue: number; // 5-11 target value
 	castingModifier: number; // -1, 0, +1, +2
 	dispelModifier: number; // -1, 0, +1, +2
