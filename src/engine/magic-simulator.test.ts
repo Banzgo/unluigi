@@ -16,6 +16,7 @@ describe("runMagicSimulation", () => {
 		magicResistance: 0,
 		rerollCasting: "none",
 		rerollDispel: "none",
+		isBoundSpell: false,
 		iterations: 10000,
 	};
 
@@ -350,5 +351,78 @@ describe("runMagicSimulation", () => {
 
 		expect(results.castingFailPercent).toBeGreaterThanOrEqual(0);
 		expect(results.spellSuccessPercent).toBeGreaterThanOrEqual(0);
+	});
+
+	describe("bound spells", () => {
+		it("should have higher fail rate than regular spells", () => {
+			const regularSpell = runMagicSimulation({
+				...baseParams,
+				castingDice: 4,
+				castingValue: 9,
+				isBoundSpell: false,
+				iterations: 20000,
+			});
+
+			const boundSpell = runMagicSimulation({
+				...baseParams,
+				castingDice: 4,
+				castingValue: 9,
+				isBoundSpell: true,
+				iterations: 20000,
+			});
+
+			// Bound spells (1d6+3d3) have lower average than regular (4d6)
+			expect(boundSpell.castingFailPercent).toBeGreaterThan(regularSpell.castingFailPercent);
+		});
+
+		it("should work with rerolls", () => {
+			const results = runMagicSimulation({
+				...baseParams,
+				castingDice: 3,
+				castingValue: 7,
+				isBoundSpell: true,
+				rerollCasting: "1s",
+				iterations: 10000,
+			});
+
+			expect(results).toBeDefined();
+			expect(results.castingFailPercent).toBeGreaterThanOrEqual(0);
+			expect(results.castingFailPercent).toBeLessThanOrEqual(100);
+		});
+
+		it("should handle edge case of 2 dice bound spell", () => {
+			const results = runMagicSimulation({
+				...baseParams,
+				castingDice: 2,
+				castingValue: 5,
+				isBoundSpell: true,
+				iterations: 10000,
+			});
+
+			// 1d6+1d3 should have reasonable success rate for CV 5
+			expect(results.castingFailPercent).toBeGreaterThan(20);
+			expect(results.castingFailPercent).toBeLessThan(60);
+		});
+
+		it("should produce lower casting totals on average", () => {
+			const regularResults = runMagicSimulation({
+				...baseParams,
+				castingDice: 5,
+				castingValue: 15,
+				isBoundSpell: false,
+				iterations: 20000,
+			});
+
+			const boundResults = runMagicSimulation({
+				...baseParams,
+				castingDice: 5,
+				castingValue: 15,
+				isBoundSpell: true,
+				iterations: 20000,
+			});
+
+			// Bound spell should have much higher failure rate for high CV
+			expect(boundResults.castingFailPercent).toBeGreaterThan(regularResults.castingFailPercent + 20);
+		});
 	});
 });

@@ -2,7 +2,7 @@
  * Magic phase simulation engine for spell casting and dispelling
  */
 
-import { rollD6 } from "./dice";
+import { rollCastingDice, rollD3, rollD6, rollDispelDice } from "./dice";
 
 /**
  * Reroll type for casting rolls
@@ -26,16 +26,25 @@ export interface MagicSimulationParameters {
 	magicResistance: number; // 0, 1, 2, 3 (subtracted from casting roll)
 	rerollCasting: CastingRerollType; // none, 1s, all
 	rerollDispel: DispelRerollType; // none, all
+	isBoundSpell?: boolean; // If true, first die is D6, rest are D3
 	iterations?: number; // Number of simulations (default 50000)
 }
 
 /**
  * Results from magic simulation
+ *
+ * Main categories:
+ * - spellSuccessPercent: Spell goes through successfully
+ * - Spell fails (split into two sub-categories):
+ *   - castingFailPercent: Casting roll doesn't reach CV
+ *   - dispelSuccessPercent: Casting succeeds but dispel stops it
+ *
+ * These three percentages sum to 100%
  */
 export interface MagicSimulationResults {
-	castingFailPercent: number; // Probability casting roll doesn't reach CV
-	dispelSuccessPercent: number; // Probability dispel beats casting (when cast succeeds)
-	spellSuccessPercent: number; // Probability spell goes through (cast succeeds AND dispel fails)
+	castingFailPercent: number; // Spell fails: casting roll doesn't reach CV
+	dispelSuccessPercent: number; // Spell fails: dispel beats casting roll
+	spellSuccessPercent: number; // Spell succeeds: cast succeeds AND dispel fails
 	iterations: number;
 	executionTimeMs: number;
 }
@@ -45,33 +54,25 @@ export interface MagicSimulationResults {
  */
 const DEFAULT_MAGIC_PARAMS = {
 	iterations: 50000,
+	isBoundSpell: false,
 };
 
 /**
- * Roll multiple D6 and return each individual roll
- */
-function rollDice(count: number): number[] {
-	const rolls: number[] = [];
-	for (let i = 0; i < count; i++) {
-		rolls.push(rollD6());
-	}
-	return rolls;
-}
-
-/**
  * Apply reroll logic to casting dice
+ * Respects bound spell rules (first die D6, rest D3)
  */
-function applyRerollCasting(rolls: number[], rerollType: CastingRerollType): number[] {
+function applyRerollCasting(rolls: number[], rerollType: CastingRerollType, isBoundSpell: boolean): number[] {
 	if (rerollType === "none") return rolls;
 
-	return rolls.map((roll) => {
-		if (rerollType === "all") {
-			return rollD6(); // Reroll all dice
+	return rolls.map((roll, index) => {
+		const shouldReroll = rerollType === "all" || (rerollType === "1s" && roll === 1);
+		if (!shouldReroll) return roll;
+
+		// Reroll with same die type
+		if (isBoundSpell && index > 0) {
+			return rollD3();
 		}
-		if (rerollType === "1s" && roll === 1) {
-			return rollD6(); // Reroll only 1s
-		}
-		return roll;
+		return rollD6();
 	});
 }
 
@@ -95,34 +96,35 @@ function simulateSingleCast(params: Required<MagicSimulationParameters>): {
 	spellSucceeded: boolean;
 } {
 	// Roll casting dice
-	let castingRolls = rollDice(params.castingDice);
-	let castingTotal = castingRolls.reduce((sum, roll) => sum + roll, 0) + params.castingModifier - params.magicResistance;
+	let castingRolls = rollCastingDice(params.castingDice, params.isBoundSpell);
+	let castingTotal =
+		castingRolls.reduce((sum, roll) => sum + roll, 0) + params.castingModifier - params.magicResistance;
 
 	// Check if casting succeeded
 	let castSucceeded = castingTotal >= params.castingValue;
 
-  if (!castSucceeded) {
-    castingRolls = applyRerollCasting(castingRolls, params.rerollCasting);
-    castingTotal = castingRolls.reduce((sum, roll) => sum + roll, 0) + params.castingModifier - params.magicResistance;
-    castSucceeded = castingTotal >= params.castingValue;
-  }
+	if (!castSucceeded) {
+		castingRolls = applyRerollCasting(castingRolls, params.rerollCasting, params.isBoundSpell);
+		castingTotal = castingRolls.reduce((sum, roll) => sum + roll, 0) + params.castingModifier - params.magicResistance;
+		castSucceeded = castingTotal >= params.castingValue;
+	}
 
 	if (!castSucceeded) {
 		return { castSucceeded: false, dispelSucceeded: false, spellSucceeded: false };
 	}
 
 	// Roll dispel dice
-	let dispelRolls = rollDice(params.dispelDice);
+	let dispelRolls = rollDispelDice(params.dispelDice);
 	let dispelTotal = dispelRolls.reduce((sum, roll) => sum + roll, 0) + params.dispelModifier;
 
 	// Dispel succeeds if it equals or exceeds the casting total
 	let dispelSucceeded = dispelTotal >= castingTotal;
 
-  if (!dispelSucceeded) {
-    dispelRolls = applyRerollDispel(dispelRolls, params.rerollDispel);
-    dispelTotal = dispelRolls.reduce((sum, roll) => sum + roll, 0) + params.dispelModifier;
-    dispelSucceeded = dispelTotal >= castingTotal;
-  }
+	if (!dispelSucceeded) {
+		dispelRolls = applyRerollDispel(dispelRolls, params.rerollDispel);
+		dispelTotal = dispelRolls.reduce((sum, roll) => sum + roll, 0) + params.dispelModifier;
+		dispelSucceeded = dispelTotal >= castingTotal;
+	}
 
 	return {
 		castSucceeded: true,
@@ -145,7 +147,6 @@ export function runMagicSimulation(params: MagicSimulationParameters): MagicSimu
 	const startTime = performance.now();
 
 	let castingFailures = 0;
-	let castingSuccesses = 0;
 	let dispelSuccesses = 0;
 	let spellSuccesses = 0;
 
@@ -155,7 +156,6 @@ export function runMagicSimulation(params: MagicSimulationParameters): MagicSimu
 		if (!result.castSucceeded) {
 			castingFailures++;
 		} else {
-			castingSuccesses++;
 			if (result.dispelSucceeded) {
 				dispelSuccesses++;
 			}
@@ -168,6 +168,9 @@ export function runMagicSimulation(params: MagicSimulationParameters): MagicSimu
 	const endTime = performance.now();
 
 	// Calculate percentages
+	// Two main categories: spell success vs spell fails
+	// Spell fails split into: casting fail + dispel success
+	// All three sum to 100%
 	const castingFailPercent = (castingFailures / fullParams.iterations) * 100;
 	const dispelSuccessPercent = (dispelSuccesses / fullParams.iterations) * 100;
 	const spellSuccessPercent = (spellSuccesses / fullParams.iterations) * 100;
@@ -180,4 +183,3 @@ export function runMagicSimulation(params: MagicSimulationParameters): MagicSimu
 		executionTimeMs: endTime - startTime,
 	};
 }
-

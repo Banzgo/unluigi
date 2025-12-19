@@ -32,6 +32,39 @@ export function rollD3(): number {
 }
 
 /**
+ * Roll casting dice based on bound spell rules
+ * - Regular spell: all D6
+ * - Bound spell: first die is D6, rest are D3
+ * @param count Number of dice to roll
+ * @param isBoundSpell Whether this is a bound spell
+ * @returns Array of individual die rolls
+ */
+export function rollCastingDice(count: number, isBoundSpell: boolean): number[] {
+	const rolls: number[] = [];
+	for (let i = 0; i < count; i++) {
+		if (isBoundSpell && i > 0) {
+			rolls.push(rollD3());
+		} else {
+			rolls.push(rollD6());
+		}
+	}
+	return rolls;
+}
+
+/**
+ * Roll multiple D6 dice and return each individual roll
+ * @param count Number of dice to roll
+ * @returns Array of individual die rolls
+ */
+export function rollDispelDice(count: number): number[] {
+	const rolls: number[] = [];
+	for (let i = 0; i < count; i++) {
+		rolls.push(rollD6());
+	}
+	return rolls;
+}
+
+/**
  * Parse dice expression and return the result
  * Supports: "d6", "2d6", "d3", "2d6+3", "d3+1", or plain numbers
  * @param expression The dice expression to parse
