@@ -128,7 +128,9 @@ function CompactTable({ castingValues, diceRange, calculateProbability }: Compac
 							return (
 								<td key={dice} className="p-1 text-center border-b border-border/50">
 									<span
-										className={`inline-block px-1.5 py-0.5 rounded text-xs font-mono font-medium ${getProbabilityColor(prob)}`}
+										className={`inline-block px-1.5 py-0.5 rounded text-xs font-mono font-medium ${getProbabilityColor(
+											prob,
+										)}`}
 									>
 										{prob.toFixed(0)}%
 									</span>
@@ -355,7 +357,9 @@ function DispelSimulator() {
 						<div className="space-y-1">
 							<div className="text-xs text-muted-foreground">Cast Fail</div>
 							<div
-								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getInvertedProbabilityColor(results.castingFailPercent)}`}
+								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getInvertedProbabilityColor(
+									results.castingFailPercent,
+								)}`}
 							>
 								{results.castingFailPercent.toFixed(1)}%
 							</div>
@@ -363,7 +367,9 @@ function DispelSimulator() {
 						<div className="space-y-1">
 							<div className="text-xs text-muted-foreground">Dispel Success</div>
 							<div
-								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getInvertedProbabilityColor(results.dispelSuccessPercent)}`}
+								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getInvertedProbabilityColor(
+									results.dispelSuccessPercent,
+								)}`}
 							>
 								{results.dispelSuccessPercent.toFixed(1)}%
 							</div>
@@ -371,14 +377,13 @@ function DispelSimulator() {
 						<div className="space-y-1">
 							<div className="text-xs text-muted-foreground">Spell Success</div>
 							<div
-								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getProbabilityColor(results.spellSuccessPercent)}`}
+								className={`text-xl font-mono font-bold px-2 py-1 rounded ${getProbabilityColor(
+									results.spellSuccessPercent,
+								)}`}
 							>
 								{results.spellSuccessPercent.toFixed(1)}%
 							</div>
 						</div>
-					</div>
-					<div className="text-xs text-muted-foreground text-center mt-2">
-						{results.iterations.toLocaleString()} iterations in {results.executionTimeMs.toFixed(0)}ms
 					</div>
 				</Card>
 			)}
@@ -443,7 +448,7 @@ function MagicPage() {
 								<span className="text-base font-semibold">Spell Casting Probabilities</span>
 							</div>
 						</AccordionTrigger>
-						<AccordionContent className="px-4">
+						<AccordionContent className="px-4 py-2">
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 								{/* learned Spells */}
 								<div className="space-y-2">
@@ -490,7 +495,7 @@ function MagicPage() {
 								<span className="text-base font-semibold">Dispel Simulator</span>
 							</div>
 						</AccordionTrigger>
-						<AccordionContent className="px-4">
+						<AccordionContent className="px-4 py-2">
 							<DispelSimulator />
 						</AccordionContent>
 					</AccordionItem>

@@ -3,7 +3,16 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { isSuccess, parseDiceExpression, rollD3, rollD6, shouldReroll, shouldRerollSplit } from "./dice";
+import {
+	isSuccess,
+	parseDiceExpression,
+	rollCastingDice,
+	rollD3,
+	rollD6,
+	rollDispelDice,
+	shouldReroll,
+	shouldRerollSplit,
+} from "./dice";
 
 describe("rollD6", () => {
 	it("should return a number between 1 and 6", () => {
@@ -41,6 +50,87 @@ describe("rollD3", () => {
 			results.add(rollD3());
 		}
 		expect(results.size).toBe(3);
+	});
+});
+
+describe("rollCastingDice", () => {
+	it("should roll all D6 for regular spells", () => {
+		for (let i = 0; i < 50; i++) {
+			const rolls = rollCastingDice(3, false);
+			expect(rolls).toHaveLength(3);
+			for (const roll of rolls) {
+				expect(roll).toBeGreaterThanOrEqual(1);
+				expect(roll).toBeLessThanOrEqual(6);
+			}
+		}
+	});
+
+	it("should roll first D6 then D3s for bound spells", () => {
+		for (let i = 0; i < 50; i++) {
+			const rolls = rollCastingDice(4, true);
+			expect(rolls).toHaveLength(4);
+			// First die should be D6
+			expect(rolls[0]).toBeGreaterThanOrEqual(1);
+			expect(rolls[0]).toBeLessThanOrEqual(6);
+			// Rest should be D3 (1-3)
+			for (let j = 1; j < rolls.length; j++) {
+				expect(rolls[j]).toBeGreaterThanOrEqual(1);
+				expect(rolls[j]).toBeLessThanOrEqual(3);
+			}
+		}
+	});
+
+	it("should handle single die bound spell (all D6)", () => {
+		for (let i = 0; i < 50; i++) {
+			const rolls = rollCastingDice(1, true);
+			expect(rolls).toHaveLength(1);
+			expect(rolls[0]).toBeGreaterThanOrEqual(1);
+			expect(rolls[0]).toBeLessThanOrEqual(6);
+		}
+	});
+
+	it("should produce lower averages for bound spells", () => {
+		let regularSum = 0;
+		let boundSum = 0;
+		const iterations = 1000;
+
+		for (let i = 0; i < iterations; i++) {
+			regularSum += rollCastingDice(4, false).reduce((a, b) => a + b, 0);
+			boundSum += rollCastingDice(4, true).reduce((a, b) => a + b, 0);
+		}
+
+		const regularAvg = regularSum / iterations;
+		const boundAvg = boundSum / iterations;
+
+		// Regular 4d6 avg ~14, Bound 1d6+3d3 avg ~9
+		expect(regularAvg).toBeGreaterThan(boundAvg);
+		expect(regularAvg).toBeGreaterThan(12);
+		expect(boundAvg).toBeLessThan(11);
+	});
+});
+
+describe("rollDispelDice", () => {
+	it("should roll all D6", () => {
+		for (let i = 0; i < 50; i++) {
+			const rolls = rollDispelDice(5);
+			expect(rolls).toHaveLength(5);
+			for (const roll of rolls) {
+				expect(roll).toBeGreaterThanOrEqual(1);
+				expect(roll).toBeLessThanOrEqual(6);
+			}
+		}
+	});
+
+	it("should return empty array for 0 dice", () => {
+		const rolls = rollDispelDice(0);
+		expect(rolls).toHaveLength(0);
+	});
+
+	it("should handle single die", () => {
+		const rolls = rollDispelDice(1);
+		expect(rolls).toHaveLength(1);
+		expect(rolls[0]).toBeGreaterThanOrEqual(1);
+		expect(rolls[0]).toBeLessThanOrEqual(6);
 	});
 });
 
