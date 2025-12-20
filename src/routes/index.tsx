@@ -205,7 +205,7 @@ ${simulationResults.probabilityDistribution
 						className="w-full sm:flex-none sm:w-48 h-12 sm:h-14 text-base sm:text-lg bg-secondary hover:bg-secondary/80 text-foreground border-border"
 						variant="outline"
 					>
-						+ Add Another Input
+						+ Add Attacker
 					</Button>
 
 					<Button
