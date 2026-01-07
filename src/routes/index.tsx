@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { z } from "zod";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
+import { VersusView } from "@/components/VersusView";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -12,11 +14,28 @@ import {
 	type SimulationResults,
 } from "@/engine";
 
+const indexSearchSchema = z.object({
+	mode: z.enum(["versus"]).optional(),
+});
+
 export const Route = createFileRoute("/")({
+	validateSearch: indexSearchSchema,
 	component: CombatPage,
 });
 
 function CombatPage() {
+	const { mode } = Route.useSearch();
+
+	// If in versus mode, show VersusView
+	if (mode === "versus") {
+		return <VersusView />;
+	}
+
+	// Default mode - show regular combat simulator
+	return <DefaultCombatView />;
+}
+
+function DefaultCombatView() {
 	const [inputs, setInputs] = useState<DiceInputState[]>([
 		{
 			id: crypto.randomUUID(),
