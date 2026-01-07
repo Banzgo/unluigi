@@ -237,8 +237,8 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 						{data.wounds}
 						{suffix} wounds
 					</p>
-					<p className="text-sm text-brand-green">Input 1: {value1?.toFixed(2)}%</p>
-					<p className="text-sm text-orange-500">Input 2: {value2?.toFixed(2)}%</p>
+					<p className="text-sm text-brand-green">Profile 1: {value1?.toFixed(2)}%</p>
+					<p className="text-sm text-orange-500">Profile 2: {value2?.toFixed(2)}%</p>
 				</div>
 			);
 		}
@@ -250,12 +250,12 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			{/* Comparison Header */}
 			<div className="grid grid-cols-2 gap-4 mb-4 sm:mb-6">
 				<div className="text-center space-y-2">
-					<h2 className="text-sm sm:text-lg font-semibold text-brand-green">INPUT 1</h2>
+					<h2 className="text-sm sm:text-lg font-semibold text-brand-green">PROFILE 1</h2>
 					<div className="text-3xl sm:text-4xl font-bold text-brand-green">{results.mean.toFixed(2)}</div>
 					<div className="text-xs sm:text-sm text-muted-foreground">Variance: {results.variance.toFixed(2)}</div>
 				</div>
 				<div className="text-center space-y-2">
-					<h2 className="text-sm sm:text-lg font-semibold text-orange-500">INPUT 2</h2>
+					<h2 className="text-sm sm:text-lg font-semibold text-orange-500">PROFILE 2</h2>
 					<div className="text-3xl sm:text-4xl font-bold text-orange-500">{results2.mean.toFixed(2)}</div>
 					<div className="text-xs sm:text-sm text-muted-foreground">Variance: {results2.variance.toFixed(2)}</div>
 				</div>
@@ -264,11 +264,11 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			<ChartContainer
 				config={{
 					probability: {
-						label: "Input 1",
+						label: "Profile 1",
 						color: "hsl(142, 76%, 36%)",
 					},
 					probability2: {
-						label: "Input 2",
+						label: "Profile 2",
 						color: "rgb(249, 115, 22)",
 					},
 				}}
@@ -318,11 +318,11 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			<div className="mt-2 mb-2 flex justify-center gap-6 text-sm text-muted-foreground">
 				<div className="flex items-center gap-2">
 					<div className="w-3 h-3 bg-brand-green rounded-sm" />
-					<span>Input 1</span>
+					<span>Profile 1</span>
 				</div>
 				<div className="flex items-center gap-2">
 					<div className="w-3 h-3 bg-orange-500 rounded-sm" />
-					<span>Input 2</span>
+					<span>Profile 2</span>
 				</div>
 			</div>
 

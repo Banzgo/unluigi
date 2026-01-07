@@ -162,7 +162,7 @@ export function VersusView() {
 			<div className="space-y-6">
 				{/* Input Set 1 */}
 				<div className="space-y-4">
-					<h2 className="text-xl sm:text-2xl font-bold text-brand-green">Input 1</h2>
+					<h2 className="text-xl sm:text-2xl font-bold text-brand-green">Profile 1</h2>
 
 					{inputs1.map((input) => (
 						<DiceInput
@@ -179,17 +179,17 @@ export function VersusView() {
 						className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
 						variant="outline"
 					>
-						+ Add Attacker to Input 1
+						+ Add Attacker to Profile 1
 					</Button>
 				</div>
 
 				{/* Input Set 2 */}
 				<div className="space-y-4">
 					<div className="flex justify-between items-center">
-						<h2 className="text-xl sm:text-2xl font-bold text-orange-500">Input 2</h2>
+						<h2 className="text-xl sm:text-2xl font-bold text-orange-500">Profile 2</h2>
 						<Button onClick={copyInputs1To2} variant="outline" size="sm" className="gap-2">
 							<Copy className="h-4 w-4" />
-							Copy from Input 1
+							Copy from Profile 1
 						</Button>
 					</div>
 
@@ -208,7 +208,7 @@ export function VersusView() {
 						className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
 						variant="outline"
 					>
-						+ Add Attacker to Input 2
+						+ Add Attacker to Profile 2
 					</Button>
 				</div>
 			</div>
