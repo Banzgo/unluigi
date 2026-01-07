@@ -140,6 +140,8 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 											position: "insideLeft",
 										}
 							}
+							domain={chartMode === "cumulative" ? [0, 100] : undefined}
+							tickFormatter={(value) => `${Math.round(value)}%`}
 							width={isMobile ? 0 : 60}
 							stroke="var(--muted-foreground)"
 							tick={{ fill: "var(--muted-foreground)" }}
@@ -186,8 +188,8 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 
 	// Versus mode - combine both results
 	const allWounds = new Set<number>();
-	results.probabilityDistribution.forEach((d) => allWounds.add(d.wounds));
-	results2.probabilityDistribution.forEach((d) => allWounds.add(d.wounds));
+	results.probabilityDistribution.forEach((d) => void allWounds.add(d.wounds));
+	results2.probabilityDistribution.forEach((d) => void allWounds.add(d.wounds));
 
 	const sortedWounds = Array.from(allWounds).sort((a, b) => a - b);
 
@@ -231,7 +233,10 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			const suffix = chartMode === "cumulative" ? "+" : "";
 			return (
 				<div className="bg-card border border-border rounded-md p-2 shadow-md">
-					<p className="text-sm text-foreground font-semibold mb-1">{data.wounds}{suffix} wounds</p>
+					<p className="text-sm text-foreground font-semibold mb-1">
+						{data.wounds}
+						{suffix} wounds
+					</p>
 					<p className="text-sm text-brand-green">Input 1: {value1?.toFixed(2)}%</p>
 					<p className="text-sm text-orange-500">Input 2: {value2?.toFixed(2)}%</p>
 				</div>
@@ -287,6 +292,8 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 										position: "insideLeft",
 									}
 						}
+						domain={chartMode === "cumulative" ? [0, 100] : undefined}
+						tickFormatter={(value) => `${Math.round(value)}%`}
 						width={isMobile ? 0 : 60}
 						stroke="var(--muted-foreground)"
 						tick={{ fill: "var(--muted-foreground)" }}
