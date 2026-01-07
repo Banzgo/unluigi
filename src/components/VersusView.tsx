@@ -3,35 +3,8 @@ import { useState } from "react";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
-import {
-	calculateStatistics,
-	parseDiceExpression,
-	runSimulation,
-	type SimulationParameters,
-	type SimulationResults,
-} from "@/engine";
-
-const createDefaultInput = (): DiceInputState => ({
-	id: crypto.randomUUID(),
-	numAttacks: "10",
-	hit: 4,
-	wound: 4,
-	armorSave: 5,
-	specialSave: "none",
-	rerollHitFailures: "none",
-	rerollHitSuccesses: "none",
-	rerollWoundFailures: "none",
-	rerollWoundSuccesses: "none",
-	rerollArmorSaveFailures: "none",
-	rerollArmorSaveSuccesses: "none",
-	rerollSpecialSaveFailures: "none",
-	rerollSpecialSaveSuccesses: "none",
-	poison: false,
-	lethalStrike: false,
-	fury: false,
-	multipleWounds: "1",
-	targetMaxWounds: "1",
-});
+import type { SimulationResults } from "@/engine";
+import { createDefaultInput, runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
 
 export function VersusView() {
 	const [inputs1, setInputs1] = useState<DiceInputState[]>([createDefaultInput()]);
@@ -72,68 +45,7 @@ export function VersusView() {
 		setInputs2(copiedInputs);
 	};
 
-	const validateInput = (input: DiceInputState): boolean => {
-		if (!input.numAttacks || input.numAttacks.trim() === "") {
-			return false;
-		}
-		try {
-			parseDiceExpression(input.numAttacks);
-			return true;
-		} catch {
-			return false;
-		}
-	};
-
-	const runCombinedSimulation = (inputs: DiceInputState[]): SimulationResults => {
-		const startTime = performance.now();
-		const iterations = 10000;
-
-		// Run simulations for each input and collect distributions
-		const distributions: number[][] = inputs.map((input) => {
-			const params: SimulationParameters = {
-				numAttacks: input.numAttacks,
-				toHit: input.hit === "auto" ? "auto" : input.hit,
-				rerollHitFailures: input.rerollHitFailures,
-				rerollHitSuccesses: input.rerollHitSuccesses,
-				toWound: input.wound === "auto" ? "auto" : input.wound,
-				rerollWoundFailures: input.rerollWoundFailures,
-				rerollWoundSuccesses: input.rerollWoundSuccesses,
-				armorSave: input.armorSave === "none" ? "none" : input.armorSave,
-				armorPiercing: 0,
-				rerollArmorSaveFailures: input.rerollArmorSaveFailures,
-				rerollArmorSaveSuccesses: input.rerollArmorSaveSuccesses,
-				specialSave: input.specialSave === "none" ? "none" : input.specialSave,
-				rerollSpecialSaveFailures: input.rerollSpecialSaveFailures,
-				rerollSpecialSaveSuccesses: input.rerollSpecialSaveSuccesses,
-				poison: input.poison,
-				lethalStrike: input.lethalStrike,
-				fury: input.fury,
-				multipleWounds: input.multipleWounds || "1",
-				targetMaxWounds: Number.parseInt(input.targetMaxWounds, 10) || 1,
-				iterations,
-			};
-
-			return runSimulation(params);
-		});
-
-		// Combine distributions by summing wounds for each iteration
-		const combinedDistribution: number[] = [];
-		for (let i = 0; i < iterations; i++) {
-			let totalWounds = 0;
-			for (const dist of distributions) {
-				totalWounds += dist[i];
-			}
-			combinedDistribution.push(totalWounds);
-		}
-
-		const endTime = performance.now();
-		const executionTimeMs = endTime - startTime;
-
-		// Calculate statistics on combined distribution
-		return calculateStatistics(combinedDistribution, iterations, executionTimeMs);
-	};
-
-	const runVersusSimulation = () => {
+	const handleVersusSimulation = () => {
 		// Validate all inputs
 		const allValid = [...inputs1, ...inputs2].every(validateInput);
 		if (!allValid) {
@@ -215,7 +127,7 @@ export function VersusView() {
 
 			{/* Simulate Button */}
 			<Button
-				onClick={runVersusSimulation}
+				onClick={handleVersusSimulation}
 				disabled={!allInputsValid}
 				className="w-full h-12 sm:h-14 text-lg sm:text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
 			>
