@@ -141,7 +141,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 					>
 						{input.hit === "auto" ? "AUTO" : `${input.hit}+`}
 					</Button>
-					<div className="flex gap-1">
+					<div className="flex flex-col sm:flex-row gap-1">
 						<Button
 							onClick={() =>
 								onUpdate(input.id, {
@@ -207,7 +207,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 					>
 						{input.wound === "auto" ? "AUTO" : `${input.wound}+`}
 					</Button>
-					<div className="flex gap-1">
+					<div className="flex flex-col sm:flex-row gap-1">
 						<Button
 							onClick={() =>
 								onUpdate(input.id, {
@@ -264,7 +264,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 					>
 						{input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
 					</Button>
-					<div className="flex gap-1">
+					<div className="flex flex-col sm:flex-row gap-1">
 						<Button
 							onClick={() =>
 								onUpdate(input.id, {
@@ -312,7 +312,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 					>
 						{input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
 					</Button>
-					<div className="flex gap-1">
+					<div className="flex flex-col sm:flex-row gap-1">
 						<Button
 							onClick={() =>
 								onUpdate(input.id, {
