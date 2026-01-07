@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import {
 	calculateStatistics,
 	parseDiceExpression,
@@ -35,9 +34,7 @@ export function CombatView() {
 			targetMaxWounds: "1",
 		},
 	]);
-	const [results, setResults] = useState<string>("");
 	const [simResults, setSimResults] = useState<SimulationResults | null>(null);
-	const [showDebug, setShowDebug] = useState<boolean>(false);
 
 	const addInput = () => {
 		setInputs([
@@ -140,32 +137,6 @@ export function CombatView() {
 		// Calculate statistics on combined distribution
 		const simulationResults = calculateStatistics(combinedDistribution, iterations, executionTimeMs);
 
-		const output = `
-Simulation Results (10,000 iterations)
-======================================
-Combined ${inputs.length} input${inputs.length > 1 ? "s" : ""}
-
-Mean: ${simulationResults.mean.toFixed(2)} wounds
-Median: ${simulationResults.median.toFixed(2)} wounds
-Mode: ${simulationResults.mode} wounds
-Variance: ${simulationResults.variance.toFixed(2)}
-
-Percentiles:
-- 10th: ${simulationResults.percentile10.toFixed(2)} wounds
-- 90th: ${simulationResults.percentile90.toFixed(2)} wounds
-
-Range: ${simulationResults.min} - ${simulationResults.max} wounds
-Execution time: ${simulationResults.executionTimeMs.toFixed(2)}ms
-
-Top Results:
-${simulationResults.probabilityDistribution
-	.sort((a, b) => b.probability - a.probability)
-	.slice(0, 5)
-	.map((p) => `  ${p.wounds} wounds: ${p.probability.toFixed(2)}% (${p.count} times)`)
-	.join("\n")}
-    `.trim();
-
-		setResults(output);
 		setSimResults(simulationResults);
 	};
 
@@ -216,20 +187,6 @@ ${simulationResults.probabilityDistribution
 				<div className="space-y-6">
 					{/* Chart with Score */}
 					<ProbabilityChart results={simResults} />
-
-					{/* Debug Toggle */}
-					<div className="text-center">
-						<Button onClick={() => setShowDebug(!showDebug)} variant="outline" className="text-sm">
-							{showDebug ? "Hide" : "Show"} Debug Info
-						</Button>
-					</div>
-
-					{/* Debug Info */}
-					{showDebug && results && (
-						<Card className="p-6 bg-card border-border">
-							<pre className="text-left text-sm whitespace-pre-wrap text-foreground">{results}</pre>
-						</Card>
-					)}
 				</div>
 			)}
 		</>
