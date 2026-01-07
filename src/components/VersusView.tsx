@@ -219,7 +219,7 @@ export function VersusView() {
 				disabled={!allInputsValid}
 				className="w-full h-12 sm:h-14 text-lg sm:text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
 			>
-				Simulate Both
+				Simulate
 			</Button>
 
 			{/* Results */}
