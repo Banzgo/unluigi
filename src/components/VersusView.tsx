@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import { useState } from "react";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
@@ -10,7 +11,6 @@ import {
 	type SimulationParameters,
 	type SimulationResults,
 } from "@/engine";
-import { Copy } from "lucide-react";
 
 const createDefaultInput = (): DiceInputState => ({
 	id: crypto.randomUUID(),
@@ -152,141 +152,140 @@ export function VersusView() {
 	const allInputsValid = [...inputs1, ...inputs2].every(validateInput);
 
 	return (
-		<div className="p-4 sm:p-6 lg:p-8">
-			<div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
-				{/* Title */}
-				<h1
-					className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center"
-					style={{ fontFamily: "var(--font-display)" }}
-				>
-					<span className="text-brand-green">VERSUS</span> <span className="text-orange-500">MODE</span>
-		</h1>
+		<>
+			{/* Title */}
+			<h1
+				className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center"
+				style={{ fontFamily: "var(--font-display)" }}
+			>
+				<span className="text-brand-green">VERSUS</span> <span className="text-orange-500">MODE</span>
+			</h1>
 
-		<div className="space-y-6">
-			{/* Input Set 1 */}
-			<div className="space-y-4">
-				<div className="flex justify-between items-center">
-					<h2 className="text-xl sm:text-2xl font-bold text-brand-green">Input 1</h2>
-					<Button onClick={copyInputs1To2} variant="outline" size="sm" className="gap-2">
-						<Copy className="h-4 w-4" />
-						Copy to Input 2
+			<div className="space-y-6">
+				{/* Input Set 1 */}
+				<div className="space-y-4">
+					<div className="flex justify-between items-center">
+						<h2 className="text-xl sm:text-2xl font-bold text-brand-green">Input 1</h2>
+						<Button onClick={copyInputs1To2} variant="outline" size="sm" className="gap-2">
+							<Copy className="h-4 w-4" />
+							Copy to Input 2
+						</Button>
+					</div>
+
+					{inputs1.map((input) => (
+						<DiceInput
+							key={input.id}
+							input={input}
+							onUpdate={updateInput1}
+							onRemove={removeInput1}
+							showRemove={inputs1.length > 1}
+						/>
+					))}
+
+					<Button
+						onClick={addInput1}
+						className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
+						variant="outline"
+					>
+						+ Add Attacker to Input 1
 					</Button>
 				</div>
 
-				{inputs1.map((input) => (
-				<DiceInput
-					key={input.id}
-					input={input}
-					onUpdate={updateInput1}
-					onRemove={removeInput1}
-					showRemove={inputs1.length > 1}
-				/>
-			))}
+				{/* Input Set 2 */}
+				<div className="space-y-4">
+					<h2 className="text-xl sm:text-2xl font-bold text-orange-500">Input 2</h2>
 
+					{inputs2.map((input) => (
+						<DiceInput
+							key={input.id}
+							input={input}
+							onUpdate={updateInput2}
+							onRemove={removeInput2}
+							showRemove={inputs2.length > 1}
+						/>
+					))}
+
+					<Button
+						onClick={addInput2}
+						className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
+						variant="outline"
+					>
+						+ Add Attacker to Input 2
+					</Button>
+				</div>
+			</div>
+
+			{/* Simulate Button */}
 			<Button
-				onClick={addInput1}
-				className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
-				variant="outline"
+				onClick={runVersusSimulation}
+				disabled={!allInputsValid}
+				className="w-full h-12 sm:h-14 text-lg sm:text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
 			>
-				+ Add Attacker to Input 1
+				Simulate Both
 			</Button>
-		</div>
 
-		{/* Input Set 2 */}
-		<div className="space-y-4">
-			<h2 className="text-xl sm:text-2xl font-bold text-orange-500">Input 2</h2>
+			{/* Results */}
+			{results1 && results2 && (
+				<div className="space-y-6">
+					{/* Comparison Stats */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<Card className="p-6 bg-card border-border">
+							<h3 className="text-lg font-semibold text-brand-green mb-2">Input 1 Results</h3>
+							<div className="space-y-1 text-foreground">
+								<p>Mean: {results1.mean.toFixed(2)} wounds</p>
+								<p>Variance: {results1.variance.toFixed(2)}</p>
+							</div>
+						</Card>
 
-			{inputs2.map((input) => (
-				<DiceInput
-					key={input.id}
-					input={input}
-					onUpdate={updateInput2}
-					onRemove={removeInput2}
-					showRemove={inputs2.length > 1}
-				/>
-			))}
+						<Card className="p-6 bg-card border-border">
+							<h3 className="text-lg font-semibold text-orange-500 mb-2">Input 2 Results</h3>
+							<div className="space-y-1 text-foreground">
+								<p>Mean: {results2.mean.toFixed(2)} wounds</p>
+								<p>Variance: {results2.variance.toFixed(2)}</p>
+							</div>
+						</Card>
+					</div>
 
-			<Button
-				onClick={addInput2}
-				className="w-full bg-secondary hover:bg-secondary/80 text-foreground border-border"
-				variant="outline"
-			>
-				+ Add Attacker to Input 2
-			</Button>
-		</div>
-	</div>
-				{/* Simulate Button */}
-				<Button
-					onClick={runVersusSimulation}
-					disabled={!allInputsValid}
-					className="w-full h-12 sm:h-14 text-lg sm:text-xl bg-brand-green hover:bg-brand-green-dark text-white disabled:opacity-50 disabled:cursor-not-allowed"
-				>
-					Simulate Both
-				</Button>
+					{/* Chart with Both Results */}
+					<ProbabilityChart results={results1} results2={results2} />
 
-				{/* Results */}
-				{results1 && results2 && (
-					<div className="space-y-6">
-						{/* Comparison Stats */}
+					{/* Debug Toggle */}
+					<div className="text-center">
+						<Button onClick={() => setShowDebug(!showDebug)} variant="outline" className="text-sm">
+							{showDebug ? "Hide" : "Show"} Debug Info
+						</Button>
+					</div>
+
+					{/* Debug Info */}
+					{showDebug && (
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 							<Card className="p-6 bg-card border-border">
-								<h3 className="text-lg font-semibold text-brand-green mb-2">Input 1 Results</h3>
-								<div className="space-y-1 text-foreground">
-									<p>Mean: {results1.mean.toFixed(2)} wounds</p>
-									<p>Variance: {results1.variance.toFixed(2)}</p>
-								</div>
-							</Card>
-
-							<Card className="p-6 bg-card border-border">
-								<h3 className="text-lg font-semibold text-orange-500 mb-2">Input 2 Results</h3>
-								<div className="space-y-1 text-foreground">
-									<p>Mean: {results2.mean.toFixed(2)} wounds</p>
-									<p>Variance: {results2.variance.toFixed(2)}</p>
-								</div>
-							</Card>
-						</div>
-
-						{/* Chart with Both Results */}
-						<ProbabilityChart results={results1} results2={results2} />
-
-						{/* Debug Toggle */}
-						<div className="text-center">
-							<Button onClick={() => setShowDebug(!showDebug)} variant="outline" className="text-sm">
-								{showDebug ? "Hide" : "Show"} Debug Info
-							</Button>
-						</div>
-
-						{/* Debug Info */}
-						{showDebug && (
-							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-								<Card className="p-6 bg-card border-border">
-									<h3 className="text-lg font-semibold text-brand-green mb-2">Input 1 Debug</h3>
-									<pre className="text-left text-sm whitespace-pre-wrap text-foreground">
-										{`Mean: ${results1.mean.toFixed(2)} wounds
+								<h3 className="text-lg font-semibold text-brand-green mb-2">Input 1 Debug</h3>
+								<pre className="text-left text-sm whitespace-pre-wrap text-foreground">
+									{`Mean: ${results1.mean.toFixed(2)} wounds
 Median: ${results1.median.toFixed(2)} wounds
 Mode: ${results1.mode} wounds
 Variance: ${results1.variance.toFixed(2)}
 Range: ${results1.min} - ${results1.max} wounds
 Execution time: ${results1.executionTimeMs.toFixed(2)}ms`}
-									</pre>
-								</Card>
+								</pre>
+							</Card>
 
-								<Card className="p-6 bg-card border-border">
-									<h3 className="text-lg font-semibold text-orange-500 mb-2">Input 2 Debug</h3>
-									<pre className="text-left text-sm whitespace-pre-wrap text-foreground">
-										{`Mean: ${results2.mean.toFixed(2)} wounds
+							<Card className="p-6 bg-card border-border">
+								<h3 className="text-lg font-semibold text-orange-500 mb-2">Input 2 Debug</h3>
+								<pre className="text-left text-sm whitespace-pre-wrap text-foreground">
+									{`Mean: ${results2.mean.toFixed(2)} wounds
 Median: ${results2.median.toFixed(2)} wounds
 Mode: ${results2.mode} wounds
 Variance: ${results2.variance.toFixed(2)}
 Range: ${results2.min} - ${results2.max} wounds
 Execution time: ${results2.executionTimeMs.toFixed(2)}ms`}
-									</pre>
-								</Card>
-							</div>
-						)}
-					</div>
-				)}
-			</div>
-		</div>
+								</pre>
+							</Card>
+						</div>
+					)}
+				</div>
+			)}
+		</>
 	);
 }
