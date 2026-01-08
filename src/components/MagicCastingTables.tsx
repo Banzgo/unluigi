@@ -102,7 +102,7 @@ function CompactTable({ castingValues, diceRange, calculateProbability }: Compac
 						<td className="p-1.5 text-sm font-mono font-semibold text-foreground border-b border-border/50">{cv}+</td>
 						{diceRange.map((dice) => {
 							const prob = calculateProbability(dice, cv);
-              const probText = prob.toFixed(0) === '100' && prob.toFixed(1) !== '100.0' ? '~100' : prob.toFixed(0);
+							const probText = prob.toFixed(0) === "100" && prob.toFixed(1) !== "100.0" ? "~100" : prob.toFixed(0);
 							return (
 								<td key={dice} className="p-1 text-center border-b border-border/50">
 									<span
