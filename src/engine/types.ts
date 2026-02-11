@@ -39,8 +39,10 @@ export interface SimulationParameters {
 
 	// Special Rules
 	poison?: boolean; // 6s to hit auto-wound (skip wound roll)
+	poisonOn5Plus?: boolean; // 5+ to hit auto-wound (like poison but on 5+)
 	lethalStrike?: boolean; // 6s to wound ignore armor AND special saves
 	fury?: boolean; // 6s to hit generate 2 hits instead of 1
+	redFury?: boolean; // Each unsaved wound generates one extra attack (no further chaining)
 	multipleWounds?: string | number; // Wounds per unsaved wound: 1, "d3", "d6+1", etc.
 	targetMaxWounds?: number; // Maximum wounds target model has (caps multiple wounds)
 

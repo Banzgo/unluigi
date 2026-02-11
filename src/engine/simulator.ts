@@ -22,8 +22,10 @@ const DEFAULT_PARAMS = {
 	rerollSpecialSaveFailures: "none" as const,
 	rerollSpecialSaveSuccesses: "none" as const,
 	poison: false,
+	poisonOn5Plus: false,
 	lethalStrike: false,
 	fury: false,
+	redFury: false,
 	multipleWounds: 1,
 	targetMaxWounds: 3,
 	iterations: 10000,
@@ -82,6 +84,42 @@ function simulateSingleSequence(params: Required<SimulationParameters>): number 
 	// Phase 0: Determine number of attacks
 	const numAttacks = parseDiceExpression(params.numAttacks);
 
+	// If Red Fury is not active, we can run the standard pipeline once
+	if (!params.redFury) {
+		const { totalWounds } = simulateAttackBatch(numAttacks, params);
+		return totalWounds;
+	}
+
+	// With Red Fury: each unsaved wound from the initial batch generates
+	// one additional attack, but these extra attacks do not generate
+	// further Red Fury attacks (no chaining).
+	const { unsavedHits, totalWounds: baseWounds } = simulateAttackBatch(numAttacks, params);
+
+	if (unsavedHits === 0) {
+		return baseWounds;
+	}
+
+	// Extra attacks use the same properties, but Red Fury is disabled so
+	// they cannot generate further attacks.
+	const paramsWithoutRedFury: Required<SimulationParameters> = {
+		...params,
+		redFury: false,
+	};
+
+	const { totalWounds: extraWounds } = simulateAttackBatch(unsavedHits, paramsWithoutRedFury);
+
+	return baseWounds + extraWounds;
+}
+
+/**
+ * Simulate a batch of attacks with the given number of attacks.
+ * Returns both the number of unsaved wounds (before multiple wounds)
+ * and the final total wounds after applying multiple wounds.
+ */
+function simulateAttackBatch(
+	numAttacks: number,
+	params: Required<SimulationParameters>,
+): { unsavedHits: number; totalWounds: number } {
 	// Phase 1: To-Hit Rolls
 	const hitTrackers = rollToHit(numAttacks, params);
 
@@ -97,7 +135,10 @@ function simulateSingleSequence(params: Required<SimulationParameters>): number 
 	// Phase 5: Apply Multiple Wounds
 	const totalWounds = applyMultipleWounds(unsavedAfterSpecial, params);
 
-	return totalWounds;
+	return {
+		unsavedHits: unsavedAfterSpecial.length,
+		totalWounds,
+	};
 }
 
 /**
@@ -120,8 +161,11 @@ function rollToHit(numAttacks: number, params: Required<SimulationParameters>): 
 
 		// Check if hit succeeded
 		if (isSuccess(roll, params.toHit)) {
+			const isPoisonHit =
+				(params.poisonOn5Plus && unmodifiedRoll >= 5) || (params.poison && unmodifiedRoll === 6);
+
 			const tracker: HitTracker = {
-				isPoison: params.poison && unmodifiedRoll === 6,
+				isPoison: isPoisonHit,
 				isLethal: false, // Set during wound phase
 			};
 

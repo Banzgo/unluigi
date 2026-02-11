@@ -23,8 +23,10 @@ export interface DiceInputState {
 	rerollSpecialSaveFailures: FailureRerollType;
 	rerollSpecialSaveSuccesses: SuccessRerollType;
 	poison: boolean;
+	poisonOn5Plus: boolean;
 	lethalStrike: boolean;
 	fury: boolean;
+	redFury: boolean;
 	multipleWounds: string;
 	targetMaxWounds: string;
 }
@@ -38,7 +40,7 @@ interface DiceInputProps {
 
 export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputProps) {
 	const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
-	const [showMultipleWounds, setShowMultipleWounds] = useState<boolean>(false);
+	const [showSpecialRules, setShowSpecialRules] = useState<boolean>(false);
 
 	const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
 	const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
@@ -347,65 +349,75 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 				</div>
 			</div>
 
-			{/* Multiple Wounds Accordion */}
+			{/* Special Rules Accordion */}
 			<div className="border-t border-border pt-3">
 				<button
 					type="button"
-					onClick={() => setShowMultipleWounds(!showMultipleWounds)}
+					onClick={() => setShowSpecialRules(!showSpecialRules)}
 					className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors pb-2"
 				>
-					{showMultipleWounds ? (
-						<>
-							<div className="flex items-center justify-between sm:hidden">
-								<span>Multiple Wounds</span>
-								<span className="text-xs">▼</span>
-							</div>
-							<div className="hidden sm:grid sm:grid-cols-2 gap-3 sm:gap-4 items-center">
-								<div className="flex items-center justify-between">
-									<span>Multiple Wounds</span>
-								</div>
-								<div className="flex items-center justify-between">
-									<span>Target Max Wounds</span>
-									<span className="text-xs">▼</span>
-								</div>
-							</div>
-						</>
-					) : (
-						<div className="flex items-center justify-between">
-							<span>Multiple Wounds</span>
-							<span className="text-xs">▶</span>
-						</div>
-					)}
+					<div className="flex items-center justify-between">
+						<span>Special rules</span>
+						<span className="text-xs">{showSpecialRules ? "▼" : "▶"}</span>
+					</div>
 				</button>
 
-				{showMultipleWounds && (
-					<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-						<div className="space-y-2">
-							<Input
-								id={`mw-${input.id}`}
-								type="text"
-								value={input.multipleWounds}
-								onChange={(e) => onUpdate(input.id, { multipleWounds: e.target.value })}
-								className="bg-input text-foreground placeholder:text-gray-500"
-								placeholder="1, d3, d6+1"
-							/>
+				{showSpecialRules && (
+					<div className="space-y-3 sm:space-y-4">
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+							<div className="space-y-2">
+								<Label htmlFor={`mw-${input.id}`} className="text-sm text-foreground">
+									Multiple Wounds
+								</Label>
+								<Input
+									id={`mw-${input.id}`}
+									type="text"
+									value={input.multipleWounds}
+									onChange={(e) => onUpdate(input.id, { multipleWounds: e.target.value })}
+									className="bg-input text-foreground placeholder:text-gray-500"
+									placeholder="1, d3, d6+1"
+								/>
+							</div>
+							<div className="space-y-2">
+								<Label htmlFor={`max-${input.id}`} className="text-sm text-foreground">
+									Target Max Wounds
+								</Label>
+								<Input
+									id={`max-${input.id}`}
+									type="text"
+									value={input.targetMaxWounds}
+									onChange={(e) =>
+										onUpdate(input.id, {
+											targetMaxWounds: e.target.value,
+										})
+									}
+									className="bg-input text-foreground placeholder:text-gray-400"
+									placeholder="e.g. 3"
+								/>
+							</div>
 						</div>
-						<div className="space-y-2">
-							<Label htmlFor={`max-${input.id}`} className="text-sm text-foreground sm:hidden">
-								Target Max Wounds
-							</Label>
-							<Input
-								id={`max-${input.id}`}
-								type="text"
-								value={input.targetMaxWounds}
-								onChange={(e) =>
-									onUpdate(input.id, {
-										targetMaxWounds: e.target.value,
-									})
-								}
-								className="bg-input text-foreground placeholder:text-gray-400"
-								placeholder="e.g. 3"
-							/>
+
+						<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+							<Button
+								onClick={() => onUpdate(input.id, { poisonOn5Plus: !input.poisonOn5Plus })}
+								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${
+									input.poisonOn5Plus
+										? "bg-blue-600 hover:bg-blue-700 text-white"
+										: "bg-secondary hover:bg-secondary/80"
+								}`}
+								variant="outline"
+							>
+								Poison (5+)
+							</Button>
+							<Button
+								onClick={() => onUpdate(input.id, { redFury: !input.redFury })}
+								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${
+									input.redFury ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
+								}`}
+								variant="outline"
+							>
+								Red Fury
+							</Button>
 						</div>
 					</div>
 				)}

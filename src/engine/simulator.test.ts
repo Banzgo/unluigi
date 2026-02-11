@@ -109,6 +109,27 @@ describe("runSimulationWithStats", () => {
 		expect(withPoison.mean).toBeGreaterThan(noPoison.mean);
 	});
 
+	it("should handle poison on 5+ correctly", () => {
+		const regularPoison = runSimulationWithStats({
+			...baseParams,
+			toWound: 6,
+			poison: true,
+			poisonOn5Plus: false,
+			iterations: 5000,
+		});
+
+		const poisonFivePlus = runSimulationWithStats({
+			...baseParams,
+			toWound: 6,
+			poison: false,
+			poisonOn5Plus: true, // 5+ to hit auto-wound
+			iterations: 5000,
+		});
+
+		// 5+ poison should be strictly better than regular poison
+		expect(poisonFivePlus.mean).toBeGreaterThan(regularPoison.mean);
+	});
+
 	it("should handle fury correctly", () => {
 		const noFury = runSimulationWithStats({
 			...baseParams,
@@ -124,6 +145,27 @@ describe("runSimulationWithStats", () => {
 
 		// Fury should increase average wounds
 		expect(withFury.mean).toBeGreaterThan(noFury.mean);
+	});
+
+	it("should handle red fury correctly", () => {
+		const noRedFury = runSimulationWithStats({
+			...baseParams,
+			armorSave: 6,
+			specialSave: "none",
+			redFury: false,
+			iterations: 5000,
+		});
+
+		const withRedFury = runSimulationWithStats({
+			...baseParams,
+			armorSave: 6,
+			specialSave: "none",
+			redFury: true, // Each unsaved wound generates an extra attack
+			iterations: 5000,
+		});
+
+		// Red Fury should increase average wounds compared to the same profile without it
+		expect(withRedFury.mean).toBeGreaterThan(noRedFury.mean);
 	});
 
 	it("should handle lethal strike correctly", () => {

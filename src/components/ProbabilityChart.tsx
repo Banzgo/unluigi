@@ -169,15 +169,25 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 				<div className="flex flex-col sm:flex-row justify-center gap-2">
 					<Button
 						onClick={() => setChartMode("probability")}
-						variant={chartMode === "probability" ? "default" : "outline"}
+						variant="outline"
 						size="sm"
+						className={
+							chartMode === "probability"
+								? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+								: "bg-secondary hover:bg-secondary/80 text-foreground"
+						}
 					>
 						Distribution
 					</Button>
 					<Button
 						onClick={() => setChartMode("cumulative")}
-						variant={chartMode === "cumulative" ? "default" : "outline"}
+						variant="outline"
 						size="sm"
+						className={
+							chartMode === "cumulative"
+								? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+								: "bg-secondary hover:bg-secondary/80 text-foreground"
+						}
 					>
 						Cumulative
 					</Button>
@@ -330,15 +340,25 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			<div className="flex flex-col sm:flex-row justify-center gap-2">
 				<Button
 					onClick={() => setChartMode("probability")}
-					variant={chartMode === "probability" ? "default" : "outline"}
+					variant="outline"
 					size="sm"
+					className={
+						chartMode === "probability"
+							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+							: "bg-secondary hover:bg-secondary/80 text-foreground"
+					}
 				>
 					Distribution
 				</Button>
 				<Button
 					onClick={() => setChartMode("cumulative")}
-					variant={chartMode === "cumulative" ? "default" : "outline"}
+					variant="outline"
 					size="sm"
+					className={
+						chartMode === "cumulative"
+							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
+							: "bg-secondary hover:bg-secondary/80 text-foreground"
+					}
 				>
 					Cumulative
 				</Button>
