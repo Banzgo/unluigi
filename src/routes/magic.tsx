@@ -20,7 +20,7 @@ function MagicPage() {
 					<span className="text-purple-400">MAGIC</span> <span className="text-orange-500">PHASE</span>
 				</h1>
 
-				<Accordion type="multiple" defaultValue={["casting-tables", "dispel-simulator"]} className="w-full space-y-4">
+				<Accordion type="multiple" defaultValue={["dispel-simulator"]} className="w-full space-y-4">
 					{/* Spell Casting Tables Accordion */}
 					<AccordionItem value="casting-tables" className="border border-border rounded-lg bg-card overflow-hidden">
 						<AccordionTrigger className="px-4 hover:no-underline hover:bg-white/5">

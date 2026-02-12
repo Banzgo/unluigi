@@ -24,7 +24,7 @@ export interface MagicSimulatorInputState {
 type SpellType = "learned" | "bound";
 type CastingDiceValue = 2 | 3 | 4 | 5;
 type DispelDiceValue = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-type CastingValueOption = 5 | 6 | 7 | 8 | 9 | 10 | 11;
+type CastingValueOption = 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
 
 /**
  * Get color class based on probability value
@@ -49,8 +49,8 @@ function getInvertedProbabilityColor(prob: number): string {
 export function MagicSimulatorInput() {
 	const castingDiceOptions: CastingDiceValue[] = [2, 3, 4, 5];
 	const dispelDiceOptions: DispelDiceValue[] = [0, 1, 2, 3, 4, 5, 6, 7];
-	const castingValueOptions: CastingValueOption[] = [5, 6, 7, 8, 9, 10, 11];
-	const modifierOptions = [-1, 0, 1, 2];
+	const castingValueOptions: CastingValueOption[] = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
+	const modifierOptions = [-2, -1, 0, 1, 2];
 	const magicResistanceOptions = [0, 1, 2, 3];
 	const castingRerollOptions: CastingRerollType[] = ["none", "1s", "all"];
 	const dispelRerollOptions: DispelRerollType[] = ["none", "all"];

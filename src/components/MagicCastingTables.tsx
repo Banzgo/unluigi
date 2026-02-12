@@ -129,7 +129,7 @@ export function MagicCastingTables() {
 		for (let dice = 2; dice <= 5; dice++) {
 			const distribution = calculateSumDistribution(dice, 6);
 			const totalOutcomes = 6 ** dice;
-			for (let cv = 5; cv <= 11; cv++) {
+			for (let cv = 5; cv <= 16; cv++) {
 				const prob = probabilityAtLeast(distribution, cv, totalOutcomes);
 				probs.set(`${dice}-${cv}`, prob);
 			}
@@ -143,7 +143,7 @@ export function MagicCastingTables() {
 		for (let dice = 2; dice <= 5; dice++) {
 			const distribution = calculateBoundSpellDistribution(dice);
 			const totalOutcomes = 6 * 3 ** (dice - 1);
-			for (let cv = 3; cv <= 7; cv++) {
+			for (let cv = 3; cv <= 10; cv++) {
 				const prob = probabilityAtLeast(distribution, cv, totalOutcomes);
 				probs.set(`${dice}-${cv}`, prob);
 			}
@@ -172,7 +172,7 @@ export function MagicCastingTables() {
 					</div>
 				</div>
 				<CompactTable
-					castingValues={[5, 6, 7, 8, 9, 10, 11]}
+					castingValues={[5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]}
 					diceRange={[2, 3, 4, 5]}
 					calculateProbability={getLearnedSpellProbability}
 				/>
@@ -189,7 +189,7 @@ export function MagicCastingTables() {
 					</div>
 				</div>
 				<CompactTable
-					castingValues={[3, 4, 5, 6, 7]}
+					castingValues={[3, 4, 5, 6, 7, 8, 9, 10]}
 					diceRange={[2, 3, 4, 5]}
 					calculateProbability={getBoundSpellProbability}
 				/>
