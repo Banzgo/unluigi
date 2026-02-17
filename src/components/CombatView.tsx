@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
 import type { SimulationResults } from "@/engine";
+import { type CombatSharePayloadV1, encodeCombatShareState } from "@/utils/share";
 import { createDefaultInput, runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
 
-export function CombatView() {
-	const [inputs, setInputs] = useState<DiceInputState[]>([createDefaultInput()]);
+interface CombatViewProps {
+	initialInputs?: DiceInputState[] | null;
+	autoRun?: boolean;
+}
+
+export function CombatView({ initialInputs, autoRun }: CombatViewProps = {}) {
+	const [inputs, setInputs] = useState<DiceInputState[]>(
+		initialInputs && initialInputs.length > 0 ? initialInputs : [createDefaultInput()],
+	);
 	const [simResults, setSimResults] = useState<SimulationResults | null>(null);
+	const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
+	const hasAutoRun = useRef(false);
 
 	const addInput = () => {
 		setInputs([...inputs, createDefaultInput()]);
@@ -30,6 +40,60 @@ export function CombatView() {
 
 		const simulationResults = runCombinedSimulation(inputs);
 		setSimResults(simulationResults);
+	};
+
+	useEffect(() => {
+		if (!autoRun || hasAutoRun.current) return;
+		hasAutoRun.current = true;
+
+		const allValid = inputs.every(validateInput);
+		if (!allValid) return;
+
+		const simulationResults = runCombinedSimulation(inputs);
+		setSimResults(simulationResults);
+	}, [autoRun, inputs]);
+
+	const handleShareClick = async () => {
+		try {
+			// Build a compact representation: drop ids and omit fields that match defaults
+			const base = createDefaultInput();
+
+			const compactInputs = inputs.map((input) => {
+				const { id: _id, ...rest } = input;
+				const { id: _baseId, ...baseRest } = base;
+				const diff: Partial<Omit<DiceInputState, "id">> = {};
+
+				(Object.keys(rest) as (keyof typeof rest)[]).forEach((key) => {
+					if (rest[key] !== baseRest[key]) {
+						// @ts-expect-error - dynamic key assignment is safe here
+						diff[key] = rest[key];
+					}
+				});
+
+				return diff;
+			});
+
+			const payload: CombatSharePayloadV1<DiceInputState[]> = {
+				v: 1,
+				// Only send the per-attacker diffs
+				inputs: compactInputs as unknown as DiceInputState[],
+			};
+			const encoded = encodeCombatShareState(payload);
+
+			const url = new URL(window.location.href);
+			url.searchParams.set("sim", encoded);
+
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(url.toString());
+				setShareStatus("copied");
+				setTimeout(() => setShareStatus("idle"), 2000);
+			} else {
+				window.prompt("Copy this link:", url.toString());
+			}
+		} catch {
+			setShareStatus("error");
+			setTimeout(() => setShareStatus("idle"), 2000);
+		}
 	};
 
 	return (
@@ -76,9 +140,20 @@ export function CombatView() {
 
 			{/* Results */}
 			{simResults && (
-				<div className="space-y-6">
+				<div className="space-y-2">
 					{/* Chart with Score */}
 					<ProbabilityChart results={simResults} />
+					<div className="flex items-center justify-end">
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={handleShareClick}
+							className="text-xs sm:text-[11px] h-8 px-3"
+						>
+							{shareStatus === "copied" ? "Link copied" : shareStatus === "error" ? "Copy failed" : "Share link"}
+						</Button>
+					</div>
 				</div>
 			)}
 		</>

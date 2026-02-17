@@ -1,14 +1,36 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { z } from "zod";
 import { Shield, Sparkles } from "lucide-react";
 import { MagicCastingTables } from "@/components/MagicCastingTables";
-import { MagicSimulatorInput } from "@/components/MagicSimulatorInput";
+import { MagicSimulatorInput, type MagicSimulatorInputState, type SpellType } from "@/components/MagicSimulatorInput";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { decodeMagicShareState } from "@/utils/share";
+
+const magicSearchSchema = z.object({
+	sim: z.string().optional(),
+});
 
 export const Route = createFileRoute("/magic")({
+	validateSearch: magicSearchSchema,
 	component: MagicPage,
 });
 
 function MagicPage() {
+	const { sim } = Route.useSearch();
+
+	let initialState: Partial<MagicSimulatorInputState> | undefined;
+	let initialSpellType: SpellType | undefined;
+	let autoRun = false;
+
+	if (sim) {
+		const decoded = decodeMagicShareState<Partial<MagicSimulatorInputState>>(sim);
+		if (decoded && decoded.v === 1) {
+			initialState = decoded.inputs;
+			initialSpellType = decoded.spellType === "bound" ? "bound" : "learned";
+			autoRun = true;
+		}
+	}
+
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
 			<div className="max-w-4xl mx-auto space-y-4">
@@ -43,7 +65,7 @@ function MagicPage() {
 							</div>
 						</AccordionTrigger>
 						<AccordionContent className="px-4 py-2">
-							<MagicSimulatorInput />
+							<MagicSimulatorInput initialState={initialState} initialSpellType={initialSpellType} autoRun={autoRun} />
 						</AccordionContent>
 					</AccordionItem>
 				</Accordion>
