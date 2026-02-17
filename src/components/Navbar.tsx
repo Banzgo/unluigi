@@ -18,7 +18,7 @@ export function Navbar() {
 	// biome-ignore lint/correctness/useExhaustiveDependencies: intentionally trigger on route change
 	useEffect(() => {
 		setMobileMenuOpen(false);
-	}, [currentPath]);
+	}, [currentPath, searchParams]);
 
 	// Close mobile menu on escape key
 	useEffect(() => {
