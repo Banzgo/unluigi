@@ -36,9 +36,12 @@ const DEFAULT_PARAMS = {
  * @returns Complete simulation parameters with defaults applied
  */
 function applyDefaults(params: SimulationParameters): Required<SimulationParameters> {
+	// Filter out undefined values from params so they don't override defaults
+	const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, value]) => value !== undefined));
+
 	return {
 		...DEFAULT_PARAMS,
-		...params,
+		...cleanParams,
 	} as Required<SimulationParameters>;
 }
 

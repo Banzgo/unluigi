@@ -43,6 +43,9 @@ interface UnitProfile {
   fury?: boolean;
   redFury?: boolean;
   multipleWounds?: string;
+  hatred?: boolean;          // Reroll failed to-hit rolls
+  autoHit?: boolean;         // Always hits (no roll needed)
+  autoWound?: boolean;       // Always wounds (no roll needed)
   
   // Special rules - structured format
   specialRules?: SpecialRule[];  // Array of active special rules
@@ -216,6 +219,57 @@ interface SpecialRule {
 }
 ```
 
+**Auto-Hit** - Always hits regardless of skill difference (V1 boolean flag):
+```typescript
+// V1 approach with boolean flag
+const attacker: UnitProfile = {
+  // ... other stats
+  autoHit: true,  // Overrides calculated to-hit value with "auto"
+};
+
+// V2 approach with structured special rule (future)
+{
+  name: "Unerring Aim",
+  targetPhases: ['hit'],
+  effect: {
+    type: 'modifier',
+    modifier: {
+      operation: 'set',
+      value: 'auto'  // Sets to-hit to "auto" (always succeeds)
+    }
+  }
+}
+```
+
+**Auto-Wound** - Always wounds regardless of strength vs resilience (V1 boolean flag):
+```typescript
+// V1 approach with boolean flag
+const attacker: UnitProfile = {
+  // ... other stats
+  autoWound: true,  // Overrides calculated to-wound value with "auto"
+};
+
+// V2 approach with structured special rule (future)
+{
+  name: "Rending Strike",
+  targetPhases: ['wound'],
+  effect: {
+    type: 'modifier',
+    modifier: {
+      operation: 'set',
+      value: 'auto'  // Sets to-wound to "auto" (always succeeds)
+    }
+  }
+}
+```
+
+**Note on Auto-Hit/Auto-Wound:**
+- These represent special abilities where the attack automatically succeeds
+- Examples: magical weapons that can't miss, abilities that bypass normal wounding mechanics
+- The simulator already supports `"auto"` as a valid `HitValue`
+- Can be combined with other special rules (poison, fury, etc.)
+- Still allows armor saves and special saves unless other rules prevent them
+
 ### Applying Special Rules to Simulation
 
 When converting profile to simulation parameters, process special rules:
@@ -361,6 +415,8 @@ interface UnitProfile {
   lethalStrike?: boolean;
   fury?: boolean;
   hatred?: boolean;  // Mapped to rerollHitFailures: 'all'
+  autoHit?: boolean; // Mapped to toHit: 'auto'
+  autoWound?: boolean; // Mapped to toWound: 'auto'
   
   // V2: Full special rules system
   specialRules?: SpecialRule[];
@@ -471,11 +527,11 @@ Based on attacker's Offensive Skill vs defender's Defensive Skill:
 function calculateToHit(attackerOff: number, defenderDef: number): number {
   const difference = attackerOff - defenderDef;
   
-  if (difference > 4) return 2;  // Attacker 5+ higher
-  if (difference > 0) return 3;  // Attacker 1-4 higher
-  // Both tied (difference === 0) AND defender 1-4 higher
-  if (difference >= -4) return 4;
-  // Defender 5+ higher
+  if (difference >= 4) return 2;  // Attacker 4+ higher
+  if (difference > 0) return 3;  // Attacker 1-3 higher
+  // Both tied (difference === 0) AND defender 1-3 higher
+  if (difference > -4) return 4;
+  // Defender 4+ higher
   return 5;
 }
 ```
@@ -632,6 +688,8 @@ function profileToSimulationParams(
 
 For initial implementation with boolean flags:
 - `hatred: true` → `rerollHitFailures: 'all'`
+- `autoHit: true` → `toHit: 'auto'`
+- `autoWound: true` → `toWound: 'auto'`
 - `divineAttacks: true` → Prevents Aegis saves (special handling)
 - `blessedInscriptions: true` → `rerollHitFailures: '1s'` and `rerollWoundFailures: '1s'`
 
@@ -644,11 +702,11 @@ See "Applying Special Rules to Simulation" section above for full structured app
 Use query parameter on index page (similar to `?mode=versus`):
 
 ```typescript
-// Route: /?mode=profiles
+// Route: /?mode=profile
 // Existing: / (default combat) and /?mode=versus
 
 const indexSearchSchema = z.object({
-  mode: z.enum(['versus', 'profiles']).optional(),
+  mode: z.enum(['versus', 'profile']).optional(),
 });
 ```
 
@@ -1175,7 +1233,7 @@ describe('applyModifier', () => {
 - A: Same as tied (4+ to hit)
 
 ✅ **Q: How to integrate into UI?**
-- A: New query parameter on index page: `/?mode=profiles`
+- A: New query parameter on index page: `/?mode=profile`
 
 ✅ **Q: Special saves format?**
 - A: Input field for save value (2-6)

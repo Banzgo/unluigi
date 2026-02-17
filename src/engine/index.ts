@@ -23,6 +23,21 @@ export {
 	getProbabilityAtLeast,
 	getProbabilityExact,
 } from "./probability";
+export type {
+	ModifierConfig,
+	ModifierType,
+	RerollType as ProfileRerollType,
+	RollPhase,
+	SpecialRule,
+	UnitProfile,
+} from "./profile";
+export {
+	calculateArmorSave,
+	calculateToHit,
+	calculateToWound,
+	determineSpecialSave,
+	profileToSimulationParams,
+} from "./profile";
 export { runSimulation, runSimulationWithStats } from "./simulator";
 export type {
 	FailureRerollType,
