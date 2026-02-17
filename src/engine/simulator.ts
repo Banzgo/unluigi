@@ -15,7 +15,6 @@ const DEFAULT_PARAMS = {
 	rerollWoundFailures: "none" as const,
 	rerollWoundSuccesses: "none" as const,
 	armorSave: "none" as const,
-	armorPiercing: 0,
 	rerollArmorSaveFailures: "none" as const,
 	rerollArmorSaveSuccesses: "none" as const,
 	specialSave: "none" as const,
@@ -161,8 +160,7 @@ function rollToHit(numAttacks: number, params: Required<SimulationParameters>): 
 
 		// Check if hit succeeded
 		if (isSuccess(roll, params.toHit)) {
-			const isPoisonHit =
-				(params.poisonOn5Plus && unmodifiedRoll >= 5) || (params.poison && unmodifiedRoll === 6);
+			const isPoisonHit = (params.poisonOn5Plus && unmodifiedRoll >= 5) || (params.poison && unmodifiedRoll === 6);
 
 			const tracker: HitTracker = {
 				isPoison: isPoisonHit,
@@ -245,11 +243,8 @@ function rollArmorSaves(woundTrackers: HitTracker[], params: Required<Simulation
 			continue;
 		}
 
-		// Calculate modified armor save
-		const modifiedArmorSave = Math.min(7, params.armorSave + params.armorPiercing);
-
-		// If modified save is 7+, it's impossible
-		if (modifiedArmorSave > 6) {
+		// If save is 7+, it's impossible
+		if (params.armorSave > 6) {
 			unsavedWounds.push(wound);
 			continue;
 		}
@@ -257,12 +252,12 @@ function rollArmorSaves(woundTrackers: HitTracker[], params: Required<Simulation
 		let roll = rollD6();
 
 		// Check for rerolls (defender's perspective, a die can only be rerolled once)
-		if (shouldRerollSplit(roll, modifiedArmorSave, params.rerollArmorSaveFailures, params.rerollArmorSaveSuccesses)) {
+		if (shouldRerollSplit(roll, params.armorSave, params.rerollArmorSaveFailures, params.rerollArmorSaveSuccesses)) {
 			roll = rollD6();
 		}
 
 		// Check if save failed
-		if (!isSuccess(roll, modifiedArmorSave)) {
+		if (!isSuccess(roll, params.armorSave)) {
 			unsavedWounds.push(wound);
 		}
 	}

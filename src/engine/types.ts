@@ -29,7 +29,6 @@ export interface SimulationParameters {
 
 	// Save Phase
 	armorSave?: HitValue; // 2-6, 'auto' (no wound gets through), or 'none' (no save)
-	armorPiercing?: number; // AP value (reduces armor, 0-6)
 	rerollArmorSaveFailures?: FailureRerollType; // 'none' | '1s' | 'all' - reroll failed saves (for defender)
 	rerollArmorSaveSuccesses?: SuccessRerollType; // 'none' | '6s' | 'all' - reroll successful saves (for defender)
 

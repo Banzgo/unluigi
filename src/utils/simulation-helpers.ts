@@ -13,11 +13,6 @@ import {
 export const DEFAULT_ITERATIONS = 10000;
 
 /**
- * Default armor piercing value
- */
-export const DEFAULT_ARMOR_PIERCING = 0;
-
-/**
  * Creates a default DiceInputState object with standard values
  */
 export function createDefaultInput(): DiceInputState {
@@ -77,7 +72,6 @@ export function mapInputToSimulationParams(
 		rerollWoundFailures: input.rerollWoundFailures,
 		rerollWoundSuccesses: input.rerollWoundSuccesses,
 		armorSave: input.armorSave === "none" ? "none" : input.armorSave,
-		armorPiercing: DEFAULT_ARMOR_PIERCING,
 		rerollArmorSaveFailures: input.rerollArmorSaveFailures,
 		rerollArmorSaveSuccesses: input.rerollArmorSaveSuccesses,
 		specialSave: input.specialSave === "none" ? "none" : input.specialSave,

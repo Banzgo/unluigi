@@ -54,25 +54,6 @@ describe("runSimulationWithStats", () => {
 		expect(withArmor.mean).toBeLessThan(1.5);
 	});
 
-	it("should handle armor piercing correctly", () => {
-		const noAP = runSimulationWithStats({
-			...baseParams,
-			armorSave: 4,
-			armorPiercing: 0,
-			iterations: 5000,
-		});
-
-		const withAP = runSimulationWithStats({
-			...baseParams,
-			armorSave: 4,
-			armorPiercing: 1, // Makes save 5+ instead of 4+
-			iterations: 5000,
-		});
-
-		// With AP, should deal more wounds
-		expect(withAP.mean).toBeGreaterThan(noAP.mean);
-	});
-
 	it("should handle reroll hits correctly", () => {
 		const noReroll = runSimulationWithStats({
 			...baseParams,
@@ -344,8 +325,7 @@ describe("runSimulationWithStats", () => {
 			toHit: 3,
 			rerollHitFailures: "1s",
 			toWound: 4,
-			armorSave: 4,
-			armorPiercing: 1,
+			armorSave: 5,
 			specialSave: 5,
 			lethalStrike: true,
 			iterations: 5000,
@@ -466,13 +446,12 @@ describe("runSimulationWithStats", () => {
 		expect(results.mean).toBeGreaterThan(1);
 	});
 
-	it("should handle lethal strike with armor piercing", () => {
+	it("should handle lethal strike with good armor saves", () => {
 		const results = runSimulationWithStats({
 			numAttacks: 10,
 			toHit: 4,
 			toWound: 4,
 			armorSave: 2, // Very good armor
-			armorPiercing: 2, // AP helps but not enough
 			specialSave: 4, // Ward save
 			lethalStrike: true, // 6s to wound bypass everything
 			iterations: 5000,
