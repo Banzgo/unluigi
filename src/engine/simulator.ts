@@ -18,6 +18,7 @@ const DEFAULT_PARAMS = {
 	rerollArmorSaveFailures: "none" as const,
 	rerollArmorSaveSuccesses: "none" as const,
 	specialSave: "none" as const,
+	specialSaveType: "aegis" as const,
 	rerollSpecialSaveFailures: "none" as const,
 	rerollSpecialSaveSuccesses: "none" as const,
 	poison: false,
@@ -229,7 +230,7 @@ function rollArmorSaves(woundTrackers: HitTracker[], params: Required<Simulation
 	const unsavedWounds: HitTracker[] = [];
 
 	for (const wound of woundTrackers) {
-		// Lethal Strike bypasses all saves
+		// Lethal Strike bypasses armor saves
 		if (wound.isLethal) {
 			unsavedWounds.push(wound);
 			continue;
@@ -278,8 +279,8 @@ function rollSpecialSaves(woundTrackers: HitTracker[], params: Required<Simulati
 	const unsavedWounds: HitTracker[] = [];
 
 	for (const wound of woundTrackers) {
-		// Lethal Strike bypasses all saves (including special)
-		if (wound.isLethal) {
+		// Lethal Strike bypasses regeneration saves but not aegis
+		if (wound.isLethal && params.specialSaveType === "regeneration") {
 			unsavedWounds.push(wound);
 			continue;
 		}

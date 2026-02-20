@@ -71,8 +71,9 @@ Each phase has its own reroll setting:
 #### Lethal Strike
 
 - **Trigger**: Unmodified 6 to wound
-- **Effect**: Bypasses BOTH armor save AND special save
-- **Interaction**: Goes straight to final wounds
+- **Effect**: Bypasses armor save AND regeneration saves (but NOT aegis saves)
+- **Interaction**: Aegis saves can still stop lethal strikes, regeneration cannot
+- **Special Save Type**: When lethal strike is active, the special save type (aegis or regeneration) determines if it's bypassed
 
 #### Fury
 

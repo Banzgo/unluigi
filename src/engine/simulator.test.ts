@@ -170,6 +170,31 @@ describe("runSimulationWithStats", () => {
 		expect(withLethal.mean).toBeGreaterThan(noLethal.mean);
 	});
 
+	it("should handle lethal strike with aegis vs regeneration", () => {
+		// Test that lethal strike ignores regeneration but not aegis
+		const withRegeneration = runSimulationWithStats({
+			...baseParams,
+			armorSave: 2, // Very good armor
+			specialSave: 4, // Regeneration save
+			specialSaveType: "regeneration",
+			lethalStrike: true, // 6s to wound bypass armor and regeneration
+			iterations: 5000,
+		});
+
+		const withAegis = runSimulationWithStats({
+			...baseParams,
+			armorSave: 2, // Very good armor
+			specialSave: 4, // Aegis save
+			specialSaveType: "aegis",
+			lethalStrike: true, // 6s to wound bypass armor but NOT aegis
+			iterations: 5000,
+		});
+
+		// Regeneration should be less effective against lethal strike (more wounds)
+		// Aegis should still work against lethal strike (fewer wounds)
+		expect(withRegeneration.mean).toBeGreaterThan(withAegis.mean);
+	});
+
 	it("should handle multiple wounds correctly", () => {
 		const singleWound = runSimulationWithStats({
 			...baseParams,

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { type FailureRerollType, parseDiceExpression, type SuccessRerollType } from "../engine";
+import { type FailureRerollType, parseDiceExpression, type SpecialSaveType, type SuccessRerollType } from "../engine";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
@@ -14,6 +14,7 @@ export interface DiceInputState {
 	wound: ToggleValue;
 	armorSave: ToggleValue;
 	specialSave: ToggleValue;
+	specialSaveType: SpecialSaveType;
 	rerollHitFailures: FailureRerollType;
 	rerollHitSuccesses: SuccessRerollType;
 	rerollWoundFailures: FailureRerollType;
@@ -346,6 +347,32 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 							{getSuccessRerollLabel(input.rerollSpecialSaveSuccesses)}
 						</Button>
 					</div>
+					{input.lethalStrike && (
+						<div className="flex flex-col sm:flex-row gap-1 w-full">
+							<Button
+								onClick={() => onUpdate(input.id, { specialSaveType: "aegis" })}
+								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
+									input.specialSaveType === "aegis"
+										? "bg-blue-600 hover:bg-blue-700 text-white"
+										: "bg-secondary hover:bg-secondary/80"
+								}`}
+								variant="outline"
+							>
+								Aegis
+							</Button>
+							<Button
+								onClick={() => onUpdate(input.id, { specialSaveType: "regeneration" })}
+								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
+									input.specialSaveType === "regeneration"
+										? "bg-blue-600 hover:bg-blue-700 text-white"
+										: "bg-secondary hover:bg-secondary/80"
+								}`}
+								variant="outline"
+							>
+								Regen
+							</Button>
+						</div>
+					)}
 				</div>
 			</div>
 

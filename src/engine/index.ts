@@ -47,5 +47,6 @@ export type {
 	RerollType,
 	SimulationParameters,
 	SimulationResults,
+	SpecialSaveType,
 	SuccessRerollType,
 } from "./types";
