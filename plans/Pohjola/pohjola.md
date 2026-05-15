@@ -97,7 +97,7 @@ flowchart TB
    - die ≥ DS = hit negated. die < DS = hit stands.
 7. **Block / Crush**: `effectiveBlock = max(0, block - crush)`. Cancel up to `effectiveBlock` crits.
 8. **Damage**: (remaining crits + surviving normal hits) = total hits → each hit = 1 HP.
-9. **Lethality [X]**: add X extra HP per hit, total bonus capped at damage dealt this attack.
+9. **Lethality [X]**: add X extra hits to the pool (flat bonus, no effect if 0 hits).
 10. **Reverberating Strikes**: each hit that contributed to final damage spawns one sub-attack (same params, `canReverberate: false`).
 
 ### Tracked metrics

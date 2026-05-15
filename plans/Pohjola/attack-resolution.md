@@ -96,9 +96,8 @@ Each hit = 1 HP damage.
 
 ### Step 9 — Lethality [X]
 
-`lethalityBonus = totalHits * X`  
-`lethalityBonus = min(lethalityBonus, totalHits)` — bonus capped at base damage.  
-`damage = totalHits + lethalityBonus`
+Adds X extra hits to the pool (flat bonus). No effect if totalHits = 0.  
+`damage = totalHits + X` (when totalHits > 0)
 
 ### Step 10 — Reverberating Strikes
 
@@ -136,7 +135,7 @@ Crits and Blocks are surfaced in the chart header (global averages) and per-bar 
 | `divineTruth` | 0–N | Auto-hit normal hits (first N dice) |
 | `block` | 0–3 | Max crits defender can cancel |
 | `crush` | 0–3 | Reduces block by X (min 0) |
-| `lethality` | 0–3 | Extra HP per hit (capped at base damage) |
+| `lethality` | 0–3 | Flat extra hits added to pool (if any hits scored) |
 | `reverberating` | bool | Each damage-hit spawns sub-attack |
 
 ---

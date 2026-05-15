@@ -152,9 +152,8 @@ export function applyBlock(crits: number, block: number, crush: number): { remai
 	return { remainingCrits: crits - blocked, blocked };
 }
 
-/** Lethality: add X extra HP per hit, capped at base damage. */
+/** Lethality: add X extra hits to the pool (flat bonus). No effect if no hits. */
 export function applyLethality(totalHits: number, lethality: number): number {
-	if (lethality === 0) return totalHits;
-	const bonus = Math.min(totalHits * lethality, totalHits);
-	return totalHits + bonus;
+	if (lethality === 0 || totalHits === 0) return totalHits;
+	return totalHits + lethality;
 }

@@ -56,14 +56,14 @@ describe("applyLethality", () => {
 	it("no bonus when lethality=0", () => {
 		expect(applyLethality(4, 0)).toBe(4);
 	});
-	it("adds X per hit", () => {
-		expect(applyLethality(3, 1)).toBe(6); // 3 + min(3*1, 3) = 6
+	it("adds flat X hits to pool", () => {
+		expect(applyLethality(3, 1)).toBe(4); // 3 + 1
+		expect(applyLethality(3, 2)).toBe(5); // 3 + 2
 	});
-	it("caps bonus at base damage", () => {
-		// 2 hits, lethality=3 → bonus = min(6, 2) = 2 → total 4
-		expect(applyLethality(2, 3)).toBe(4);
+	it("X=3 adds 3 regardless of hit count", () => {
+		expect(applyLethality(2, 3)).toBe(5); // 2 + 3
 	});
-	it("zero hits produces zero", () => {
+	it("zero hits produces zero (no lethality without hits)", () => {
 		expect(applyLethality(0, 2)).toBe(0);
 	});
 });
