@@ -1,10 +1,11 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Menu, Sparkles, Swords, X } from "lucide-react";
+import { Axe, Menu, Sparkles, Swords, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
 	{ to: "/magic", label: "Magic", icon: Sparkles },
+	{ to: "/pohjola", label: "Pohjola", icon: Axe },
 	//{ to: "/about", label: "About", icon: Info },
 ] as const;
 

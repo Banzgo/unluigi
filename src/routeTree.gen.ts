@@ -9,10 +9,16 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PohjolaRouteImport } from './routes/pohjola'
 import { Route as MagicRouteImport } from './routes/magic'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 
+const PohjolaRoute = PohjolaRouteImport.update({
+  id: '/pohjola',
+  path: '/pohjola',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MagicRoute = MagicRouteImport.update({
   id: '/magic',
   path: '/magic',
@@ -33,34 +39,45 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/pohjola': typeof PohjolaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/pohjola': typeof PohjolaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/pohjola': typeof PohjolaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/magic'
+  fullPaths: '/' | '/about' | '/magic' | '/pohjola'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/magic'
-  id: '__root__' | '/' | '/about' | '/magic'
+  to: '/' | '/about' | '/magic' | '/pohjola'
+  id: '__root__' | '/' | '/about' | '/magic' | '/pohjola'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   MagicRoute: typeof MagicRoute
+  PohjolaRoute: typeof PohjolaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/pohjola': {
+      id: '/pohjola'
+      path: '/pohjola'
+      fullPath: '/pohjola'
+      preLoaderRoute: typeof PohjolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/magic': {
       id: '/magic'
       path: '/magic'
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   MagicRoute: MagicRoute,
+  PohjolaRoute: PohjolaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

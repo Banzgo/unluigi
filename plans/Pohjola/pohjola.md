@@ -4,9 +4,9 @@ overview: Add an isolated `/pohjola` route and `src/pohjola/` module with its ow
 todos:
   - id: docs-attack-resolution
     content: Write plans/Pohjola/attack-resolution.md and expand pohjola.md (metrics, order of ops, stage 2)
-    status: pending
+    status: done
   - id: engine-types-base
-    content: Create src/pohjola/engine/types.ts + base resolveAttack (pool, AS, DS, 6s skip defence)
+    content: Create src/pohjola/engine/types.ts + base resolveAttack (pool, AS, DS, crit threshold)
     status: pending
   - id: engine-rules
     content: Implement all attack specials in rules.ts with Vitest unit tests
@@ -29,9 +29,9 @@ isProject: false
 
 - New page at **`/pohjola`** (TanStack Router, same pattern as [`src/routes/magic.tsx`](src/routes/magic.tsx)).
 - All code under **`src/pohjola/`** so the T9A combat engine and [`CombatView`](src/components/CombatView.tsx) stay untouched.
-- **Stage 1:** full attack sequence + all attack-related special rules from [`plans/Pohjola/pohjola.md`](plans/Pohjola/pohjola.md); **exclude** Will tests and Fear.
+- **Stage 1:** full attack sequence + all attack-related special rules; **exclude** Will tests and Fear.
 - **UI:** damage distribution bar chart (like [`ProbabilityChart`](src/components/ProbabilityChart.tsx)), header with expected damage + variance + **overall avg crit / avg block**, tooltips per bar with **conditional** avg crit & block for that damage value.
-- **Docs:** expand `plans/Pohjola/pohjola.md` (and add a mechanics spec file) before/during implementation.
+- **Docs:** `plans/Pohjola/attack-resolution.md` (see sibling file) is the canonical rules reference.
 
 ## Architecture
 
@@ -71,7 +71,7 @@ flowchart TB
 | UI | `src/pohjola/components/` | Inputs, run button, chart, share link |
 | Engine | `src/pohjola/engine/` | One attack resolution + Monte Carlo loop |
 | Docs | `plans/Pohjola/` | Rules, resolution order, metric definitions |
-| Nav | [`src/components/Navbar.tsx`](src/components/Navbar.tsx) | Add “Pohjola” link |
+| Nav | [`src/components/Navbar.tsx`](src/components/Navbar.tsx) | Add "Pohjola" link |
 
 **Reuse (read-only imports):** `rollD6` / `parseDiceExpression` from [`src/engine/dice.ts`](src/engine/dice.ts), `calculateStatistics` from [`src/engine/probability.ts`](src/engine/probability.ts), shadcn `Card` / `Button` / `Input` / `ChartContainer` from [`src/components/ui/`](src/components/ui/).
 
@@ -79,43 +79,38 @@ flowchart TB
 
 ---
 
-## Documentation (first deliverable)
+## Attack Resolution (canonical — see also attack-resolution.md)
 
-Expand [`plans/Pohjola/pohjola.md`](plans/Pohjola/pohjola.md) and add **`plans/Pohjola/attack-resolution.md`** with:
+### Order of operations
 
-### Core attack loop (from doc)
+1. **Divine Truth [X]**: first X attack dice auto-succeed as normal hits (not crits). Roll the rest.
+2. **Hit roll**: remaining dice vs AS. die ≥ AS = hit.
+3. **Crit determination**: `critThreshold = max(2, 6 - criticalStrike)`. If `criticalStrike = -1`, crits are impossible (threshold 7). die ≥ critThreshold = crit (also a hit); AS ≤ die < critThreshold = normal hit.
+4. **Attacker rerolls**:
+   - `attackerGoodRerolls`: reroll up to N failed attack dice ("all" = all failures).
+   - `attackerBadTokens`: force-reroll up to N successful attack dice ("all" = all successes).
+5. **Titanic Strikes [X]**: each hit (crit or normal) becomes X+1 hits, preserving crit status. Applied **before** defence.
+6. **Defence phase** (per normal hit only — crits skip):
+   - `defenceDice = normalHitCount + resilient`; roll all, sort descending, assign top `normalHitCount` rolls vs DS.
+   - `defenderGoodRerolls`: reroll up to N failed defence dice.
+   - `defenderBadTokens`: force-reroll up to N successful defence dice.
+   - die ≥ DS = hit negated. die < DS = hit stands.
+7. **Block / Crush**: `effectiveBlock = max(0, block - crush)`. Cancel up to `effectiveBlock` crits.
+8. **Damage**: (remaining crits + surviving normal hits) = total hits → each hit = 1 HP.
+9. **Lethality [X]**: add X extra HP per hit, total bonus capped at damage dealt this attack.
+10. **Reverberating Strikes**: each hit that contributed to final damage spawns one sub-attack (same params, `canReverberate: false`).
 
-1. Roll **attack pool** (N d6).
-2. **Hit:** die ≥ **AS** (Attack Skill).
-3. Apply attacker modifiers (rerolls, tokens, Divine Truth, Titanic, etc.) — order fixed in spec.
-4. **Defence:** for each hit, roll defence **except** hits from attack dice showing **6** (auto-hit, no defence roll).
-5. **Critical hit (defence success):** defence die ≥ effective **DS** (Defence Skill), modified by attacker **Critical Strike [X]** (`effectiveDS = DS - X`, clamp 2–6).
-6. Apply **Block [X]** (defender: ignore up to X critical hits) and **Crush [X]** (attacker: ignore up to X Block cancellations).
-7. Remaining hits → **HP damage**; apply **Lethality [X]** (extra HP, capped at damage dealt this attack).
-8. **Reverberating Strikes:** each hit that remains after step 7 spawns one **red fury** sub-attack (same stats, `canReverberate: false`).
-
-### Tracked metrics (answers “nice to have” crit/block)
+### Tracked metrics
 
 | Metric | Definition |
 |--------|------------|
-| **Crit** | Defence successes: critical hits that **would** remove a hit (before Block/Crush adjustments), per iteration |
-| **Block** | Critical hits **negated** by Block [X] (after Crush), per iteration |
-| **Damage** | Final HP lost (base hits + Lethality), per iteration |
+| **Crits** | Total crit hits scored (post-Titanic, before Block rule) |
+| **Blocks** | Normal hits negated by successful defence rolls (die ≥ DS in step 6) |
+| **Damage** | Final HP lost (step 8 + Lethality), including Reverberating |
 
-**Tooltip:** for bar at damage `d`, show `P(damage = d)` plus `E[crit \| damage = d]` and `E[block \| damage = d]` (computed from iteration buckets).
+**Tooltip:** for bar at damage `d`: `P(damage = d)` + `E[crits | damage = d]` + `E[blocks | damage = d]`.
 
-**Header:** `E[damage]`, variance, `E[crit]`, `E[block]` across all iterations.
-
-### Rule parameters
-
-- Each `[X]` rule: UI select **0 / 1 / 2 / 3** (0 = off); **Critical Strike** also allows **-1** (increases effective DS).
-- **Good Rerolls / Bad Tokens:** count 1, 2, or “all” (map to engine enum).
-- **Divine Truth [X]:** X preset faces (1–6) applied to first X attack dice before rolling the rest.
-- **Resilient [X]:** document default from example — *3 hits, Resilient [1] → roll 4 defence dice, assign the **3 highest** rolls to the 3 hits* (pool + extra dice, take best per hit). **Flag in doc:** you chose “Other” for Resilient; confirm this interpretation at implementation time or adjust in one place in `rules.ts`.
-
-### Out of scope (stage 2)
-
-- Will tests, Fear, Versus mode, profile import.
+**Header:** `E[damage]`, variance, `E[crits]`, `E[blocks]` across all iterations.
 
 ---
 
@@ -124,22 +119,25 @@ Expand [`plans/Pohjola/pohjola.md`](plans/Pohjola/pohjola.md) and add **`plans/P
 ### Types — `types.ts`
 
 ```ts
-// Simplified sketch
+type RerollCount = 0 | 1 | 2 | "all";
+
 interface PohjolaAttackParams {
-  attackPool: number | string;   // dice count or expression
+  attackPool: number | string;        // dice count or expression
   as: 2 | 3 | 4 | 5 | 6;
   ds: 2 | 3 | 4 | 5 | 6;
   lethality: 0 | 1 | 2 | 3;
-  criticalStrike: -1 | 0 | 1 | 2 | 3;
+  criticalStrike: -1 | 0 | 1 | 2 | 3; // critThreshold = max(2, 6 - X); -1 = impossible
   crush: 0 | 1 | 2 | 3;
   block: 0 | 1 | 2 | 3;
-  titanicStrikes: 0 | 1 | 2 | 3;
-  resilient: 0 | 1 | 2 | 3;
-  goodRerolls: 0 | 1 | 2 | "all";
-  badTokens: 0 | 1 | 2 | "all";
-  divineTruth: number[];         // length = divineTruthX
+  titanicStrikes: 0 | 1 | 2 | 3;     // each hit → X+1 hits
+  resilient: 0 | 1 | 2 | 3;          // extra defence dice, pool + best N
+  attackerGoodRerolls: RerollCount;   // reroll failed attack dice
+  attackerBadTokens: RerollCount;     // force-reroll successful attack dice
+  defenderGoodRerolls: RerollCount;   // reroll failed defence dice
+  defenderBadTokens: RerollCount;     // force-reroll successful defence dice
+  divineTruth: number;                // count of auto-hit normal hits (first N dice)
   reverberating: boolean;
-  iterations?: number;           // default 10_000
+  iterations?: number;                // default 10_000
 }
 
 interface PohjolaIterationOutcome {
@@ -149,7 +147,7 @@ interface PohjolaIterationOutcome {
 }
 
 interface PohjolaSimulationResults {
-  damage: SimulationResults;     // from calculateStatistics(damage[])
+  damage: SimulationResults;          // from calculateStatistics(damage[])
   meanCrits: number;
   meanBlocks: number;
   byDamage: Record<number, {
@@ -165,24 +163,23 @@ interface PohjolaSimulationResults {
 
 - **`resolveAttack(params, options)`** → single `PohjolaIterationOutcome` (recursive only for Reverberating sub-attacks).
 - **`runPohjolaSimulation(params)`** → `PohjolaSimulationResults`.
-- **`rules.ts`:** pure helpers (`applyRerolls`, `applyTitanic`, `resolveDefence`, `applyLethality`, etc.) with **Vitest** coverage in `src/pohjola/engine/__tests__/`.
+- **`rules.ts`:** pure helpers (`applyRerolls`, `applyTitanic`, `resolveDefence`, `applyBlock`, `applyLethality`, etc.) with **Vitest** coverage in `src/pohjola/engine/__tests__/`.
 
-**Defence phase (Resilient default):**
+**Reroll helpers** (apply to both attacker and defender):
+- Good rerolls: count failures, reroll min(count, N) of them (or all if "all").
+- Bad tokens: count successes, force-reroll min(count, N) of them (or all if "all").
+- Each die rerolled at most once.
 
-- `defenceDice = hitCount + resilientX`
-- Roll `defenceDice` d6; sort descending; use top `hitCount` rolls vs `effectiveDS`.
-- Skip defence entirely for attack dice that rolled 6 (track per-hit whether it was a natural 6).
+**Block / Crush:** `effectiveBlock = max(0, block - crush)` → cancel min(crits, effectiveBlock) crits.
 
-**Block / Crush:** count raw crits first → apply Block cap → Crush reduces block applications → final cancelled hits.
-
-**Reverberating:** after main damage, for each remaining hit (post-defence), call `resolveAttack` with `reverberating: false`; sum damage/crits/blocks into parent outcome.
+**Reverberating:** after computing final damage hits, for each such hit call `resolveAttack` with `canReverberate: false`; sum damage/crits/blocks into parent outcome.
 
 ### Stats — `stats.ts`
 
 - Run N iterations, collect `{ damage, crits, blocks }[]`.
-- `damage` → `calculateStatistics` (reuse existing histogram).
+- `damage[]` → `calculateStatistics` (reuse existing histogram).
 - Build `byDamage` map for tooltip conditionals.
-- Global `meanCrits` / `meanBlocks` = arithmetic means.
+- `meanCrits` / `meanBlocks` = arithmetic means.
 
 ---
 
@@ -191,13 +188,14 @@ interface PohjolaSimulationResults {
 ### `PohjolaInput.tsx`
 
 - Card layout mirroring [`DiceInput`](src/components/DiceInput.tsx) / [`MagicSimulatorInput`](src/components/MagicSimulatorInput.tsx): core fields (pool, AS, DS) + accordion **Special rules** with X selectors.
+- Reroll section: 4 separate selects (attacker good/bad, defender good/bad), each 0/1/2/all.
 - **Simulate** button; optional auto-run from share URL.
 - **Share:** `encodePohjolaShareState` in `src/pohjola/utils/share.ts` (v1 JSON + base64url, same pattern as [`src/utils/share.ts`](src/utils/share.ts)).
 
 ### `PohjolaChart.tsx`
 
 - Fork layout from [`ProbabilityChart`](src/components/ProbabilityChart.tsx) (probability / cumulative toggle, bar colors by percentile, 0.1% filter).
-- Relabel **wounds → damage / HP**.
+- Relabel wounds → damage / HP.
 - Header block:
 
 ```
@@ -219,7 +217,7 @@ Avg crits: 2.1 · Avg blocks: 0.4
 
 ### Route + nav
 
-- Add [`src/routes/pohjola.tsx`](src/routes/pohjola.tsx); run route codegen if the project uses `tsr` generate (per existing [`routeTree.gen.ts`](src/routeTree.gen.ts) workflow).
+- Add [`src/routes/pohjola.tsx`](src/routes/pohjola.tsx); run route codegen if the project uses `tsr generate` (per existing [`routeTree.gen.ts`](src/routeTree.gen.ts) workflow).
 - [`Navbar.tsx`](src/components/Navbar.tsx): add `{ to: "/pohjola", label: "Pohjola", icon }` to `navLinks`.
 
 ---
@@ -228,11 +226,14 @@ Avg crits: 2.1 · Avg blocks: 0.4
 
 | Test | Purpose |
 |------|---------|
-| Unit: `effectiveDS`, Block/Crush ordering | Deterministic edge cases |
-| Unit: attack 6 skips defence | Doc rule |
-| Unit: Lethality cap | Never exceeds damage dealt |
-| Unit: Reverberating | Sub-attack runs once, no chain |
-| Statistical: large pool, AS 4+, DS 4+ | Mean damage within tolerance vs analytic baseline (optional) |
+| Unit: crit threshold | X=-1 → no crits; X=1 → 5+ crits |
+| Unit: Titanic | 2 hits + Titanic[1] → 4 hits pre-defence |
+| Unit: Block/Crush | effectiveBlock = max(0, block - crush) |
+| Unit: Lethality cap | bonus never exceeds damage dealt |
+| Unit: Reverberating | sub-attack runs once, no chain |
+| Unit: Resilient pool | 3 hits + Resilient[1] → roll 4, assign 3 best |
+| Unit: Reroll counts | good/bad rerolls respect count and "all" |
+| Statistical: large pool, AS 4+, DS 4+ | mean damage within tolerance vs analytic baseline |
 
 Use Vitest alongside existing [`src/engine`](src/engine) tests; no changes to T9A test files.
 
@@ -240,8 +241,8 @@ Use Vitest alongside existing [`src/engine`](src/engine) tests; no changes to T9
 
 ## Implementation order
 
-1. **Docs** — `attack-resolution.md` + update `pohjola.md` (metrics, stage boundaries, Resilient note).
-2. **Engine types + base loop** — pool → hits → defence → damage (no rules).
+1. **Docs** — `attack-resolution.md` (done in this session via plan update).
+2. **Engine types + base loop** — pool → hits → crit split → defence → damage (no specials).
 3. **Rules module** — add specials one-by-one with tests.
 4. **Stats + aggregation** — `byDamage` conditionals.
 5. **UI input + view + chart**.
@@ -250,6 +251,6 @@ Use Vitest alongside existing [`src/engine`](src/engine) tests; no changes to T9
 
 ---
 
-## Open confirmation (before coding Resilient)
+## Out of scope (stage 2)
 
-You selected **Other** for Resilient. The plan uses the doc example: **hits + X dice, assign best `hitCount` rolls**. Reply if you want per-hit “roll 1+X dice, any success counts” instead—we will only change `resolveDefence` in `rules.ts`.
+- Will tests, Fear, Versus mode, profile import.
