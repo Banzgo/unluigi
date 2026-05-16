@@ -36,6 +36,9 @@ describe("applyTitanic", () => {
 	it("no bonus on complete miss", () => {
 		expect(applyTitanic({ crits: 0, normal: 0 }, 2)).toEqual({ crits: 0, normal: 0 });
 	});
+  it("can at most double the total number of hits + crits", () => {
+    expect(applyTitanic({ crits: 1, normal: 1 }, 5)).toEqual({ crits: 1, normal: 3 });
+  });
 	it("preserves crits, adds normal bonus even when no normals", () => {
 		const result = applyTitanic({ crits: 3, normal: 0 }, 1);
 		expect(result.crits).toBe(3);
@@ -66,8 +69,8 @@ describe("applyLethality", () => {
 		expect(applyLethality(3, 1)).toBe(4); // 3 + 1
 		expect(applyLethality(3, 2)).toBe(5); // 3 + 2
 	});
-	it("X=3 adds 3 regardless of hit count", () => {
-		expect(applyLethality(2, 3)).toBe(5); // 2 + 3
+	it("Adds at most double the total damage", () => {
+		expect(applyLethality(2, 3)).toBe(4); // 2 + 2
 	});
 	it("zero hits produces zero (no lethality without hits)", () => {
 		expect(applyLethality(0, 2)).toBe(0);

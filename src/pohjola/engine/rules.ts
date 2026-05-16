@@ -100,10 +100,12 @@ export function applyAttackerRerolls(
 	return { crits: c, normal: n, goodUsed, badUsed };
 }
 
-/** Apply Titanic Strikes: add X flat normal hits to the pool. No bonus on complete miss. */
+/** Apply Titanic Strikes: add X flat normal hits to the pool. Can at most double the total number of hits + crits. No bonus on complete miss. */
 export function applyTitanic(hits: HitPool, titanicStrikes: number): HitPool {
-	if (titanicStrikes === 0 || hits.crits + hits.normal === 0) return hits;
-	return { crits: hits.crits, normal: hits.normal + titanicStrikes };
+	if (titanicStrikes === 0) return hits;
+  const totalHits = hits.crits + hits.normal;
+  const titanic = Math.min(titanicStrikes, totalHits);
+	return { crits: hits.crits, normal: hits.normal + titanic };
 }
 
 /**
@@ -164,8 +166,9 @@ export function applyBlock(crits: number, block: number, crush: number): { remai
 	return { remainingCrits: crits - converted, convertedToNormal: converted };
 }
 
-/** Lethality: add X extra hits to the pool (flat bonus). No effect if no hits. */
+/** Lethality: add X extra damage to the pool (flat bonus) at most doubling the total damage. No effect if no hits. */
 export function applyLethality(totalHits: number, lethality: number): number {
-	if (lethality === 0 || totalHits === 0) return totalHits;
-	return totalHits + lethality;
+	if (lethality === 0) return totalHits;
+  const lethalityBonus = Math.min(lethality, totalHits);
+	return totalHits + lethalityBonus;
 }

@@ -60,7 +60,7 @@ After rerolls, re-classify hits as crit / normal using critThreshold.
 
 ### Step 5 — Titanic Strikes [X]
 
-Add X flat **normal** hits to the pool (no effect on a complete miss, and crits are unaffected).  
+Add X flat **normal** hits to the pool (no effect on a complete miss, and crits are unaffected). Adds at most double to total number of hits + crits
 Example: 2 crits + 1 normal hit, Titanic[1] → 2 crits + 2 normal hits.  
 Applied **before** Block and defence.
 
@@ -107,8 +107,8 @@ Each hit = 1 HP damage.
 
 ### Step 10 — Lethality [X]
 
-Adds X extra hits to the pool (flat bonus). No effect if totalHits = 0.  
-`damage = totalHits + X` (when totalHits > 0)
+Adds X extra hits to the pool (flat bonus). At most adds totalHits amount. No effect if totalHits = 0.  
+`damage = totalHits + min(X, totalHits)` 
 
 ---
 
