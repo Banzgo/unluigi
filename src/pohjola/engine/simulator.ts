@@ -7,6 +7,7 @@ import {
 	getCritThreshold,
 	resolveDefence,
 	rollAttacks,
+	subtractRerollBudget,
 } from "./rules";
 import type { PohjolaAttackParams, PohjolaIterationOutcome } from "./types";
 
@@ -22,6 +23,7 @@ const DEFAULTS = {
 	defenderGoodRerolls: 0 as const,
 	defenderBadTokens: 0 as const,
 	divineTruth: 0,
+	defenderDivineTruth: 0,
 	reverberating: false,
 	iterations: 10_000,
 };
@@ -34,14 +36,15 @@ export function resolveAttack(params: Required<PohjolaAttackParams>): PohjolaIte
 	const poolSize = parseDiceExpression(params.attackPool);
 	const critThreshold = getCritThreshold(params.criticalStrike);
 
-	// Step 1-3: Roll attacks, classify hits
-	const {
-		crits: rawCrits,
-		normal: rawNormal,
-		failedRolls,
-	} = rollAttacks(poolSize, params.as, critThreshold, params.divineTruth);
+	// Step 1: Roll attacks, classify hits
+	const { crits: rawCrits, normal: rawNormal, failedRolls } = rollAttacks(
+		poolSize,
+		params.as,
+		critThreshold,
+		params.divineTruth,
+	);
 
-	// Step 4: Attacker rerolls
+	// Step 2: Attacker rerolls — both good/bad determined from initial roll, each die rerolled once
 	const afterRerolls = applyAttackerRerolls(
 		rawCrits,
 		rawNormal,
@@ -52,45 +55,49 @@ export function resolveAttack(params: Required<PohjolaAttackParams>): PohjolaIte
 		params.attackerBadTokens,
 	);
 
-	// Step 5: Titanic Strikes
-	const afterTitanic = applyTitanic(afterRerolls, params.titanicStrikes);
+	// Step 3: Titanic Strikes — flat +X normal hits added to pool
+	let combined = applyTitanic(afterRerolls, params.titanicStrikes);
 
-	// Step 6: Defence phase (normal hits only)
+	// Step 4: Reverberating Strikes — each hit spawns one new d6 attack, results join pool
+	// Reroll budget is reduced by what was consumed on the main attack
+	if (params.reverberating) {
+		const hitCount = combined.crits + combined.normal;
+		let extraCrits = 0;
+		let extraNormals = 0;
+		let gBudget = subtractRerollBudget(params.attackerGoodRerolls, afterRerolls.goodUsed);
+		let bBudget = subtractRerollBudget(params.attackerBadTokens, afterRerolls.badUsed);
+		for (let i = 0; i < hitCount; i++) {
+			const { crits: rc, normal: rn, failedRolls: subFailed } = rollAttacks(1, params.as, critThreshold, 0);
+			const sub = applyAttackerRerolls(rc, rn, subFailed.length, params.as, critThreshold, gBudget, bBudget);
+			extraCrits += sub.crits;
+			extraNormals += sub.normal;
+			gBudget = subtractRerollBudget(gBudget, sub.goodUsed);
+			bBudget = subtractRerollBudget(bBudget, sub.badUsed);
+		}
+		combined = { crits: combined.crits + extraCrits, normal: combined.normal + extraNormals };
+	}
+
+	// Step 5: Block / Crush — convert crits to normal hits (converted still face defence)
+	const { remainingCrits, convertedToNormal } = applyBlock(combined.crits, params.block, params.crush);
+
+	// Step 6: Defence phase (all normal hits including Block-converted crits)
 	const { survived: survivedNormal, negated } = resolveDefence(
-		afterTitanic.normal,
+		combined.normal + convertedToNormal,
 		params.ds,
 		params.resilient,
 		params.defenderGoodRerolls,
 		params.defenderBadTokens,
+		params.defenderDivineTruth,
 	);
 
-	// Step 7: Block / Crush
-	const { remainingCrits } = applyBlock(afterTitanic.crits, params.block, params.crush);
-
-	// Step 8: Total hits
+	// Step 7: Total hits + Lethality
 	const totalHits = remainingCrits + survivedNormal;
-
-	// Step 9: Lethality
 	const damage = applyLethality(totalHits, params.lethality);
 
-	// Step 10: Reverberating Strikes
-	let subDamage = 0;
-	let subCrits = 0;
-	let subBlocks = 0;
-	if (params.reverberating && totalHits > 0) {
-		const subParams: Required<PohjolaAttackParams> = { ...params, attackPool: 1, reverberating: false };
-		for (let i = 0; i < totalHits; i++) {
-			const sub = resolveAttack(subParams);
-			subDamage += sub.damage;
-			subCrits += sub.crits;
-			subBlocks += sub.blocks;
-		}
-	}
-
 	return {
-		damage: damage + subDamage,
-		crits: afterTitanic.crits + subCrits,
-		blocks: negated + subBlocks, // successful defence saves (normal hits negated)
+		damage,
+		crits: combined.crits,
+		blocks: negated,
 	};
 }
 

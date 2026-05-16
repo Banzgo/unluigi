@@ -14,7 +14,7 @@ export function getCritThreshold(criticalStrike: -1 | 0 | 1 | 2 | 3): number {
 
 /**
  * Roll the attack pool and classify hits.
- * divineTruth dice auto-succeed as normal hits.
+ * divineTruth dice auto-succeed as crits (skip the roll entirely).
  * Returns { crits, normal } before rerolls/titanic.
  */
 export function rollAttacks(
@@ -23,9 +23,9 @@ export function rollAttacks(
 	critThreshold: number,
 	divineTruth: number,
 ): { crits: number; normal: number; failedRolls: number[]; successRolls: number[] } {
-	let crits = 0;
 	const autoHits = Math.min(divineTruth, poolSize);
-	let normal = autoHits; // auto-hits are always normal hits
+	let crits = autoHits; // auto-hits are always crits
+	let normal = 0;
 	const failedRolls: number[] = [];
 	const successRolls: number[] = [];
 
@@ -53,10 +53,21 @@ function rerollCount(eligible: number, limit: RerollCount): number {
 	return Math.min(eligible, limit);
 }
 
+export interface AttackerRerollResult extends HitPool {
+	goodUsed: number;
+	badUsed: number;
+}
+
+/** Subtract used rerolls from budget. "all" is inexhaustible. */
+export function subtractRerollBudget(original: RerollCount, used: number): RerollCount {
+	if (original === "all") return "all";
+	return Math.max(0, original - used) as RerollCount;
+}
+
 /**
  * Apply attacker good rerolls (reroll failures) and bad tokens (reroll successes).
- * Good rerolls happen first; bad tokens apply to all successes after good rerolls.
- * Each original die is rerolled at most once.
+ * Both determined from the initial roll — each die rerolled at most once.
+ * Returns hits plus how many rerolls were consumed (for reverberating budget).
  */
 export function applyAttackerRerolls(
 	crits: number,
@@ -66,44 +77,38 @@ export function applyAttackerRerolls(
 	critThreshold: number,
 	goodRerolls: RerollCount,
 	badTokens: RerollCount,
-): HitPool {
+): AttackerRerollResult {
 	let c = crits;
 	let n = normal;
 
-	// Good rerolls: reroll failed attack dice
-	const goodCount = rerollCount(failedCount, goodRerolls);
-	for (let i = 0; i < goodCount; i++) {
-		const die = rollD6();
-		if (die >= critThreshold) c++;
-		else if (die >= as) n++;
-	}
+	// Determine rerolls from INITIAL roll — bad budget from original successes, not post-good-reroll
+	const goodUsed = rerollCount(failedCount, goodRerolls);
+	const badUsed = rerollCount(c + n, badTokens);
 
-	// Bad tokens: force-reroll successes (strip crits first, then normal hits)
-	const badCount = rerollCount(c + n, badTokens);
-	let toStrip = badCount;
-	const strippedCrits = Math.min(toStrip, c);
+	// Strip original successes claimed by bad tokens (crits first)
+	const strippedCrits = Math.min(badUsed, c);
 	c -= strippedCrits;
-	toStrip -= strippedCrits;
-	n -= Math.min(toStrip, n);
+	n -= Math.min(badUsed - strippedCrits, n);
 
-	for (let i = 0; i < badCount; i++) {
+	// Reroll all targeted dice — no die rerolled twice (failures ∩ successes = ∅)
+	for (let i = 0; i < goodUsed + badUsed; i++) {
 		const die = rollD6();
 		if (die >= critThreshold) c++;
 		else if (die >= as) n++;
 	}
 
-	return { crits: c, normal: n };
+	return { crits: c, normal: n, goodUsed, badUsed };
 }
 
-/** Apply Titanic Strikes: each hit becomes X+1 hits, crits stay crits. */
+/** Apply Titanic Strikes: add X flat normal hits to the pool. No bonus on complete miss. */
 export function applyTitanic(hits: HitPool, titanicStrikes: number): HitPool {
-	if (titanicStrikes === 0) return hits;
-	const multiplier = titanicStrikes + 1;
-	return { crits: hits.crits * multiplier, normal: hits.normal * multiplier };
+	if (titanicStrikes === 0 || hits.crits + hits.normal === 0) return hits;
+	return { crits: hits.crits, normal: hits.normal + titanicStrikes };
 }
 
 /**
  * Roll defence for normal hits.
+ * defenderDivineTruth: first N hits auto-save without rolling.
  * Resilient: pool = normalHits + resilient extra dice, assign top normalHits vs DS.
  * Returns { negated, survived } normal hits.
  */
@@ -113,43 +118,50 @@ export function resolveDefence(
 	resilient: number,
 	defenderGoodRerolls: RerollCount,
 	defenderBadTokens: RerollCount,
+	defenderDivineTruth = 0,
 ): { negated: number; survived: number } {
 	if (normalHits === 0) return { negated: 0, survived: 0 };
 
-	const poolSize = normalHits + resilient;
+	const autoSaves = Math.min(defenderDivineTruth, normalHits);
+	const hitsNeedingRoll = normalHits - autoSaves;
+
+	if (hitsNeedingRoll === 0) return { negated: normalHits, survived: 0 };
+
+	const poolSize = hitsNeedingRoll + resilient;
 	const rolls: number[] = [];
 
 	for (let i = 0; i < poolSize; i++) {
 		rolls.push(rollD6());
 	}
 
-	// Defender good rerolls: reroll dice below DS
+	// Determine reroll targets from ORIGINAL rolls — each die rerolled at most once
 	const failedIndices = rolls.map((r, i) => (r < ds ? i : -1)).filter((i) => i >= 0);
+	const successIndices = rolls.map((r, i) => (r >= ds ? i : -1)).filter((i) => i >= 0);
+
 	const goodCount = rerollCount(failedIndices.length, defenderGoodRerolls);
+	const badCount = rerollCount(successIndices.length, defenderBadTokens);
+
 	for (let i = 0; i < goodCount; i++) {
 		rolls[failedIndices[i]] = rollD6();
 	}
-
-	// Defender bad tokens: force-reroll dice at or above DS
-	const successIndices = rolls.map((r, i) => (r >= ds ? i : -1)).filter((i) => i >= 0);
-	const badCount = rerollCount(successIndices.length, defenderBadTokens);
 	for (let i = 0; i < badCount; i++) {
 		rolls[successIndices[i]] = rollD6();
 	}
 
-	// Assign top normalHits rolls to hits
+	// Assign top hitsNeedingRoll rolls to hits
 	rolls.sort((a, b) => b - a);
-	const assigned = rolls.slice(0, normalHits);
+	const assigned = rolls.slice(0, hitsNeedingRoll);
 
-	const negated = assigned.filter((r) => r >= ds).length;
+	const rolledNegated = assigned.filter((r) => r >= ds).length;
+	const negated = autoSaves + rolledNegated;
 	return { negated, survived: normalHits - negated };
 }
 
-/** Block/Crush: effectiveBlock = max(0, block - crush). Returns crits cancelled. */
-export function applyBlock(crits: number, block: number, crush: number): { remainingCrits: number; blocked: number } {
+/** Block/Crush: effectiveBlock = max(0, block - crush). Converts crits to normal hits (still face defence). */
+export function applyBlock(crits: number, block: number, crush: number): { remainingCrits: number; convertedToNormal: number } {
 	const effectiveBlock = Math.max(0, block - crush);
-	const blocked = Math.min(crits, effectiveBlock);
-	return { remainingCrits: crits - blocked, blocked };
+	const converted = Math.min(crits, effectiveBlock);
+	return { remainingCrits: crits - converted, convertedToNormal: converted };
 }
 
 /** Lethality: add X extra hits to the pool (flat bonus). No effect if no hits. */

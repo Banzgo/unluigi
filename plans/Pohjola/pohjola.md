@@ -7,19 +7,19 @@ todos:
     status: done
   - id: engine-types-base
     content: Create src/pohjola/engine/types.ts + base resolveAttack (pool, AS, DS, crit threshold)
-    status: pending
+    status: done
   - id: engine-rules
     content: Implement all attack specials in rules.ts with Vitest unit tests
-    status: pending
+    status: done
   - id: engine-monte-carlo
     content: Add runPohjolaSimulation + stats.ts (byDamage conditionals, reuse calculateStatistics)
-    status: pending
+    status: done
   - id: ui-pohjola
     content: Build PohjolaInput, PohjolaChart (damage + crit/block tooltips/header), PohjolaView
-    status: pending
+    status: done
   - id: route-nav-share
     content: Add /pohjola route, Navbar link, share encode/decode
-    status: pending
+    status: done
 isProject: false
 ---
 
@@ -83,21 +83,24 @@ flowchart TB
 
 ### Order of operations
 
-1. **Divine Truth [X]**: first X attack dice auto-succeed as normal hits (not crits). Roll the rest.
+1. **Divine Truth [X]**: first X attack dice auto-succeed as **crits** (skip the hit roll entirely). Roll the rest.
 2. **Hit roll**: remaining dice vs AS. die ≥ AS = hit.
 3. **Crit determination**: `critThreshold = max(2, 6 - criticalStrike)`. If `criticalStrike = -1`, crits are impossible (threshold 7). die ≥ critThreshold = crit (also a hit); AS ≤ die < critThreshold = normal hit.
 4. **Attacker rerolls**:
    - `attackerGoodRerolls`: reroll up to N failed attack dice ("all" = all failures).
    - `attackerBadTokens`: force-reroll up to N successful attack dice ("all" = all successes).
-5. **Titanic Strikes [X]**: each hit (crit or normal) becomes X+1 hits, preserving crit status. Applied **before** defence.
-6. **Defence phase** (per normal hit only — crits skip):
+   - Reroll budget determined from the initial roll; each die rerolled at most once.
+5. **Titanic Strikes [X]**: add X flat **normal** hits to the pool (no effect on complete miss). Crits are unaffected. Applied before defence and Block.
+6. **Reverberating Strikes**: each hit in the current pool spawns one additional d6 attack die, resolved with the same AS / crit threshold and the remaining attacker-reroll budget (shared). Extra hits join the combined pool before defence.
+7. **Block / Crush**: `effectiveBlock = max(0, block - crush)`. Convert up to `effectiveBlock` crits into **normal hits** (they still face the defence roll).
+8. **Defence phase** (all normal hits — including Block-converted crits):
    - `defenceDice = normalHitCount + resilient`; roll all, sort descending, assign top `normalHitCount` rolls vs DS.
+   - `defenderDivineTruth`: first N hits auto-save (no roll required).
    - `defenderGoodRerolls`: reroll up to N failed defence dice.
    - `defenderBadTokens`: force-reroll up to N successful defence dice.
-   - die ≥ DS = hit negated. die < DS = hit stands.
-7. **Block / Crush**: `effectiveBlock = max(0, block - crush)`. Cancel up to `effectiveBlock` crits.
-8. **Damage**: (remaining crits + surviving normal hits) = total hits → each hit = 1 HP.
-9. **Lethality [X]**: add X extra hits to the pool (flat bonus, no effect if 0 hits).
+   - die ≥ DS = hit negated (counted as a Block). die < DS = hit stands.
+9. **Damage**: (remaining crits + surviving normal hits) = total hits → each hit = 1 HP.
+10. **Lethality [X]**: add X extra hits to the pool (flat bonus, no effect if 0 hits).
 10. **Reverberating Strikes**: each hit that contributed to final damage spawns one sub-attack (same params, `canReverberate: false`).
 
 ### Tracked metrics
@@ -129,13 +132,14 @@ interface PohjolaAttackParams {
   criticalStrike: -1 | 0 | 1 | 2 | 3; // critThreshold = max(2, 6 - X); -1 = impossible
   crush: 0 | 1 | 2 | 3;
   block: 0 | 1 | 2 | 3;
-  titanicStrikes: 0 | 1 | 2 | 3;     // each hit → X+1 hits
+  titanicStrikes: 0 | 1 | 2 | 3;     // flat +X normal hits added to pool (no effect on miss)
   resilient: 0 | 1 | 2 | 3;          // extra defence dice, pool + best N
   attackerGoodRerolls: RerollCount;   // reroll failed attack dice
   attackerBadTokens: RerollCount;     // force-reroll successful attack dice
   defenderGoodRerolls: RerollCount;   // reroll failed defence dice
   defenderBadTokens: RerollCount;     // force-reroll successful defence dice
-  divineTruth: number;                // count of auto-hit normal hits (first N dice)
+  divineTruth: number;                // count of auto-crit hits (first N dice bypass roll)
+  defenderDivineTruth: number;        // count of auto-save defence hits (first N hits auto-negated)
   reverberating: boolean;
   iterations?: number;                // default 10_000
 }
@@ -161,18 +165,18 @@ interface PohjolaSimulationResults {
 
 ### Resolution — `simulator.ts` + `rules.ts`
 
-- **`resolveAttack(params, options)`** → single `PohjolaIterationOutcome` (recursive only for Reverberating sub-attacks).
-- **`runPohjolaSimulation(params)`** → `PohjolaSimulationResults`.
-- **`rules.ts`:** pure helpers (`applyRerolls`, `applyTitanic`, `resolveDefence`, `applyBlock`, `applyLethality`, etc.) with **Vitest** coverage in `src/pohjola/engine/__tests__/`.
+- **`resolveAttack(params)`** → single `PohjolaIterationOutcome`.
+- **`runPohjolaSimulation(params)`** → `PohjolaIterationOutcome[]`.
+- **`rules.ts`:** pure helpers (`rollAttacks`, `applyAttackerRerolls`, `applyTitanic`, `resolveDefence`, `applyBlock`, `applyLethality`, `getCritThreshold`, `subtractRerollBudget`) with **Vitest** coverage in `src/pohjola/engine/__tests__/`.
 
 **Reroll helpers** (apply to both attacker and defender):
 - Good rerolls: count failures, reroll min(count, N) of them (or all if "all").
-- Bad tokens: count successes, force-reroll min(count, N) of them (or all if "all").
+- Bad tokens: determined from the **initial** roll (pre-good-reroll), force-reroll min(count, N) of them.
 - Each die rerolled at most once.
 
-**Block / Crush:** `effectiveBlock = max(0, block - crush)` → cancel min(crits, effectiveBlock) crits.
+**Block / Crush:** `effectiveBlock = max(0, block - crush)` → **convert** min(crits, effectiveBlock) crits into normal hits (converted hits still face the defence roll).
 
-**Reverberating:** after computing final damage hits, for each such hit call `resolveAttack` with `canReverberate: false`; sum damage/crits/blocks into parent outcome.
+**Reverberating:** for each hit in the post-Titanic pool, roll one additional d6 attack die through hit/crit classification and the remaining attacker-reroll budget (budget is shared and decremented after main attack). Extra hits are appended to the combined pool **before** Block and defence.
 
 ### Stats — `stats.ts`
 

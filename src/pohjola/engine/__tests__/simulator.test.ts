@@ -17,6 +17,7 @@ const base: Required<PohjolaAttackParams> = {
 	defenderGoodRerolls: 0,
 	defenderBadTokens: 0,
 	divineTruth: 0,
+	defenderDivineTruth: 0,
 	reverberating: false,
 	iterations: 1000,
 };
@@ -48,11 +49,19 @@ describe("resolveAttack", () => {
 		}
 	});
 
-	it("divine truth auto-hits count as normal (not crits)", () => {
-		// criticalStrike=-1 = no crits possible. divineTruth=3, pool=3 → all 3 are auto-normal.
+	it("attacker divine truth auto-hits count as crits", () => {
+		// divineTruth=3, pool=3 → all 3 are auto-crits (bypass AS roll entirely)
 		const params: Required<PohjolaAttackParams> = { ...base, criticalStrike: -1, divineTruth: 3, attackPool: 3 };
 		for (let i = 0; i < 20; i++) {
-			expect(resolveAttack(params).crits).toBe(0);
+			expect(resolveAttack(params).crits).toBe(3);
+		}
+	});
+
+	it("defender divine truth auto-saves all hits", () => {
+		// criticalStrike=-1 = no crits. defenderDivineTruth=10 → all normal hits auto-saved
+		const params: Required<PohjolaAttackParams> = { ...base, criticalStrike: -1, defenderDivineTruth: 10, attackPool: 6 };
+		for (let i = 0; i < 20; i++) {
+			expect(resolveAttack(params).damage).toBe(0);
 		}
 	});
 

@@ -24,31 +24,37 @@ describe("applyTitanic", () => {
 	it("no-op when 0", () => {
 		expect(applyTitanic({ crits: 2, normal: 1 }, 0)).toEqual({ crits: 2, normal: 1 });
 	});
-	it("doubles hits at X=1", () => {
-		expect(applyTitanic({ crits: 2, normal: 3 }, 1)).toEqual({ crits: 4, normal: 6 });
+	it("adds X flat normal hits — 2 hits + X=1 → 3 hits", () => {
+		expect(applyTitanic({ crits: 0, normal: 2 }, 1)).toEqual({ crits: 0, normal: 3 });
 	});
-	it("triples hits at X=2", () => {
-		expect(applyTitanic({ crits: 1, normal: 1 }, 2)).toEqual({ crits: 3, normal: 3 });
+	it("adds X to normals, crits unchanged", () => {
+		expect(applyTitanic({ crits: 2, normal: 3 }, 1)).toEqual({ crits: 2, normal: 4 });
 	});
-	it("preserves crit status", () => {
+	it("adds X=2 flat normal hits", () => {
+		expect(applyTitanic({ crits: 1, normal: 1 }, 2)).toEqual({ crits: 1, normal: 3 });
+	});
+	it("no bonus on complete miss", () => {
+		expect(applyTitanic({ crits: 0, normal: 0 }, 2)).toEqual({ crits: 0, normal: 0 });
+	});
+	it("preserves crits, adds normal bonus even when no normals", () => {
 		const result = applyTitanic({ crits: 3, normal: 0 }, 1);
-		expect(result.crits).toBe(6);
-		expect(result.normal).toBe(0);
+		expect(result.crits).toBe(3);
+		expect(result.normal).toBe(1);
 	});
 });
 
 describe("applyBlock", () => {
 	it("effectiveBlock = block - crush, min 0", () => {
-		expect(applyBlock(5, 2, 3)).toEqual({ remainingCrits: 5, blocked: 0 });
+		expect(applyBlock(5, 2, 3)).toEqual({ remainingCrits: 5, convertedToNormal: 0 });
 	});
-	it("cancels up to effectiveBlock crits", () => {
-		expect(applyBlock(5, 3, 1)).toEqual({ remainingCrits: 3, blocked: 2 });
+	it("converts up to effectiveBlock crits to normals", () => {
+		expect(applyBlock(5, 3, 1)).toEqual({ remainingCrits: 3, convertedToNormal: 2 });
 	});
-	it("cannot block more crits than exist", () => {
-		expect(applyBlock(1, 3, 0)).toEqual({ remainingCrits: 0, blocked: 1 });
+	it("cannot convert more crits than exist", () => {
+		expect(applyBlock(1, 3, 0)).toEqual({ remainingCrits: 0, convertedToNormal: 1 });
 	});
 	it("crush=0 uses full block value", () => {
-		expect(applyBlock(4, 2, 0)).toEqual({ remainingCrits: 2, blocked: 2 });
+		expect(applyBlock(4, 2, 0)).toEqual({ remainingCrits: 2, convertedToNormal: 2 });
 	});
 });
 

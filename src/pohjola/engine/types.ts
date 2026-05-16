@@ -19,8 +19,10 @@ export interface PohjolaAttackParams {
 	attackerBadTokens: RerollCount;
 	defenderGoodRerolls: RerollCount;
 	defenderBadTokens: RerollCount;
-	/** count of auto-hit normal hits (first N dice skip the roll) */
+	/** count of auto-crit hits (first N attacker dice skip the roll, count as crits) */
 	divineTruth: number;
+	/** count of auto-succeed defence saves (first N defender dice auto-save) */
+	defenderDivineTruth: number;
 	reverberating: boolean;
 	iterations?: number;
 }

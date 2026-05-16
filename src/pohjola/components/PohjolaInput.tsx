@@ -23,11 +23,12 @@ export interface PohjolaInputState {
 	defenderGoodRerolls: RerollCount;
 	defenderBadTokens: RerollCount;
 	divineTruth: 0 | 1 | 2 | 3 | 4 | 5;
+	defenderDivineTruth: 0 | 1 | 2 | 3 | 4 | 5;
 	reverberating: boolean;
 }
 
 export const POHJOLA_DEFAULT_STATE: PohjolaInputState = {
-	attackPool: "6",
+	attackPool: "4",
 	as: 4,
 	ds: 4,
 	lethality: 0,
@@ -41,6 +42,7 @@ export const POHJOLA_DEFAULT_STATE: PohjolaInputState = {
 	defenderGoodRerolls: 0,
 	defenderBadTokens: 0,
 	divineTruth: 0,
+	defenderDivineTruth: 0,
 	reverberating: false,
 };
 
@@ -126,6 +128,7 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 				defenderGoodRerolls: state.defenderGoodRerolls,
 				defenderBadTokens: state.defenderBadTokens,
 				divineTruth: state.divineTruth,
+				defenderDivineTruth: state.defenderDivineTruth,
 				reverberating: state.reverberating,
 				iterations: 50_000,
 			});
@@ -322,7 +325,7 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 						/>
 						<CycleBtn
 							label="Divine Truth"
-							value={inputs.divineTruth === 0 ? "Off" : `${inputs.divineTruth} auto`}
+							value={inputs.divineTruth === 0 ? "Off" : `${inputs.divineTruth} crits`}
 							active={inputs.divineTruth !== 0}
 							onClick={() => set("divineTruth", cycleNext(DIVINE_TRUTH_OPTIONS, inputs.divineTruth))}
 						/>
@@ -356,6 +359,12 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 							value={inputs.resilient === 0 ? "Off" : `[${inputs.resilient}]`}
 							active={inputs.resilient !== 0}
 							onClick={() => set("resilient", cycleNext(TITANIC_RESILIENT_OPTIONS, inputs.resilient))}
+						/>
+						<CycleBtn
+							label="Divine Truth"
+							value={inputs.defenderDivineTruth === 0 ? "Off" : `${inputs.defenderDivineTruth} saves`}
+							active={inputs.defenderDivineTruth !== 0}
+							onClick={() => set("defenderDivineTruth", cycleNext(DIVINE_TRUTH_OPTIONS, inputs.defenderDivineTruth))}
 						/>
 					</div>
 				</div>
