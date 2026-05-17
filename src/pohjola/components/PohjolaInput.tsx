@@ -311,6 +311,12 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 							active={inputs.criticalStrike !== 0}
 							onClick={() => set("criticalStrike", cycleNext(CRIT_STRIKE_OPTIONS, inputs.criticalStrike))}
 						/>
+            <CycleBtn
+							label="Crush"
+							value={inputs.crush === 0 ? "Off" : `[${inputs.crush}]`}
+							active={inputs.crush !== 0}
+							onClick={() => set("crush", cycleNext(CRUSH_BLOCK_OPTIONS, inputs.crush))}
+						/>
 						<CycleBtn
 							label="Lethality"
 							value={inputs.lethality === 0 ? "Off" : `[${inputs.lethality}]`}
@@ -347,12 +353,6 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 							value={inputs.block === 0 ? "Off" : `[${inputs.block}]`}
 							active={inputs.block !== 0}
 							onClick={() => set("block", cycleNext(CRUSH_BLOCK_OPTIONS, inputs.block))}
-						/>
-						<CycleBtn
-							label="Crush"
-							value={inputs.crush === 0 ? "Off" : `[${inputs.crush}]`}
-							active={inputs.crush !== 0}
-							onClick={() => set("crush", cycleNext(CRUSH_BLOCK_OPTIONS, inputs.crush))}
 						/>
 						<CycleBtn
 							label="Resilient"
