@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PohjolaRouteImport } from './routes/pohjola'
+import { Route as MatchresultRouteImport } from './routes/matchresult'
 import { Route as MagicRouteImport } from './routes/magic'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +18,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const PohjolaRoute = PohjolaRouteImport.update({
   id: '/pohjola',
   path: '/pohjola',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchresultRoute = MatchresultRouteImport.update({
+  id: '/matchresult',
+  path: '/matchresult',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MagicRoute = MagicRouteImport.update({
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/matchresult': typeof MatchresultRoute
   '/pohjola': typeof PohjolaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/matchresult': typeof MatchresultRoute
   '/pohjola': typeof PohjolaRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,22 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/magic': typeof MagicRoute
+  '/matchresult': typeof MatchresultRoute
   '/pohjola': typeof PohjolaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/magic' | '/pohjola'
+  fullPaths: '/' | '/about' | '/magic' | '/matchresult' | '/pohjola'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/magic' | '/pohjola'
-  id: '__root__' | '/' | '/about' | '/magic' | '/pohjola'
+  to: '/' | '/about' | '/magic' | '/matchresult' | '/pohjola'
+  id: '__root__' | '/' | '/about' | '/magic' | '/matchresult' | '/pohjola'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   MagicRoute: typeof MagicRoute
+  MatchresultRoute: typeof MatchresultRoute
   PohjolaRoute: typeof PohjolaRoute
 }
 
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/pohjola'
       fullPath: '/pohjola'
       preLoaderRoute: typeof PohjolaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matchresult': {
+      id: '/matchresult'
+      path: '/matchresult'
+      fullPath: '/matchresult'
+      preLoaderRoute: typeof MatchresultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/magic': {
@@ -106,6 +123,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   MagicRoute: MagicRoute,
+  MatchresultRoute: MatchresultRoute,
   PohjolaRoute: PohjolaRoute,
 }
 export const routeTree = rootRouteImport
