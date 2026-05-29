@@ -46,51 +46,43 @@ export function ScorePanel({
 	return (
 		<div className="bg-card border border-border rounded-xl p-4 space-y-4">
 			{/* VP + BP scores */}
-			<div className="grid grid-cols-3 gap-2 text-center">
-				{/* Player 1 */}
-				<div className="space-y-1">
-					<p className="text-xs text-muted-foreground uppercase tracking-wide">{p1Name} VP</p>
-					<p className="text-2xl font-bold font-mono">{formatVp(result.player1Vp)}</p>
-					<p
-						className={cn(
-							"text-3xl font-bold",
-							p1Wins ? "text-green-400" : p2Wins ? "text-red-400" : "text-yellow-400",
-						)}
-					>
-						{result.player1Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
-					</p>
-					{p1NextVp !== null && <p className="text-xs text-muted-foreground/60">{p1NextVp} VP (+1)</p>}
-				</div>
+			<div className="grid grid-cols-3 gap-x-2 gap-y-1 text-center items-center">
+				{/* Names row */}
+				<p className="text-xs text-muted-foreground uppercase tracking-wide break-words">{p1Name}</p>
+				<p className="text-xs text-muted-foreground uppercase tracking-wide">VP diff</p>
+				<p className="text-xs text-muted-foreground uppercase tracking-wide break-words">{p2Name}</p>
 
-				{/* Center: diff */}
-				<div className="flex flex-col items-center justify-center space-y-1">
-					<p className="text-xs text-muted-foreground uppercase tracking-wide">VP diff</p>
-					<p className="text-xl font-bold font-mono text-muted-foreground">{formatVp(result.vpDiff)}</p>
-				</div>
+				{/* VP row */}
+				<p className="text-2xl font-bold font-mono">{formatVp(result.player1Vp)}</p>
+				<p className="text-xl font-bold font-mono text-muted-foreground">{formatVp(result.vpDiff)}</p>
+				<p className="text-2xl font-bold font-mono">{formatVp(result.player2Vp)}</p>
 
-				{/* Player 2 */}
-				<div className="space-y-1">
-					<p className="text-xs text-muted-foreground uppercase tracking-wide">{p2Name} VP</p>
-					<p className="text-2xl font-bold font-mono">{formatVp(result.player2Vp)}</p>
-					<p
-						className={cn(
-							"text-3xl font-bold",
-							p2Wins ? "text-green-400" : p1Wins ? "text-red-400" : "text-yellow-400",
-						)}
-					>
-						{result.player2Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
-					</p>
-					{p2NextVp !== null && <p className="text-xs text-muted-foreground/60">{p2NextVp} VP (+1)</p>}
-				</div>
+				{/* BP row */}
+				<p className={cn("text-3xl font-bold", p1Wins ? "text-green-400" : p2Wins ? "text-red-400" : "text-yellow-400")}>
+					{result.player1Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
+				</p>
+				<div />
+				<p className={cn("text-3xl font-bold", p2Wins ? "text-green-400" : p1Wins ? "text-red-400" : "text-yellow-400")}>
+					{result.player2Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
+				</p>
+
+				{/* Next VP row */}
+				{(p1NextVp !== null || p2NextVp !== null) && (
+					<>
+						<p className="text-xs text-muted-foreground/60">{p1NextVp !== null ? `${p1NextVp} VP (+1)` : ""}</p>
+						<div />
+						<p className="text-xs text-muted-foreground/60">{p2NextVp !== null ? `${p2NextVp} VP (+1)` : ""}</p>
+					</>
+				)}
 			</div>
 
 			<div className="border-t border-border/50 pt-3 space-y-3">
 				{/* Primary objective */}
-				<div className="flex items-center justify-center gap-3">
-					<span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
+				<div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
+					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
 						Primary (+3)
-					</span>
-					<div className="flex gap-1">
+					</p>
+					<div className="flex justify-center gap-1">
 						{(
 							[
 								["player1", p1Name],
@@ -116,28 +108,30 @@ export function ScorePanel({
 				</div>
 
 				{/* Secondary objectives */}
-				<div className="flex items-center justify-center gap-3">
-					<span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
+				<div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
+					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
 						Secondary (+1)
-					</span>
-					<label className="flex items-center gap-1.5 cursor-pointer">
-						<input
-							type="checkbox"
-							checked={p1SecondaryDone}
-							onChange={(e) => onP1SecondaryChange(e.target.checked)}
-							className="w-4 h-4 accent-green-500"
-						/>
-						<span className="text-xs text-muted-foreground">{p1Name}</span>
-					</label>
-					<label className="flex items-center gap-1.5 cursor-pointer">
-						<input
-							type="checkbox"
-							checked={p2SecondaryDone}
-							onChange={(e) => onP2SecondaryChange(e.target.checked)}
-							className="w-4 h-4 accent-green-500"
-						/>
-						<span className="text-xs text-muted-foreground">{p2Name}</span>
-					</label>
+					</p>
+					<div className="flex justify-center gap-4">
+						<label className="flex items-center gap-1.5 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={p1SecondaryDone}
+								onChange={(e) => onP1SecondaryChange(e.target.checked)}
+								className="w-4 h-4 accent-green-500"
+							/>
+							<span className="text-xs text-muted-foreground">{p1Name}</span>
+						</label>
+						<label className="flex items-center gap-1.5 cursor-pointer">
+							<input
+								type="checkbox"
+								checked={p2SecondaryDone}
+								onChange={(e) => onP2SecondaryChange(e.target.checked)}
+								className="w-4 h-4 accent-green-500"
+							/>
+							<span className="text-xs text-muted-foreground">{p2Name}</span>
+						</label>
+					</div>
 				</div>
 			</div>
 		</div>
