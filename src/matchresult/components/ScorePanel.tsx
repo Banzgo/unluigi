@@ -27,17 +27,19 @@ export function ScorePanel({
 	onP1SecondaryChange,
 	onP2SecondaryChange,
 }: Readonly<ScorePanelProps>) {
-	const p1Wins = result.player1Vp > result.player2Vp;
-	const p2Wins = result.player2Vp > result.player1Vp;
+	const p1VpWins = result.player1Vp > result.player2Vp;
+	const p2VpWins = result.player2Vp > result.player1Vp;
+	const p1BpAhead = result.player1Bp > result.player2Bp;
+	const p2BpAhead = result.player2Bp > result.player1Bp;
 
-	const p1NextVp = p1Wins
+	const p1NextVp = p1VpWins
 		? vpToNextWinnerTier(result.vpDiff, gameSize)
-		: p2Wins
+		: p2VpWins
 			? vpToNextLoserTier(result.vpDiff, gameSize)
 			: vpToNextWinnerTier(result.vpDiff, gameSize);
-	const p2NextVp = p2Wins
+	const p2NextVp = p2VpWins
 		? vpToNextWinnerTier(result.vpDiff, gameSize)
-		: p1Wins
+		: p1VpWins
 			? vpToNextLoserTier(result.vpDiff, gameSize)
 			: vpToNextWinnerTier(result.vpDiff, gameSize);
 
@@ -58,11 +60,11 @@ export function ScorePanel({
 				<p className="text-2xl font-bold font-mono">{formatVp(result.player2Vp)}</p>
 
 				{/* BP row */}
-				<p className={cn("text-3xl font-bold", p1Wins ? "text-green-400" : p2Wins ? "text-red-400" : "text-yellow-400")}>
+				<p className={cn("text-3xl font-bold", p1BpAhead ? "text-green-400" : p2BpAhead ? "text-red-400" : "text-yellow-400")}>
 					{result.player1Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
 				</p>
 				<div />
-				<p className={cn("text-3xl font-bold", p2Wins ? "text-green-400" : p1Wins ? "text-red-400" : "text-yellow-400")}>
+				<p className={cn("text-3xl font-bold", p2BpAhead ? "text-green-400" : p1BpAhead ? "text-red-400" : "text-yellow-400")}>
 					{result.player2Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
 				</p>
 
