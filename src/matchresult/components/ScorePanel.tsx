@@ -81,9 +81,7 @@ export function ScorePanel({
 			<div className="border-t border-border/50 pt-3 space-y-3">
 				{/* Primary objective */}
 				<div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
-					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-						Primary (+3)
-					</p>
+					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">Primary (+3)</p>
 					<div className="flex justify-center gap-1">
 						{(
 							[
@@ -111,9 +109,7 @@ export function ScorePanel({
 
 				{/* Secondary objectives */}
 				<div className="flex flex-col sm:flex-row items-center justify-center gap-1.5">
-					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">
-						Secondary (+1)
-					</p>
+					<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground shrink-0">Secondary (+1)</p>
 					<div className="flex justify-center gap-4">
 						<label className="flex items-center gap-1.5 cursor-pointer">
 							<input

@@ -27,7 +27,7 @@ export interface PohjolaInputState {
 	reverberating: boolean;
 }
 
-export const POHJOLA_DEFAULT_STATE: PohjolaInputState = {
+const POHJOLA_DEFAULT_STATE: PohjolaInputState = {
 	attackPool: "4",
 	as: 4,
 	ds: 4,
@@ -311,7 +311,7 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 							active={inputs.criticalStrike !== 0}
 							onClick={() => set("criticalStrike", cycleNext(CRIT_STRIKE_OPTIONS, inputs.criticalStrike))}
 						/>
-            <CycleBtn
+						<CycleBtn
 							label="Crush"
 							value={inputs.crush === 0 ? "Off" : `[${inputs.crush}]`}
 							active={inputs.crush !== 0}

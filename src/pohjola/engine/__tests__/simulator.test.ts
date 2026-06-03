@@ -59,7 +59,12 @@ describe("resolveAttack", () => {
 
 	it("defender divine truth auto-saves all hits", () => {
 		// criticalStrike=-1 = no crits. defenderDivineTruth=10 → all normal hits auto-saved
-		const params: Required<PohjolaAttackParams> = { ...base, criticalStrike: -1, defenderDivineTruth: 10, attackPool: 6 };
+		const params: Required<PohjolaAttackParams> = {
+			...base,
+			criticalStrike: -1,
+			defenderDivineTruth: 10,
+			attackPool: 6,
+		};
 		for (let i = 0; i < 20; i++) {
 			expect(resolveAttack(params).damage).toBe(0);
 		}

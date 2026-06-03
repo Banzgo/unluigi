@@ -36,9 +36,9 @@ describe("applyTitanic", () => {
 	it("no bonus on complete miss", () => {
 		expect(applyTitanic({ crits: 0, normal: 0 }, 2)).toEqual({ crits: 0, normal: 0 });
 	});
-  it("can at most double the total number of hits + crits", () => {
-    expect(applyTitanic({ crits: 1, normal: 1 }, 5)).toEqual({ crits: 1, normal: 3 });
-  });
+	it("can at most double the total number of hits + crits", () => {
+		expect(applyTitanic({ crits: 1, normal: 1 }, 5)).toEqual({ crits: 1, normal: 3 });
+	});
 	it("preserves crits, adds normal bonus even when no normals", () => {
 		const result = applyTitanic({ crits: 3, normal: 0 }, 1);
 		expect(result.crits).toBe(3);

@@ -66,10 +66,7 @@ export function UnitRow({ unit, onStatusChange }: Readonly<UnitRowProps>) {
 						key={status}
 						type="button"
 						onClick={() => onStatusChange(unit.id, status)}
-						className={cn(
-							"p-1 border rounded transition-colors",
-							unit.status === status ? active : inactive,
-						)}
+						className={cn("p-1 border rounded transition-colors", unit.status === status ? active : inactive)}
 					>
 						{icon}
 					</button>

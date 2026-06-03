@@ -37,12 +37,11 @@ export function resolveAttack(params: Required<PohjolaAttackParams>): PohjolaIte
 	const critThreshold = getCritThreshold(params.criticalStrike);
 
 	// Step 1: Roll attacks, classify hits
-	const { crits: rawCrits, normal: rawNormal, failedRolls } = rollAttacks(
-		poolSize,
-		params.as,
-		critThreshold,
-		params.divineTruth,
-	);
+	const {
+		crits: rawCrits,
+		normal: rawNormal,
+		failedRolls,
+	} = rollAttacks(poolSize, params.as, critThreshold, params.divineTruth);
 
 	// Step 2: Attacker rerolls — both good/bad determined from initial roll, each die rerolled once
 	const afterRerolls = applyAttackerRerolls(

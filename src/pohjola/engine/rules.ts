@@ -103,8 +103,8 @@ export function applyAttackerRerolls(
 /** Apply Titanic Strikes: add X flat normal hits to the pool. Can at most double the total number of hits + crits. No bonus on complete miss. */
 export function applyTitanic(hits: HitPool, titanicStrikes: number): HitPool {
 	if (titanicStrikes === 0) return hits;
-  const totalHits = hits.crits + hits.normal;
-  const titanic = Math.min(titanicStrikes, totalHits);
+	const totalHits = hits.crits + hits.normal;
+	const titanic = Math.min(titanicStrikes, totalHits);
 	return { crits: hits.crits, normal: hits.normal + titanic };
 }
 
@@ -160,7 +160,11 @@ export function resolveDefence(
 }
 
 /** Block/Crush: effectiveBlock = max(0, block - crush). Converts crits to normal hits (still face defence). */
-export function applyBlock(crits: number, block: number, crush: number): { remainingCrits: number; convertedToNormal: number } {
+export function applyBlock(
+	crits: number,
+	block: number,
+	crush: number,
+): { remainingCrits: number; convertedToNormal: number } {
 	const effectiveBlock = Math.max(0, block - crush);
 	const converted = Math.min(crits, effectiveBlock);
 	return { remainingCrits: crits - converted, convertedToNormal: converted };
@@ -169,6 +173,6 @@ export function applyBlock(crits: number, block: number, crush: number): { remai
 /** Lethality: add X extra damage to the pool (flat bonus) at most doubling the total damage. No effect if no hits. */
 export function applyLethality(totalHits: number, lethality: number): number {
 	if (lethality === 0) return totalHits;
-  const lethalityBonus = Math.min(lethality, totalHits);
+	const lethalityBonus = Math.min(lethality, totalHits);
 	return totalHits + lethalityBonus;
 }

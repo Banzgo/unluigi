@@ -10,7 +10,7 @@ import {
 /**
  * Default number of iterations for simulations
  */
-export const DEFAULT_ITERATIONS = 10000;
+const DEFAULT_ITERATIONS = 10000;
 
 /**
  * Creates a default DiceInputState object with standard values
@@ -60,7 +60,7 @@ export function validateInput(input: DiceInputState): boolean {
 /**
  * Converts a DiceInputState to SimulationParameters
  */
-export function mapInputToSimulationParams(
+function mapInputToSimulationParams(
 	input: DiceInputState,
 	iterations: number = DEFAULT_ITERATIONS,
 ): SimulationParameters {
@@ -93,7 +93,7 @@ export function mapInputToSimulationParams(
 /**
  * Combines multiple distributions by summing values for each iteration
  */
-export function combineDistributions(distributions: number[][], iterations: number): number[] {
+function combineDistributions(distributions: number[][], iterations: number): number[] {
 	const combinedDistribution: number[] = [];
 	for (let i = 0; i < iterations; i++) {
 		let totalWounds = 0;

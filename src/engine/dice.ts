@@ -15,7 +15,7 @@ export function rollD6(): number {
  * @param count Number of dice to roll
  * @returns Sum of all dice rolled
  */
-export function rollMultipleD6(count: number): number {
+function rollMultipleD6(count: number): number {
 	let sum = 0;
 	for (let i = 0; i < count; i++) {
 		sum += rollD6();

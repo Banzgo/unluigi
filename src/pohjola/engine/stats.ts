@@ -2,7 +2,7 @@ import { calculateStatistics } from "../../engine/probability";
 import { runPohjolaSimulation } from "./simulator";
 import type { PohjolaAttackParams, PohjolaIterationOutcome, PohjolaSimulationResults } from "./types";
 
-export function aggregateResults(
+function aggregateResults(
 	outcomes: PohjolaIterationOutcome[],
 	iterations: number,
 	executionTimeMs: number,

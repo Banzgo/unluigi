@@ -9,7 +9,7 @@ export type SuccessRerollType = "none" | "6s" | "all";
 export type FailureRerollType = "none" | "1s" | "all";
 
 // Legacy type for backwards compatibility
-export type RerollType = "none" | "1s" | "successes" | "fails";
+type RerollType = "none" | "1s" | "successes" | "fails";
 
 // Special save types
 export type SpecialSaveType = "aegis" | "regeneration";
