@@ -8,7 +8,8 @@ import {
 	type MagicSimulationResults,
 	runMagicSimulation,
 } from "@/engine";
-import { encodeMagicShareState, type MagicSharePayloadV1 } from "@/utils/share";
+import { getProbabilityColor } from "@/utils/probability-color";
+import { copySimUrl, encodeMagicShareState, type MagicSharePayloadV1 } from "@/utils/share";
 
 export interface MagicSimulatorInputState {
 	castingDice: number;
@@ -27,22 +28,6 @@ type CastingDiceValue = 2 | 3 | 4 | 5;
 type DispelDiceValue = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 type CastingValueOption = 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16;
 
-/**
- * Get color class based on probability value
- */
-function getProbabilityColor(prob: number): string {
-	if (prob >= 90) return "bg-emerald-500/30 text-emerald-300";
-	if (prob >= 75) return "bg-green-500/25 text-green-300";
-	if (prob >= 60) return "bg-lime-500/20 text-lime-300";
-	if (prob >= 45) return "bg-yellow-500/20 text-yellow-300";
-	if (prob >= 30) return "bg-orange-500/20 text-orange-300";
-	if (prob >= 15) return "bg-red-500/20 text-red-300";
-	return "bg-red-900/30 text-red-400";
-}
-
-/**
- * Get inverted color (for failure rates where lower is better)
- */
 function getInvertedProbabilityColor(prob: number): string {
 	return getProbabilityColor(100 - prob);
 }
@@ -251,35 +236,16 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 	};
 
 	const handleShareClick = async () => {
-		try {
-			// Only include fields that differ from the default state to keep URLs smaller
-			const diffEntries = (Object.keys(MAGIC_DEFAULT_STATE) as (keyof MagicSimulatorInputState)[])
-				.filter((key) => inputs[key] !== MAGIC_DEFAULT_STATE[key])
-				.map((key) => [key, inputs[key]]);
+		const diffEntries = (Object.keys(MAGIC_DEFAULT_STATE) as (keyof MagicSimulatorInputState)[])
+			.filter((key) => inputs[key] !== MAGIC_DEFAULT_STATE[key])
+			.map((key) => [key, inputs[key]]);
 
-			const payload: MagicSharePayloadV1<Partial<MagicSimulatorInputState>> = {
-				v: 1,
-				// We send only the diff; defaults are re-applied when initializing the component
-				inputs: Object.fromEntries(diffEntries) as Partial<MagicSimulatorInputState>,
-				spellType,
-			};
-			const encoded = encodeMagicShareState(payload);
-
-			const url = new URL(window.location.href);
-			url.searchParams.set("sim", encoded);
-
-			if (navigator.clipboard?.writeText) {
-				await navigator.clipboard.writeText(url.toString());
-				setShareStatus("copied");
-				window.setTimeout(() => setShareStatus("idle"), 2000);
-			} else {
-				// Fallback: prompt-based copy
-				window.prompt("Copy this link:", url.toString());
-			}
-		} catch {
-			setShareStatus("error");
-			window.setTimeout(() => setShareStatus("idle"), 2000);
-		}
+		const payload: MagicSharePayloadV1<Partial<MagicSimulatorInputState>> = {
+			v: 1,
+			inputs: Object.fromEntries(diffEntries) as Partial<MagicSimulatorInputState>,
+			spellType,
+		};
+		await copySimUrl(encodeMagicShareState(payload), setShareStatus);
 	};
 
 	return (

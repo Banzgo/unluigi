@@ -60,6 +60,27 @@ export function decodeCombatShareState<TInputs = unknown>(encoded: string): Comb
 	return parsed;
 }
 
+export async function copySimUrl(
+	encoded: string,
+	setShareStatus: (s: "idle" | "copied" | "error") => void,
+): Promise<void> {
+	try {
+		const url = new URL(window.location.href);
+		url.searchParams.set("sim", encoded);
+
+		if (navigator.clipboard?.writeText) {
+			await navigator.clipboard.writeText(url.toString());
+			setShareStatus("copied");
+			window.setTimeout(() => setShareStatus("idle"), 2000);
+		} else {
+			window.prompt("Copy this link:", url.toString());
+		}
+	} catch {
+		setShareStatus("error");
+		window.setTimeout(() => setShareStatus("idle"), 2000);
+	}
+}
+
 function toBase64Url(base64: string): string {
 	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }

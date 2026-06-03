@@ -4,27 +4,16 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { parseDiceExpression } from "@/engine";
+import { copySimUrl } from "@/utils/share";
 import { runPohjolaSimulationWithStats } from "../engine/stats";
-import type { PohjolaSimulationResults, RerollCount } from "../engine/types";
+import type { PohjolaAttackParams, PohjolaSimulationResults, RerollCount } from "../engine/types";
 import { encodePohjolaShareState } from "../utils/share";
 
-export interface PohjolaInputState {
+export interface PohjolaInputState
+	extends Omit<PohjolaAttackParams, "attackPool" | "divineTruth" | "defenderDivineTruth" | "iterations"> {
 	attackPool: string;
-	as: 2 | 3 | 4 | 5 | 6;
-	ds: 2 | 3 | 4 | 5 | 6;
-	lethality: 0 | 1 | 2 | 3;
-	criticalStrike: -1 | 0 | 1 | 2 | 3;
-	crush: 0 | 1 | 2 | 3;
-	block: 0 | 1 | 2 | 3;
-	titanicStrikes: 0 | 1 | 2 | 3;
-	resilient: 0 | 1 | 2 | 3;
-	attackerGoodRerolls: RerollCount;
-	attackerBadTokens: RerollCount;
-	defenderGoodRerolls: RerollCount;
-	defenderBadTokens: RerollCount;
 	divineTruth: 0 | 1 | 2 | 3 | 4 | 5;
 	defenderDivineTruth: 0 | 1 | 2 | 3 | 4 | 5;
-	reverberating: boolean;
 }
 
 const POHJOLA_DEFAULT_STATE: PohjolaInputState = {
@@ -138,29 +127,13 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 	};
 
 	const handleShare = async () => {
-		try {
-			const diff: Partial<PohjolaInputState> = {};
-			for (const k of Object.keys(POHJOLA_DEFAULT_STATE) as (keyof PohjolaInputState)[]) {
-				if (inputs[k] !== POHJOLA_DEFAULT_STATE[k]) {
-					(diff as Record<string, unknown>)[k] = inputs[k];
-				}
+		const diff: Partial<PohjolaInputState> = {};
+		for (const k of Object.keys(POHJOLA_DEFAULT_STATE) as (keyof PohjolaInputState)[]) {
+			if (inputs[k] !== POHJOLA_DEFAULT_STATE[k]) {
+				(diff as Record<string, unknown>)[k] = inputs[k];
 			}
-
-			const encoded = encodePohjolaShareState({ v: 1, inputs: diff });
-			const url = new URL(window.location.href);
-			url.searchParams.set("sim", encoded);
-
-			if (navigator.clipboard?.writeText) {
-				await navigator.clipboard.writeText(url.toString());
-				setShareStatus("copied");
-				window.setTimeout(() => setShareStatus("idle"), 2000);
-			} else {
-				window.prompt("Copy this link:", url.toString());
-			}
-		} catch {
-			setShareStatus("error");
-			window.setTimeout(() => setShareStatus("idle"), 2000);
 		}
+		await copySimUrl(encodePohjolaShareState({ v: 1, inputs: diff }), setShareStatus);
 	};
 
 	return (

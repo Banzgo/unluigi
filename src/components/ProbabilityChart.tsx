@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import type { SimulationResults } from "../engine";
-import { Button } from "./ui/button";
+import { type ChartMode, ChartModeToggle, PercentileLegend } from "./ChartModeToggle";
 import { Card } from "./ui/card";
 import { ChartContainer, ChartTooltip } from "./ui/chart";
 
@@ -24,7 +24,9 @@ interface TooltipProps {
 	}>;
 }
 
-type ChartMode = "probability" | "cumulative";
+function computeCumulative(distribution: { wounds: number; probability: number }[], wound: number): number {
+	return distribution.filter((d) => d.wounds >= wound).reduce((sum, d) => sum + d.probability, 0);
+}
 
 export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 	const [chartMode, setChartMode] = useState<ChartMode>("probability");
@@ -49,16 +51,10 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 			.filter((d) => d.probability >= 0.1)
 			.sort((a, b) => a.wounds - b.wounds);
 
-		// Calculate cumulative probability (X or more wounds)
-		const cumulativeData = baseChartData.map((point) => {
-			const cumulative = results.probabilityDistribution
-				.filter((d) => d.wounds >= point.wounds)
-				.reduce((sum, d) => sum + d.probability, 0);
-			return {
-				...point,
-				cumulative,
-			};
-		});
+		const cumulativeData = baseChartData.map((point) => ({
+			...point,
+			cumulative: computeCumulative(results.probabilityDistribution, point.wounds),
+		}));
 
 		const chartData = chartMode === "cumulative" ? cumulativeData : baseChartData;
 		const dataKey = chartMode === "cumulative" ? "cumulative" : "probability";
@@ -154,44 +150,8 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 						</Bar>
 					</BarChart>
 				</ChartContainer>
-				{/* Percentile Legend */}
-				<div className="mt-2 mb-2 flex justify-center gap-6 text-sm text-muted-foreground">
-					<div className="flex items-center gap-2">
-						<div className="w-3 h-3 bg-orange-500 rounded-sm" />
-						<span>Unluigi</span>
-					</div>
-					<div className="flex items-center gap-2">
-						<div className="w-3 h-3 bg-brand-green rounded-sm" />
-						<span>Luigi</span>
-					</div>
-				</div>
-				{/* Chart Mode Toggle */}
-				<div className="flex flex-col sm:flex-row justify-center gap-2">
-					<Button
-						onClick={() => setChartMode("probability")}
-						variant="outline"
-						size="sm"
-						className={
-							chartMode === "probability"
-								? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-								: "bg-secondary hover:bg-secondary/80 text-foreground"
-						}
-					>
-						Distribution
-					</Button>
-					<Button
-						onClick={() => setChartMode("cumulative")}
-						variant="outline"
-						size="sm"
-						className={
-							chartMode === "cumulative"
-								? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-								: "bg-secondary hover:bg-secondary/80 text-foreground"
-						}
-					>
-						Cumulative
-					</Button>
-				</div>
+				<PercentileLegend lowLabel="Unluigi" highLabel="Luigi" />
+				<ChartModeToggle chartMode={chartMode} onChange={setChartMode} />
 			</Card>
 		);
 	}
@@ -216,20 +176,11 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 		}))
 		.filter((d) => d.probability >= 0.1 || d.probability2 >= 0.1);
 
-	// Calculate cumulative probabilities
-	const cumulativeData = baseChartData.map((point) => {
-		const cumulative = results.probabilityDistribution
-			.filter((d) => d.wounds >= point.wounds)
-			.reduce((sum, d) => sum + d.probability, 0);
-		const cumulative2 = results2.probabilityDistribution
-			.filter((d) => d.wounds >= point.wounds)
-			.reduce((sum, d) => sum + d.probability, 0);
-		return {
-			...point,
-			cumulative,
-			cumulative2,
-		};
-	});
+	const cumulativeData = baseChartData.map((point) => ({
+		...point,
+		cumulative: computeCumulative(results.probabilityDistribution, point.wounds),
+		cumulative2: computeCumulative(results2.probabilityDistribution, point.wounds),
+	}));
 
 	const chartData = chartMode === "cumulative" ? cumulativeData : baseChartData;
 
@@ -324,7 +275,6 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 				</BarChart>
 			</ChartContainer>
 
-			{/* Legend */}
 			<div className="mt-2 mb-2 flex justify-center gap-6 text-sm text-muted-foreground">
 				<div className="flex items-center gap-2">
 					<div className="w-3 h-3 bg-brand-green rounded-sm" />
@@ -335,34 +285,7 @@ export function ProbabilityChart({ results, results2 }: ProbabilityChartProps) {
 					<span>Profile 2</span>
 				</div>
 			</div>
-
-			{/* Chart Mode Toggle */}
-			<div className="flex flex-col sm:flex-row justify-center gap-2">
-				<Button
-					onClick={() => setChartMode("probability")}
-					variant="outline"
-					size="sm"
-					className={
-						chartMode === "probability"
-							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-							: "bg-secondary hover:bg-secondary/80 text-foreground"
-					}
-				>
-					Distribution
-				</Button>
-				<Button
-					onClick={() => setChartMode("cumulative")}
-					variant="outline"
-					size="sm"
-					className={
-						chartMode === "cumulative"
-							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-							: "bg-secondary hover:bg-secondary/80 text-foreground"
-					}
-				>
-					Cumulative
-				</Button>
-			</div>
+			<ChartModeToggle chartMode={chartMode} onChange={setChartMode} />
 		</Card>
 	);
 }

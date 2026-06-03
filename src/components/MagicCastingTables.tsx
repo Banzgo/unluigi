@@ -1,28 +1,28 @@
 import { BookOpen, Flame } from "lucide-react";
 import { useMemo } from "react";
+import { getProbabilityColor } from "@/utils/probability-color";
 
-/**
- * Calculate the probability distribution for summing n dice each with d sides
- * Returns a Map where key is sum and value is count of ways to achieve that sum
- */
-function calculateSumDistribution(numDice: number, sides: number): Map<number, number> {
-	let distribution = new Map<number, number>();
-	for (let face = 1; face <= sides; face++) {
-		distribution.set(face, 1);
-	}
-
-	for (let die = 1; die < numDice; die++) {
+function convolveWithDie(distribution: Map<number, number>, sides: number, numDice: number): Map<number, number> {
+	let result = distribution;
+	for (let die = 0; die < numDice; die++) {
 		const newDistribution = new Map<number, number>();
-		for (const [sum, count] of distribution) {
+		for (const [sum, count] of result) {
 			for (let face = 1; face <= sides; face++) {
 				const newSum = sum + face;
 				newDistribution.set(newSum, (newDistribution.get(newSum) || 0) + count);
 			}
 		}
-		distribution = newDistribution;
+		result = newDistribution;
 	}
+	return result;
+}
 
-	return distribution;
+function calculateSumDistribution(numDice: number, sides: number): Map<number, number> {
+	const distribution = new Map<number, number>();
+	for (let face = 1; face <= sides; face++) {
+		distribution.set(face, 1);
+	}
+	return convolveWithDie(distribution, sides, numDice - 1);
 }
 
 /**
@@ -38,40 +38,12 @@ function probabilityAtLeast(distribution: Map<number, number>, targetSum: number
 	return (successCount / totalOutcomes) * 100;
 }
 
-/**
- * Calculate probability distribution for bound spell: 1d6 + (n-1)d3
- */
 function calculateBoundSpellDistribution(numDice: number): Map<number, number> {
-	let distribution = new Map<number, number>();
+	const distribution = new Map<number, number>();
 	for (let face = 1; face <= 6; face++) {
 		distribution.set(face, 1);
 	}
-
-	for (let die = 1; die < numDice; die++) {
-		const newDistribution = new Map<number, number>();
-		for (const [sum, count] of distribution) {
-			for (let face = 1; face <= 3; face++) {
-				const newSum = sum + face;
-				newDistribution.set(newSum, (newDistribution.get(newSum) || 0) + count);
-			}
-		}
-		distribution = newDistribution;
-	}
-
-	return distribution;
-}
-
-/**
- * Get color class based on probability value
- */
-function getProbabilityColor(prob: number): string {
-	if (prob >= 90) return "bg-emerald-500/30 text-emerald-300";
-	if (prob >= 75) return "bg-green-500/25 text-green-300";
-	if (prob >= 60) return "bg-lime-500/20 text-lime-300";
-	if (prob >= 45) return "bg-yellow-500/20 text-yellow-300";
-	if (prob >= 30) return "bg-orange-500/20 text-orange-300";
-	if (prob >= 15) return "bg-red-500/20 text-red-300";
-	return "bg-red-900/30 text-red-400";
+	return convolveWithDie(distribution, 3, numDice - 1);
 }
 
 interface CompactTableProps {

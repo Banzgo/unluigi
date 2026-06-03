@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { Button } from "@/components/ui/button";
+import { type ChartMode, ChartModeToggle, PercentileLegend } from "@/components/ChartModeToggle";
 import { Card } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import type { PohjolaSimulationResults } from "../engine/types";
@@ -21,8 +21,6 @@ interface TooltipProps {
 		};
 	}>;
 }
-
-type ChartMode = "probability" | "cumulative";
 
 export function PohjolaChart({ results }: PohjolaChartProps) {
 	const [chartMode, setChartMode] = useState<ChartMode>("probability");
@@ -140,43 +138,8 @@ export function PohjolaChart({ results }: PohjolaChartProps) {
 				</BarChart>
 			</ChartContainer>
 
-			<div className="mt-2 mb-2 flex justify-center gap-6 text-sm text-muted-foreground">
-				<div className="flex items-center gap-2">
-					<div className="w-3 h-3 bg-orange-500 rounded-sm" />
-					<span>Low</span>
-				</div>
-				<div className="flex items-center gap-2">
-					<div className="w-3 h-3 bg-brand-green rounded-sm" />
-					<span>High</span>
-				</div>
-			</div>
-
-			<div className="flex flex-col sm:flex-row justify-center gap-2">
-				<Button
-					onClick={() => setChartMode("probability")}
-					variant="outline"
-					size="sm"
-					className={
-						chartMode === "probability"
-							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-							: "bg-secondary hover:bg-secondary/80 text-foreground"
-					}
-				>
-					Distribution
-				</Button>
-				<Button
-					onClick={() => setChartMode("cumulative")}
-					variant="outline"
-					size="sm"
-					className={
-						chartMode === "cumulative"
-							? "bg-blue-600 hover:bg-blue-700 text-white border-blue-600"
-							: "bg-secondary hover:bg-secondary/80 text-foreground"
-					}
-				>
-					Cumulative
-				</Button>
-			</div>
+			<PercentileLegend lowLabel="Low" highLabel="High" />
+			<ChartModeToggle chartMode={chartMode} onChange={setChartMode} />
 		</Card>
 	);
 }

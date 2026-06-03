@@ -3,7 +3,7 @@ import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
 import type { SimulationResults } from "@/engine";
-import { type CombatSharePayloadV1, encodeCombatShareState } from "@/utils/share";
+import { type CombatSharePayloadV1, copySimUrl, encodeCombatShareState } from "@/utils/share";
 import { createDefaultInput, runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
 
 interface CombatViewProps {
@@ -54,46 +54,28 @@ export function CombatView({ initialInputs, autoRun }: CombatViewProps = {}) {
 	}, [autoRun, inputs]);
 
 	const handleShareClick = async () => {
-		try {
-			// Build a compact representation: drop ids and omit fields that match defaults
-			const base = createDefaultInput();
+		const base = createDefaultInput();
 
-			const compactInputs = inputs.map((input) => {
-				const { id: _id, ...rest } = input;
-				const { id: _baseId, ...baseRest } = base;
-				const diff: Partial<Omit<DiceInputState, "id">> = {};
+		const compactInputs = inputs.map((input) => {
+			const { id: _id, ...rest } = input;
+			const { id: _baseId, ...baseRest } = base;
+			const diff: Partial<Omit<DiceInputState, "id">> = {};
 
-				(Object.keys(rest) as (keyof typeof rest)[]).forEach((key) => {
-					if (rest[key] !== baseRest[key]) {
-						// @ts-expect-error - dynamic key assignment is safe here
-						diff[key] = rest[key];
-					}
-				});
-
-				return diff;
+			(Object.keys(rest) as (keyof typeof rest)[]).forEach((key) => {
+				if (rest[key] !== baseRest[key]) {
+					// @ts-expect-error - dynamic key assignment is safe here
+					diff[key] = rest[key];
+				}
 			});
 
-			const payload: CombatSharePayloadV1<DiceInputState[]> = {
-				v: 1,
-				// Only send the per-attacker diffs
-				inputs: compactInputs as unknown as DiceInputState[],
-			};
-			const encoded = encodeCombatShareState(payload);
+			return diff;
+		});
 
-			const url = new URL(window.location.href);
-			url.searchParams.set("sim", encoded);
-
-			if (navigator.clipboard?.writeText) {
-				await navigator.clipboard.writeText(url.toString());
-				setShareStatus("copied");
-				setTimeout(() => setShareStatus("idle"), 2000);
-			} else {
-				window.prompt("Copy this link:", url.toString());
-			}
-		} catch {
-			setShareStatus("error");
-			setTimeout(() => setShareStatus("idle"), 2000);
-		}
+		const payload: CombatSharePayloadV1<DiceInputState[]> = {
+			v: 1,
+			inputs: compactInputs as unknown as DiceInputState[],
+		};
+		await copySimUrl(encodeCombatShareState(payload), setShareStatus);
 	};
 
 	return (
