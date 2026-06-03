@@ -168,39 +168,17 @@ export function shouldRerollSplit(
 	failureReroll: "none" | "1s" | "all",
 	successReroll: "none" | "6s" | "all",
 ): boolean {
-	// If both are none, no reroll
-	if (failureReroll === "none" && successReroll === "none") {
-		return false;
-	}
+	if (failureReroll === "none" && successReroll === "none") return false;
 
-	// Determine if this roll is a success or failure
 	let rollIsSuccess: boolean;
-	if (target === "auto") {
-		rollIsSuccess = true;
-	} else if (target === "none") {
-		rollIsSuccess = false;
-	} else {
-		rollIsSuccess = roll >= target;
-	}
+	if (target === "auto") rollIsSuccess = true;
+	else if (target === "none") rollIsSuccess = false;
+	else rollIsSuccess = roll >= target;
 
-	// Check failure rerolls (for failed rolls)
 	if (!rollIsSuccess) {
-		if (failureReroll === "all") {
-			return true;
-		}
-		if (failureReroll === "1s" && roll === 1) {
-			return true;
-		}
-	}
-
-	// Check success rerolls (for successful rolls)
-	if (rollIsSuccess) {
-		if (successReroll === "all") {
-			return true;
-		}
-		if (successReroll === "6s" && roll === 6) {
-			return true;
-		}
+		if (failureReroll === "all" || (failureReroll === "1s" && roll === 1)) return true;
+	} else {
+		if (successReroll === "all" || (successReroll === "6s" && roll === 6)) return true;
 	}
 
 	return false;

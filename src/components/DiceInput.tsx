@@ -39,69 +39,97 @@ interface DiceInputProps {
 	showRemove: boolean;
 }
 
+interface DiceColumnProps {
+	label: string;
+	displayValue: string;
+	onCycleValue: () => void;
+	failureReroll: FailureRerollType;
+	successReroll: SuccessRerollType;
+	onCycleFailureReroll: () => void;
+	onCycleSuccessReroll: () => void;
+	failureRerollLabel: string;
+	successRerollLabel: string;
+	children?: React.ReactNode;
+}
+
+function DiceColumn({
+	label,
+	displayValue,
+	onCycleValue,
+	failureReroll,
+	successReroll,
+	onCycleFailureReroll,
+	onCycleSuccessReroll,
+	failureRerollLabel,
+	successRerollLabel,
+	children,
+}: DiceColumnProps) {
+	return (
+		<div className="flex flex-col space-y-1.5">
+			<Label className="text-sm text-muted-foreground text-center">{label}</Label>
+			<Button
+				onClick={onCycleValue}
+				className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
+				variant="outline"
+			>
+				{displayValue}
+			</Button>
+			<div className="flex flex-col sm:flex-row gap-1">
+				<Button
+					onClick={onCycleFailureReroll}
+					className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+						failureReroll !== "none" ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
+					}`}
+					variant="outline"
+				>
+					{failureRerollLabel}
+				</Button>
+				<Button
+					onClick={onCycleSuccessReroll}
+					className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
+						successReroll !== "none" ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
+					}`}
+					variant="outline"
+				>
+					{successRerollLabel}
+				</Button>
+			</div>
+			{children}
+		</div>
+	);
+}
+
+const HIT_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+const WOUND_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
+const SAVE_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
+const FAILURE_REROLL_OPTIONS: FailureRerollType[] = ["none", "1s", "all"];
+const SUCCESS_REROLL_OPTIONS: SuccessRerollType[] = ["none", "6s", "all"];
+
+function cycleNext<T>(options: T[], current: T): T {
+	return options[(options.indexOf(current) + 1) % options.length] as T;
+}
+
+function failureRerollLabel(reroll: FailureRerollType): string {
+	if (reroll === "1s") return "Reroll 1s";
+	if (reroll === "all") return "Reroll fails";
+	return "No fail rerolls";
+}
+
+function successRerollLabel(reroll: SuccessRerollType): string {
+	if (reroll === "6s") return "Reroll 6s";
+	if (reroll === "all") return "Reroll successes";
+	return "No success rerolls";
+}
+
+function toggleClass(active: boolean): string {
+	return active ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80";
+}
+
 export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputProps) {
 	const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
 	const [showSpecialRules, setShowSpecialRules] = useState<boolean>(false);
 
-	const hitOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-	const woundOptions: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-	const saveOptions: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
-	const failureRerollOptions: FailureRerollType[] = ["none", "1s", "all"];
-	const successRerollOptions: SuccessRerollType[] = ["none", "6s", "all"];
-
-	const cycleValue = (current: ToggleValue, options: ToggleValue[]) => {
-		const currentIndex = options.indexOf(current);
-		return options[(currentIndex + 1) % options.length];
-	};
-
-	const cycleFailureReroll = (current: FailureRerollType): FailureRerollType => {
-		const currentIndex = failureRerollOptions.indexOf(current);
-		return failureRerollOptions[(currentIndex + 1) % failureRerollOptions.length];
-	};
-
-	const cycleSuccessReroll = (current: SuccessRerollType): SuccessRerollType => {
-		const currentIndex = successRerollOptions.indexOf(current);
-		return successRerollOptions[(currentIndex + 1) % successRerollOptions.length];
-	};
-
-	const getFailureRerollLabel = (reroll: FailureRerollType) => {
-		switch (reroll) {
-			case "none":
-				return "No fail rerolls";
-			case "1s":
-				return "Reroll 1s";
-			case "all":
-				return "Reroll fails";
-		}
-	};
-
-	const getSuccessRerollLabel = (reroll: SuccessRerollType) => {
-		switch (reroll) {
-			case "none":
-				return "No success rerolls";
-			case "6s":
-				return "Reroll 6s";
-			case "all":
-				return "Reroll successes";
-		}
-	};
-
-	const validateNumAttacks = (value: string): boolean => {
-		if (!value || value.trim() === "") {
-			return false;
-		}
-		try {
-			parseDiceExpression(value);
-			return true;
-		} catch {
-			return false;
-		}
-	};
-
-	const handleNumAttacksChange = (value: string) => {
-		onUpdate(input.id, { numAttacks: value });
-		setIsNumAttacksValid(validateNumAttacks(value));
-	};
+	const up = (updates: Partial<DiceInputState>) => onUpdate(input.id, updates);
 
 	return (
 		<Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-card border-border relative">
@@ -124,7 +152,15 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 					id={`attacks-${input.id}`}
 					type="text"
 					value={input.numAttacks}
-					onChange={(e) => handleNumAttacksChange(e.target.value)}
+					onChange={(e) => {
+						up({ numAttacks: e.target.value });
+						try {
+							parseDiceExpression(e.target.value);
+							setIsNumAttacksValid(true);
+						} catch {
+							setIsNumAttacksValid(false);
+						}
+					}}
 					className={`bg-input text-foreground placeholder:text-gray-400 ${
 						isNumAttacksValid ? "border-border" : "border-red-500 border-2"
 					}`}
@@ -132,248 +168,112 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 				/>
 			</div>
 
-			{/* Dice Values and Special Rules Grid */}
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-				{/* Hit Column */}
-				<div className="flex flex-col space-y-1.5">
-					<Label className="text-sm text-muted-foreground text-center">To Hit</Label>
+				<DiceColumn
+					label="To Hit"
+					displayValue={input.hit === "auto" ? "AUTO" : `${input.hit}+`}
+					onCycleValue={() => up({ hit: cycleNext(HIT_OPTIONS, input.hit) })}
+					failureReroll={input.rerollHitFailures}
+					successReroll={input.rerollHitSuccesses}
+					onCycleFailureReroll={() =>
+						up({ rerollHitFailures: cycleNext(FAILURE_REROLL_OPTIONS, input.rerollHitFailures) })
+					}
+					onCycleSuccessReroll={() =>
+						up({ rerollHitSuccesses: cycleNext(SUCCESS_REROLL_OPTIONS, input.rerollHitSuccesses) })
+					}
+					failureRerollLabel={failureRerollLabel(input.rerollHitFailures)}
+					successRerollLabel={successRerollLabel(input.rerollHitSuccesses)}
+				>
 					<Button
-						onClick={() => onUpdate(input.id, { hit: cycleValue(input.hit, hitOptions) })}
-						className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
-						variant="outline"
-					>
-						{input.hit === "auto" ? "AUTO" : `${input.hit}+`}
-					</Button>
-					<div className="flex flex-col sm:flex-row gap-1">
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollHitFailures: cycleFailureReroll(input.rerollHitFailures),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollHitFailures !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getFailureRerollLabel(input.rerollHitFailures)}
-						</Button>
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollHitSuccesses: cycleSuccessReroll(input.rerollHitSuccesses),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollHitSuccesses !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getSuccessRerollLabel(input.rerollHitSuccesses)}
-						</Button>
-					</div>
-					<Button
-						onClick={() => onUpdate(input.id, { poison: !input.poison })}
-						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-							input.poison ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
-						}`}
+						onClick={() => up({ poison: !input.poison })}
+						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${toggleClass(input.poison)}`}
 						variant="outline"
 					>
 						Poison
 					</Button>
 					<Button
-						onClick={() => onUpdate(input.id, { fury: !input.fury })}
-						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-							input.fury ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
-						}`}
+						onClick={() => up({ fury: !input.fury })}
+						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${toggleClass(input.fury)}`}
 						variant="outline"
 					>
 						Fury
 					</Button>
-				</div>
+				</DiceColumn>
 
-				{/* Wound Column */}
-				<div className="flex flex-col space-y-1.5">
-					<Label className="text-sm text-muted-foreground text-center">To Wound</Label>
+				<DiceColumn
+					label="To Wound"
+					displayValue={input.wound === "auto" ? "AUTO" : `${input.wound}+`}
+					onCycleValue={() => up({ wound: cycleNext(WOUND_OPTIONS, input.wound) })}
+					failureReroll={input.rerollWoundFailures}
+					successReroll={input.rerollWoundSuccesses}
+					onCycleFailureReroll={() =>
+						up({ rerollWoundFailures: cycleNext(FAILURE_REROLL_OPTIONS, input.rerollWoundFailures) })
+					}
+					onCycleSuccessReroll={() =>
+						up({ rerollWoundSuccesses: cycleNext(SUCCESS_REROLL_OPTIONS, input.rerollWoundSuccesses) })
+					}
+					failureRerollLabel={failureRerollLabel(input.rerollWoundFailures)}
+					successRerollLabel={successRerollLabel(input.rerollWoundSuccesses)}
+				>
 					<Button
-						onClick={() =>
-							onUpdate(input.id, {
-								wound: cycleValue(input.wound, woundOptions),
-							})
-						}
-						className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
-						variant="outline"
-					>
-						{input.wound === "auto" ? "AUTO" : `${input.wound}+`}
-					</Button>
-					<div className="flex flex-col sm:flex-row gap-1">
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollWoundFailures: cycleFailureReroll(input.rerollWoundFailures),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollWoundFailures !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getFailureRerollLabel(input.rerollWoundFailures)}
-						</Button>
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollWoundSuccesses: cycleSuccessReroll(input.rerollWoundSuccesses),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollWoundSuccesses !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getSuccessRerollLabel(input.rerollWoundSuccesses)}
-						</Button>
-					</div>
-					<Button
-						onClick={() => onUpdate(input.id, { lethalStrike: !input.lethalStrike })}
-						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-							input.lethalStrike ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
-						}`}
+						onClick={() => up({ lethalStrike: !input.lethalStrike })}
+						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${toggleClass(input.lethalStrike)}`}
 						variant="outline"
 					>
 						Lethal Strike
 					</Button>
-				</div>
+				</DiceColumn>
 
-				{/* Armor Save Column */}
-				<div className="flex flex-col space-y-1.5">
-					<Label className="text-sm text-muted-foreground text-center">Armor Save</Label>
-					<Button
-						onClick={() =>
-							onUpdate(input.id, {
-								armorSave: cycleValue(input.armorSave, saveOptions),
-							})
-						}
-						className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
-						variant="outline"
-					>
-						{input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
-					</Button>
-					<div className="flex flex-col sm:flex-row gap-1">
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollArmorSaveFailures: cycleFailureReroll(input.rerollArmorSaveFailures),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollArmorSaveFailures !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getFailureRerollLabel(input.rerollArmorSaveFailures)}
-						</Button>
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollArmorSaveSuccesses: cycleSuccessReroll(input.rerollArmorSaveSuccesses),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollArmorSaveSuccesses !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getSuccessRerollLabel(input.rerollArmorSaveSuccesses)}
-						</Button>
-					</div>
-				</div>
+				<DiceColumn
+					label="Armor Save"
+					displayValue={input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
+					onCycleValue={() => up({ armorSave: cycleNext(SAVE_OPTIONS, input.armorSave) })}
+					failureReroll={input.rerollArmorSaveFailures}
+					successReroll={input.rerollArmorSaveSuccesses}
+					onCycleFailureReroll={() =>
+						up({ rerollArmorSaveFailures: cycleNext(FAILURE_REROLL_OPTIONS, input.rerollArmorSaveFailures) })
+					}
+					onCycleSuccessReroll={() =>
+						up({ rerollArmorSaveSuccesses: cycleNext(SUCCESS_REROLL_OPTIONS, input.rerollArmorSaveSuccesses) })
+					}
+					failureRerollLabel={failureRerollLabel(input.rerollArmorSaveFailures)}
+					successRerollLabel={successRerollLabel(input.rerollArmorSaveSuccesses)}
+				/>
 
-				{/* Special Save Column */}
-				<div className="flex flex-col space-y-1.5">
-					<Label className="text-sm text-muted-foreground text-center">Special Save</Label>
-					<Button
-						onClick={() =>
-							onUpdate(input.id, {
-								specialSave: cycleValue(input.specialSave, saveOptions),
-							})
-						}
-						className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
-						variant="outline"
-					>
-						{input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
-					</Button>
-					<div className="flex flex-col sm:flex-row gap-1">
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollSpecialSaveFailures: cycleFailureReroll(input.rerollSpecialSaveFailures),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollSpecialSaveFailures !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getFailureRerollLabel(input.rerollSpecialSaveFailures)}
-						</Button>
-						<Button
-							onClick={() =>
-								onUpdate(input.id, {
-									rerollSpecialSaveSuccesses: cycleSuccessReroll(input.rerollSpecialSaveSuccesses),
-								})
-							}
-							className={`flex-1 h-7 sm:h-7 text-[9px] sm:text-[10px] leading-tight px-1 ${
-								input.rerollSpecialSaveSuccesses !== "none"
-									? "bg-blue-600 hover:bg-blue-700 text-white"
-									: "bg-secondary hover:bg-secondary/80"
-							}`}
-							variant="outline"
-						>
-							{getSuccessRerollLabel(input.rerollSpecialSaveSuccesses)}
-						</Button>
-					</div>
+				<DiceColumn
+					label="Special Save"
+					displayValue={input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
+					onCycleValue={() => up({ specialSave: cycleNext(SAVE_OPTIONS, input.specialSave) })}
+					failureReroll={input.rerollSpecialSaveFailures}
+					successReroll={input.rerollSpecialSaveSuccesses}
+					onCycleFailureReroll={() =>
+						up({ rerollSpecialSaveFailures: cycleNext(FAILURE_REROLL_OPTIONS, input.rerollSpecialSaveFailures) })
+					}
+					onCycleSuccessReroll={() =>
+						up({ rerollSpecialSaveSuccesses: cycleNext(SUCCESS_REROLL_OPTIONS, input.rerollSpecialSaveSuccesses) })
+					}
+					failureRerollLabel={failureRerollLabel(input.rerollSpecialSaveFailures)}
+					successRerollLabel={successRerollLabel(input.rerollSpecialSaveSuccesses)}
+				>
 					{input.lethalStrike && (
 						<div className="flex flex-col sm:flex-row gap-1 w-full">
 							<Button
-								onClick={() => onUpdate(input.id, { specialSaveType: "aegis" })}
-								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-									input.specialSaveType === "aegis"
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
+								onClick={() => up({ specialSaveType: "aegis" })}
+								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${toggleClass(input.specialSaveType === "aegis")}`}
 								variant="outline"
 							>
 								Aegis
 							</Button>
 							<Button
-								onClick={() => onUpdate(input.id, { specialSaveType: "regeneration" })}
-								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-									input.specialSaveType === "regeneration"
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
+								onClick={() => up({ specialSaveType: "regeneration" })}
+								className={`flex-1 h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${toggleClass(input.specialSaveType === "regeneration")}`}
 								variant="outline"
 							>
 								Regen
 							</Button>
 						</div>
 					)}
-				</div>
+				</DiceColumn>
 			</div>
 
 			{/* Special Rules Accordion */}
@@ -400,7 +300,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 									id={`mw-${input.id}`}
 									type="text"
 									value={input.multipleWounds}
-									onChange={(e) => onUpdate(input.id, { multipleWounds: e.target.value })}
+									onChange={(e) => up({ multipleWounds: e.target.value })}
 									className="bg-input text-foreground placeholder:text-gray-500"
 									placeholder="1, d3, d6+1"
 								/>
@@ -413,11 +313,7 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 									id={`max-${input.id}`}
 									type="text"
 									value={input.targetMaxWounds}
-									onChange={(e) =>
-										onUpdate(input.id, {
-											targetMaxWounds: e.target.value,
-										})
-									}
+									onChange={(e) => up({ targetMaxWounds: e.target.value })}
 									className="bg-input text-foreground placeholder:text-gray-400"
 									placeholder="e.g. 3"
 								/>
@@ -426,21 +322,15 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 
 						<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
 							<Button
-								onClick={() => onUpdate(input.id, { poisonOn5Plus: !input.poisonOn5Plus })}
-								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${
-									input.poisonOn5Plus
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
+								onClick={() => up({ poisonOn5Plus: !input.poisonOn5Plus })}
+								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${toggleClass(input.poisonOn5Plus)}`}
 								variant="outline"
 							>
 								Poison (5+)
 							</Button>
 							<Button
-								onClick={() => onUpdate(input.id, { redFury: !input.redFury })}
-								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${
-									input.redFury ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
-								}`}
+								onClick={() => up({ redFury: !input.redFury })}
+								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${toggleClass(input.redFury)}`}
 								variant="outline"
 							>
 								Red Fury

@@ -34,18 +34,20 @@ export function decodeSharePayload<T>(encoded: string): T | null {
 	}
 }
 
-// Backwards-compatible, domain-specific helpers
+export function validateSharePayload<T extends { v: number; inputs: unknown }>(encoded: string): T | null {
+	const parsed = decodeSharePayload<T>(encoded);
+	if (!parsed || typeof parsed !== "object") return null;
+	if (parsed.v !== 1) return null;
+	if (!("inputs" in parsed)) return null;
+	return parsed;
+}
 
 export function encodeMagicShareState<TInputs>(payload: MagicSharePayload<TInputs>): string {
 	return encodeSharePayload(payload);
 }
 
 export function decodeMagicShareState<TInputs = unknown>(encoded: string): MagicSharePayload<TInputs> | null {
-	const parsed = decodeSharePayload<MagicSharePayload<TInputs>>(encoded);
-	if (!parsed || typeof parsed !== "object") return null;
-	if (parsed.v !== 1) return null;
-	if (!("inputs" in parsed)) return null;
-	return parsed;
+	return validateSharePayload<MagicSharePayload<TInputs>>(encoded);
 }
 
 export function encodeCombatShareState<TInputs>(payload: CombatSharePayload<TInputs>): string {
@@ -53,11 +55,7 @@ export function encodeCombatShareState<TInputs>(payload: CombatSharePayload<TInp
 }
 
 export function decodeCombatShareState<TInputs = unknown>(encoded: string): CombatSharePayload<TInputs> | null {
-	const parsed = decodeSharePayload<CombatSharePayload<TInputs>>(encoded);
-	if (!parsed || typeof parsed !== "object") return null;
-	if (parsed.v !== 1) return null;
-	if (!("inputs" in parsed)) return null;
-	return parsed;
+	return validateSharePayload<CombatSharePayload<TInputs>>(encoded);
 }
 
 export async function copySimUrl(
