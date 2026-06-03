@@ -8,9 +8,6 @@ export type SuccessRerollType = "none" | "6s" | "all";
 // Failure rerolls: reroll dice that failed
 export type FailureRerollType = "none" | "1s" | "all";
 
-// Legacy type for backwards compatibility
-type RerollType = "none" | "1s" | "successes" | "fails";
-
 // Special save types
 export type SpecialSaveType = "aegis" | "regeneration";
 

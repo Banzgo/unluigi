@@ -245,8 +245,6 @@ const ChartTooltipContent = React.forwardRef<
 );
 ChartTooltipContent.displayName = "ChartTooltip";
 
-const ChartLegend = RechartsPrimitive.Legend;
-
 type LegendPayloadItem = {
 	value?: string;
 	dataKey?: string | number;
