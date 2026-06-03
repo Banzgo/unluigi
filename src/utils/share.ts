@@ -23,7 +23,7 @@ export function encodeSharePayload<T>(payload: T): string {
 	return toBase64Url(base64);
 }
 
-export function decodeSharePayload<T>(encoded: string): T | null {
+function decodeSharePayload<T>(encoded: string): T | null {
 	try {
 		const base64 = fromBase64Url(encoded);
 		const utf8 = atob(base64);
