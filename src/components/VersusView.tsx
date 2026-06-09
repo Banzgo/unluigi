@@ -1,62 +1,35 @@
 import { Copy } from "lucide-react";
-import { useState } from "react";
-import { DiceInput, type DiceInputState } from "@/components/DiceInput";
+import { DiceInput } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
-import type { SimulationResults } from "@/engine";
-import { createDefaultInput, runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
+import { useVersusStore } from "@/stores/versusStore";
+import { runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
 
 export function VersusView() {
-	const [inputs1, setInputs1] = useState<DiceInputState[]>([createDefaultInput()]);
-	const [inputs2, setInputs2] = useState<DiceInputState[]>([createDefaultInput()]);
-	const [results1, setResults1] = useState<SimulationResults | null>(null);
-	const [results2, setResults2] = useState<SimulationResults | null>(null);
-
-	const addInput1 = () => {
-		setInputs1([...inputs1, createDefaultInput()]);
-	};
-
-	const addInput2 = () => {
-		setInputs2([...inputs2, createDefaultInput()]);
-	};
-
-	const removeInput1 = (id: string) => {
-		setInputs1(inputs1.filter((input) => input.id !== id));
-	};
-
-	const removeInput2 = (id: string) => {
-		setInputs2(inputs2.filter((input) => input.id !== id));
-	};
-
-	const updateInput1 = (id: string, updates: Partial<DiceInputState>) => {
-		setInputs1(inputs1.map((input) => (input.id === id ? { ...input, ...updates } : input)));
-	};
-
-	const updateInput2 = (id: string, updates: Partial<DiceInputState>) => {
-		setInputs2(inputs2.map((input) => (input.id === id ? { ...input, ...updates } : input)));
-	};
-
-	const copyInputs1To2 = () => {
-		// Deep clone inputs1 with new IDs
-		const copiedInputs = inputs1.map((input) => ({
-			...input,
-			id: crypto.randomUUID(),
-		}));
-		setInputs2(copiedInputs);
-	};
+	const {
+		inputs1,
+		inputs2,
+		results1,
+		results2,
+		addInput1,
+		addInput2,
+		removeInput1,
+		removeInput2,
+		updateInput1,
+		updateInput2,
+		copyInputs1To2,
+		setResults1,
+		setResults2,
+	} = useVersusStore();
 
 	const handleVersusSimulation = () => {
-		// Validate all inputs
 		const allValid = [...inputs1, ...inputs2].every(validateInput);
 		if (!allValid) {
 			return;
 		}
 
-		const result1 = runCombinedSimulation(inputs1);
-		const result2 = runCombinedSimulation(inputs2);
-
-		setResults1(result1);
-		setResults2(result2);
+		setResults1(runCombinedSimulation(inputs1));
+		setResults2(runCombinedSimulation(inputs2));
 	};
 
 	const allInputsValid = [...inputs1, ...inputs2].every(validateInput);

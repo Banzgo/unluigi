@@ -24,7 +24,7 @@ export function ArmyPanel({
 	onStatusChange,
 }: Readonly<ArmyPanelProps>) {
 	const [rawText, setRawText] = useState("");
-	const [editing, setEditing] = useState(true);
+	const [editing, setEditing] = useState(units.length === 0);
 	const [error, setError] = useState("");
 
 	const handleParse = () => {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { DiceInput, type DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
-import type { SimulationResults } from "@/engine";
+import { useCombatStore } from "@/stores/combatStore";
 import { type CombatSharePayloadV1, copySimUrl, encodeCombatShareState } from "@/utils/share";
 import { createDefaultInput, runCombinedSimulation, validateInput } from "@/utils/simulation-helpers";
 
@@ -12,27 +12,21 @@ interface CombatViewProps {
 }
 
 export function CombatView({ initialInputs, autoRun }: CombatViewProps = {}) {
-	const [inputs, setInputs] = useState<DiceInputState[]>(
-		initialInputs && initialInputs.length > 0 ? initialInputs : [createDefaultInput()],
-	);
-	const [simResults, setSimResults] = useState<SimulationResults | null>(null);
+	const { inputs, simResults, addInput, removeInput, updateInput, setInputs, setSimResults } = useCombatStore();
 	const [shareStatus, setShareStatus] = useState<"idle" | "copied" | "error">("idle");
 	const hasAutoRun = useRef(false);
+	const hasInitialized = useRef(false);
 
-	const addInput = () => {
-		setInputs([...inputs, createDefaultInput()]);
-	};
-
-	const removeInput = (id: string) => {
-		setInputs(inputs.filter((input) => input.id !== id));
-	};
-
-	const updateInput = (id: string, updates: Partial<DiceInputState>) => {
-		setInputs(inputs.map((input) => (input.id === id ? { ...input, ...updates } : input)));
-	};
+	// Override store with shared URL inputs on first mount
+	useEffect(() => {
+		if (hasInitialized.current) return;
+		hasInitialized.current = true;
+		if (initialInputs && initialInputs.length > 0) {
+			setInputs(initialInputs);
+		}
+	}, [initialInputs, setInputs]);
 
 	const handleRunSimulation = () => {
-		// Validate all inputs
 		const allValid = inputs.every(validateInput);
 		if (!allValid) {
 			return;
@@ -51,7 +45,7 @@ export function CombatView({ initialInputs, autoRun }: CombatViewProps = {}) {
 
 		const simulationResults = runCombinedSimulation(inputs);
 		setSimResults(simulationResults);
-	}, [autoRun, inputs]);
+	}, [autoRun, inputs, setSimResults]);
 
 	const handleShareClick = async () => {
 		const base = createDefaultInput();

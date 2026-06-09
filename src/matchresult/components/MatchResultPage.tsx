@@ -1,34 +1,31 @@
-import { useState } from "react";
-import type { ParsedUnit, PrimaryObjective, UnitStatus } from "../types";
+import { useMatchResultStore } from "@/stores/matchResultStore";
+import type { UnitStatus } from "../types";
 import { extractPlayerName } from "../utils/parseList";
 import { calculateResult, detectGameSize } from "../utils/scoring";
 import { ArmyPanel } from "./ArmyPanel";
 import { ScorePanel } from "./ScorePanel";
 
-function makePlayer() {
-	return { header: "", units: [] as ParsedUnit[], secondaryDone: false, declaredTotal: null as number | null };
-}
-
 export function MatchResultPage() {
-	const [p1, setP1] = useState(makePlayer());
-	const [p2, setP2] = useState(makePlayer());
-	const [primary, setPrimary] = useState<PrimaryObjective>("neither");
+	const {
+		p1,
+		p2,
+		primary,
+		setP1Parsed,
+		setP2Parsed,
+		setP1Status,
+		setP2Status,
+		setPrimary,
+		setP1SecondaryDone,
+		setP2SecondaryDone,
+	} = useMatchResultStore();
 
-	const handleP1Parsed = (header: string, units: ParsedUnit[], declaredTotal: number | null) =>
-		setP1((prev) => ({ ...prev, header, units, declaredTotal }));
-	const handleP2Parsed = (header: string, units: ParsedUnit[], declaredTotal: number | null) =>
-		setP2((prev) => ({ ...prev, header, units, declaredTotal }));
+	const handleP1Parsed = (header: string, units: Parameters<typeof setP1Parsed>[1], declaredTotal: number | null) =>
+		setP1Parsed(header, units, declaredTotal);
+	const handleP2Parsed = (header: string, units: Parameters<typeof setP2Parsed>[1], declaredTotal: number | null) =>
+		setP2Parsed(header, units, declaredTotal);
 
-	const handleP1Status = (id: string, status: UnitStatus) =>
-		setP1((prev) => ({
-			...prev,
-			units: prev.units.map((u) => (u.id === id ? { ...u, status } : u)),
-		}));
-	const handleP2Status = (id: string, status: UnitStatus) =>
-		setP2((prev) => ({
-			...prev,
-			units: prev.units.map((u) => (u.id === id ? { ...u, status } : u)),
-		}));
+	const handleP1Status = (id: string, status: UnitStatus) => setP1Status(id, status);
+	const handleP2Status = (id: string, status: UnitStatus) => setP2Status(id, status);
 
 	const rawTotal = Math.max(p1.declaredTotal ?? 0, p2.declaredTotal ?? 0);
 	const gameSize = detectGameSize(rawTotal);
@@ -55,8 +52,8 @@ export function MatchResultPage() {
 					p1SecondaryDone={p1.secondaryDone}
 					p2SecondaryDone={p2.secondaryDone}
 					onPrimaryChange={setPrimary}
-					onP1SecondaryChange={(v) => setP1((prev) => ({ ...prev, secondaryDone: v }))}
-					onP2SecondaryChange={(v) => setP2((prev) => ({ ...prev, secondaryDone: v }))}
+					onP1SecondaryChange={setP1SecondaryDone}
+					onP2SecondaryChange={setP2SecondaryDone}
 				/>
 
 				{suspiciousTotal && (
