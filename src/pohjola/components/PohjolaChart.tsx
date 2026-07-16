@@ -1,32 +1,11 @@
-import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { type ChartMode, ChartModeToggle, PercentileLegend } from "@/components/ChartModeToggle";
+import { buildBarColorMap } from "@/components/barColors";
+import { ChartModeToggle, PercentileLegend, useChartState } from "@/components/ChartModeToggle";
+import { TailColoredBarChart } from "@/components/TailColoredBarChart";
 import { Card } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
 import type { PohjolaSimulationResults } from "../engine/types";
 
 interface PohjolaChartProps {
 	results: PohjolaSimulationResults;
-}
-
-const TAIL_THRESHOLD = 10;
-
-// Colors a bucket unlucky/lucky only if the majority of its own probability mass
-// falls within the bottom/top 10% tail — avoids mislabeling buckets that straddle
-// the tail boundary but mostly sit outside it.
-function computeBarColor(point: { probability: number; cumulative: number }): string {
-	const bucketMass = point.probability;
-	if (bucketMass <= 0) return "hsl(0, 0%, 60%)";
-
-	const before = point.cumulative - point.probability;
-	const lowOverlap = Math.min(Math.max(TAIL_THRESHOLD - before, 0), bucketMass);
-	if (lowOverlap / bucketMass > 0.5) return "rgb(249, 115, 22)";
-
-	const after = 100 - point.cumulative;
-	const highOverlap = Math.min(Math.max(TAIL_THRESHOLD - after, 0), bucketMass);
-	if (highOverlap / bucketMass > 0.5) return "hsl(142, 76%, 36%)";
-
-	return "hsl(0, 0%, 60%)";
 }
 
 interface TooltipProps {
@@ -43,15 +22,7 @@ interface TooltipProps {
 }
 
 export function PohjolaChart({ results }: PohjolaChartProps) {
-	const [chartMode, setChartMode] = useState<ChartMode>("probability");
-	const [isMobile, setIsMobile] = useState(false);
-
-	useEffect(() => {
-		const check = () => setIsMobile(window.innerWidth < 640);
-		check();
-		window.addEventListener("resize", check);
-		return () => window.removeEventListener("resize", check);
-	}, []);
+	const { chartMode, setChartMode, isMobile } = useChartState();
 
 	const baseChartData = results.damage.probabilityDistribution
 		.filter((d) => d.probability >= 0.1)
@@ -75,7 +46,7 @@ export function PohjolaChart({ results }: PohjolaChartProps) {
 	const maxDamage = chartData.length > 0 ? chartData[chartData.length - 1].damage : 0;
 	const hasMoreData = results.damage.probabilityDistribution.some((d) => d.wounds > maxDamage && d.probability < 0.1);
 
-	const barColors = new Map(results.damage.probabilityDistribution.map((p) => [p.wounds, computeBarColor(p)]));
+	const barColors = buildBarColorMap(results.damage.probabilityDistribution);
 	const getBarColor = (damage: number) => barColors.get(damage) ?? "hsl(0, 0%, 60%)";
 
 	const formatXTick = (value: number) => (hasMoreData && value === maxDamage ? `${value}+` : String(value));
@@ -115,45 +86,19 @@ export function PohjolaChart({ results }: PohjolaChartProps) {
 				</div>
 			</div>
 
-			<ChartContainer
-				config={{
-					probability: { label: "Probability", color: "hsl(142, 76%, 36%)" },
-				}}
-				className="h-64 sm:h-80 w-full"
-			>
-				<BarChart data={chartData}>
-					<CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-					<XAxis
-						dataKey="damage"
-						label={{ value: "Damage", position: "insideBottom", offset: -5 }}
-						stroke="var(--muted-foreground)"
-						tick={{ fill: "var(--muted-foreground)" }}
-						tickFormatter={formatXTick}
-					/>
-					<YAxis
-						label={
-							isMobile
-								? undefined
-								: {
-										value: chartMode === "cumulative" ? "Cumulative (%)" : "Probability (%)",
-										angle: -90,
-										position: "insideLeft",
-									}
-						}
-						domain={chartMode === "cumulative" ? [0, 100] : undefined}
-						tickFormatter={(v) => `${Math.round(v)}%`}
-						width={isMobile ? 0 : 60}
-						stroke="var(--muted-foreground)"
-						tick={{ fill: "var(--muted-foreground)" }}
-					/>
-					<ChartTooltip content={<CustomTooltip />} cursor={{ fill: "var(--muted)" }} />
-					<Bar dataKey={dataKey} radius={[4, 4, 0, 0]}>
-						{chartData.map((entry) => (
-							<Cell key={`cell-${entry.damage}`} fill={getBarColor(entry.damage)} />
-						))}
-					</Bar>
-				</BarChart>
-			</ChartContainer>
+			<TailColoredBarChart
+				data={chartData}
+				xKey="damage"
+				dataKey={dataKey}
+				xAxisLabel="Damage"
+				seriesLabel="Probability"
+				seriesColor="hsl(142, 76%, 36%)"
+				chartMode={chartMode}
+				isMobile={isMobile}
+				tickFormatter={formatXTick}
+				getBarColor={getBarColor}
+				tooltipContent={<CustomTooltip />}
+			/>
 
 			<PercentileLegend lowLabel="Low" highLabel="High" />
 			<ChartModeToggle chartMode={chartMode} onChange={setChartMode} />

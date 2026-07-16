@@ -1,6 +1,21 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 export type ChartMode = "probability" | "cumulative";
+
+export function useChartState() {
+	const [chartMode, setChartMode] = useState<ChartMode>("probability");
+	const [isMobile, setIsMobile] = useState(false);
+
+	useEffect(() => {
+		const check = () => setIsMobile(window.innerWidth < 640);
+		check();
+		window.addEventListener("resize", check);
+		return () => window.removeEventListener("resize", check);
+	}, []);
+
+	return { chartMode, setChartMode, isMobile };
+}
 
 interface PercentileLegendProps {
 	lowLabel: string;
