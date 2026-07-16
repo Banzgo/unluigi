@@ -9,6 +9,26 @@ interface PohjolaChartProps {
 	results: PohjolaSimulationResults;
 }
 
+const TAIL_THRESHOLD = 10;
+
+// Colors a bucket unlucky/lucky only if the majority of its own probability mass
+// falls within the bottom/top 10% tail — avoids mislabeling buckets that straddle
+// the tail boundary but mostly sit outside it.
+function computeBarColor(point: { probability: number; cumulative: number }): string {
+	const bucketMass = point.probability;
+	if (bucketMass <= 0) return "hsl(0, 0%, 60%)";
+
+	const before = point.cumulative - point.probability;
+	const lowOverlap = Math.min(Math.max(TAIL_THRESHOLD - before, 0), bucketMass);
+	if (lowOverlap / bucketMass > 0.5) return "rgb(249, 115, 22)";
+
+	const after = 100 - point.cumulative;
+	const highOverlap = Math.min(Math.max(TAIL_THRESHOLD - after, 0), bucketMass);
+	if (highOverlap / bucketMass > 0.5) return "hsl(142, 76%, 36%)";
+
+	return "hsl(0, 0%, 60%)";
+}
+
 interface TooltipProps {
 	active?: boolean;
 	payload?: Array<{
@@ -55,11 +75,8 @@ export function PohjolaChart({ results }: PohjolaChartProps) {
 	const maxDamage = chartData.length > 0 ? chartData[chartData.length - 1].damage : 0;
 	const hasMoreData = results.damage.probabilityDistribution.some((d) => d.wounds > maxDamage && d.probability < 0.1);
 
-	const getBarColor = (damage: number) => {
-		if (damage < results.damage.percentile10) return "rgb(249, 115, 22)";
-		if (damage > results.damage.percentile90) return "hsl(142, 76%, 36%)";
-		return "hsl(0, 0%, 60%)";
-	};
+	const barColors = new Map(results.damage.probabilityDistribution.map((p) => [p.wounds, computeBarColor(p)]));
+	const getBarColor = (damage: number) => barColors.get(damage) ?? "hsl(0, 0%, 60%)";
 
 	const formatXTick = (value: number) => (hasMoreData && value === maxDamage ? `${value}+` : String(value));
 

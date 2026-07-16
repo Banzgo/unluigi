@@ -28,6 +28,26 @@ function computeCumulative(distribution: { wounds: number; probability: number }
 	return distribution.filter((d) => d.wounds >= wound).reduce((sum, d) => sum + d.probability, 0);
 }
 
+const TAIL_THRESHOLD = 10;
+
+// Colors a bucket unlucky/lucky only if the majority of its own probability mass
+// falls within the bottom/top 10% tail — avoids mislabeling buckets that straddle
+// the tail boundary but mostly sit outside it.
+function computeBarColor(point: { probability: number; cumulative: number }): string {
+	const bucketMass = point.probability;
+	if (bucketMass <= 0) return "hsl(0, 0%, 60%)";
+
+	const before = point.cumulative - point.probability;
+	const lowOverlap = Math.min(Math.max(TAIL_THRESHOLD - before, 0), bucketMass);
+	if (lowOverlap / bucketMass > 0.5) return "rgb(249, 115, 22)";
+
+	const after = 100 - point.cumulative;
+	const highOverlap = Math.min(Math.max(TAIL_THRESHOLD - after, 0), bucketMass);
+	if (highOverlap / bucketMass > 0.5) return "hsl(142, 76%, 36%)";
+
+	return "hsl(0, 0%, 60%)";
+}
+
 function useChartState() {
 	const [chartMode, setChartMode] = useState<ChartMode>("probability");
 	const [isMobile, setIsMobile] = useState(false);
@@ -60,11 +80,8 @@ function SingleResultChart({ results }: { results: SimulationResults }) {
 	const maxWounds = chartData.length > 0 ? chartData[chartData.length - 1].wounds : 0;
 	const hasMoreData = results.probabilityDistribution.some((d) => d.wounds > maxWounds && d.probability < 0.1);
 
-	const getBarColor = (wounds: number) => {
-		if (wounds < results.percentile10) return "rgb(249, 115, 22)";
-		if (wounds > results.percentile90) return "hsl(142, 76%, 36%)";
-		return "hsl(0, 0%, 60%)";
-	};
+	const barColors = new Map(results.probabilityDistribution.map((p) => [p.wounds, computeBarColor(p)]));
+	const getBarColor = (wounds: number) => barColors.get(wounds) ?? "hsl(0, 0%, 60%)";
 
 	const formatXAxisTick = (value: number) => (hasMoreData && value === maxWounds ? `${value}+` : String(value));
 
