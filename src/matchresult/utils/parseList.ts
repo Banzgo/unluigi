@@ -28,10 +28,23 @@ export interface ParsedList {
 }
 
 export function parseArmyList(raw: string): ParsedList {
-	const lines = raw
+	const rawLines = raw
 		.split("\n")
 		.map((l) => l.trim())
 		.filter(Boolean);
+
+	// Merge wrapped continuation lines (no leading point value) into
+	// the previous logical line, so a unit's option list can span
+	// multiple source lines.
+	const lines: string[] = [];
+	for (const line of rawLines) {
+		const startsNewLine = /^\d+\s*-\s*/.test(line) || /^\d+$/.test(line);
+		if (startsNewLine || lines.length === 0) {
+			lines.push(line);
+		} else {
+			lines[lines.length - 1] = `${lines.at(-1)} ${line}`;
+		}
+	}
 
 	let header = "";
 	const units: ParsedUnit[] = [];
