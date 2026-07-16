@@ -1,11 +1,17 @@
+import { useEffect, useRef } from "react";
 import { useMatchResultStore } from "@/stores/matchResultStore";
 import type { UnitStatus } from "../types";
-import { extractPlayerName } from "../utils/parseList";
+import { extractPlayerName, parseArmyList } from "../utils/parseList";
 import { calculateResult, detectGameSize } from "../utils/scoring";
 import { ArmyPanel } from "./ArmyPanel";
 import { ScorePanel } from "./ScorePanel";
 
-export function MatchResultPage() {
+interface MatchResultPageProps {
+	initialList1?: string;
+	initialList2?: string;
+}
+
+export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchResultPageProps> = {}) {
 	const {
 		p1,
 		p2,
@@ -18,6 +24,26 @@ export function MatchResultPage() {
 		setP1SecondaryDone,
 		setP2SecondaryDone,
 	} = useMatchResultStore();
+
+	const hasInitializedFromUrl = useRef(false);
+
+	useEffect(() => {
+		if (hasInitializedFromUrl.current) return;
+		hasInitializedFromUrl.current = true;
+
+		if (initialList1) {
+			const parsed = parseArmyList(initialList1);
+			if (parsed.units.length > 0) {
+				setP1Parsed(parsed.header, parsed.units, parsed.declaredTotal);
+			}
+		}
+		if (initialList2) {
+			const parsed = parseArmyList(initialList2);
+			if (parsed.units.length > 0) {
+				setP2Parsed(parsed.header, parsed.units, parsed.declaredTotal);
+			}
+		}
+	}, [initialList1, initialList2, setP1Parsed, setP2Parsed]);
 
 	const handleP1Parsed = (header: string, units: Parameters<typeof setP1Parsed>[1], declaredTotal: number | null) =>
 		setP1Parsed(header, units, declaredTotal);

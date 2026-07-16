@@ -79,6 +79,24 @@ export async function copySimUrl(
 	}
 }
 
+/**
+ * URL-safe base64 encoding for plain text (newlines preserved).
+ * Prefer this over JSON share payloads when the value is raw text.
+ */
+export function encodeUrlText(text: string): string {
+	const utf8 = encodeURIComponent(text);
+	return toBase64Url(btoa(utf8));
+}
+
+export function decodeUrlText(encoded: string): string | null {
+	try {
+		const utf8 = atob(fromBase64Url(encoded));
+		return decodeURIComponent(utf8);
+	} catch {
+		return null;
+	}
+}
+
 function toBase64Url(base64: string): string {
 	return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }

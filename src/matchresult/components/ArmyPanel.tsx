@@ -1,5 +1,5 @@
 import { Pencil } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import type { ParsedUnit, UnitStatus } from "../types";
@@ -26,6 +26,15 @@ export function ArmyPanel({
 	const [rawText, setRawText] = useState("");
 	const [editing, setEditing] = useState(units.length === 0);
 	const [error, setError] = useState("");
+	const prevUnitsLen = useRef(units.length);
+
+	// Exit edit mode when units arrive from outside (e.g. URL `l1`/`l2` params)
+	useEffect(() => {
+		if (prevUnitsLen.current === 0 && units.length > 0) {
+			setEditing(false);
+		}
+		prevUnitsLen.current = units.length;
+	}, [units.length]);
 
 	const handleParse = () => {
 		const result = parseArmyList(rawText);
