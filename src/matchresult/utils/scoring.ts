@@ -13,24 +13,137 @@ function scaledThresholds(gameSize: number): number[] {
 	return BASE_THRESHOLDS.map((t) => t * scale);
 }
 
-/** VP the winner needs to widen gap into the next BP tier. null = already at max. */
-export function vpToNextWinnerTier(vpDiff: number, gameSize: number): number | null {
-	for (const t of scaledThresholds(gameSize)) {
-		if (vpDiff <= t) return t - vpDiff + 1;
-	}
-	return null;
+export interface ObjectiveState {
+	primary: MatchState["primary"];
+	player1SecondaryDone: boolean;
+	player2SecondaryDone: boolean;
 }
 
-/** VP the loser needs to narrow gap into the previous BP tier. null = already at best (draw). */
-export function vpToNextLoserTier(vpDiff: number, gameSize: number): number | null {
+export interface NextBpInfo {
+	vpNeeded: number;
+	nextBp: number;
+}
+
+function applyObjectiveModifiers(
+	p1Base: number,
+	p2Base: number,
+	objectives: ObjectiveState,
+): { player1Bp: number; player2Bp: number } {
+	let p1Bp = p1Base;
+	let p2Bp = p2Base;
+
+	if (objectives.primary === "player1") {
+		p1Bp += 3;
+		p2Bp -= 3;
+	} else if (objectives.primary === "player2") {
+		p2Bp += 3;
+		p1Bp -= 3;
+	}
+
+	if (objectives.player1SecondaryDone) {
+		p1Bp += 1;
+		p2Bp -= 1;
+	}
+	if (objectives.player2SecondaryDone) {
+		p2Bp += 1;
+		p1Bp -= 1;
+	}
+
+	return { player1Bp: p1Bp, player2Bp: p2Bp };
+}
+
+function computeBpFromVp(
+	player1Vp: number,
+	player2Vp: number,
+	objectives: ObjectiveState,
+	gameSize: number,
+): { player1Bp: number; player2Bp: number } {
+	const vpDiff = Math.abs(player1Vp - player2Vp);
+	const { winner, loser } = baseBp(vpDiff, gameSize);
+	const p1Base = player1Vp >= player2Vp ? winner : loser;
+	const p2Base = player2Vp >= player1Vp ? winner : loser;
+	return applyObjectiveModifiers(p1Base, p2Base, objectives);
+}
+
+function collectVpDeltaCandidates(
+	player: "player1" | "player2",
+	player1Vp: number,
+	player2Vp: number,
+	gameSize: number,
+): number[] {
 	const thresholds = scaledThresholds(gameSize);
-	for (let i = 0; i < thresholds.length; i++) {
-		if (vpDiff <= thresholds[i]) {
-			if (i === 0) return null;
-			return vpDiff - thresholds[i - 1];
+	const diff = Math.abs(player1Vp - player2Vp);
+	const myVp = player === "player1" ? player1Vp : player2Vp;
+	const theirVp = player === "player1" ? player2Vp : player1Vp;
+	const iAmWinner = myVp >= theirVp;
+	const candidates = new Set<number>();
+
+	if (iAmWinner) {
+		for (const t of thresholds) {
+			if (diff <= t) {
+				candidates.add(t - diff + 1);
+				break;
+			}
+		}
+	} else {
+		for (let i = 0; i < thresholds.length; i++) {
+			if (diff <= thresholds[i]) {
+				if (i > 0) candidates.add(diff - thresholds[i - 1]);
+				break;
+			}
+		}
+		if (diff > thresholds[thresholds.length - 1]) {
+			candidates.add(diff - thresholds[thresholds.length - 1]);
+		}
+
+		const gap = theirVp - myVp;
+		for (const t of thresholds) {
+			candidates.add(gap + t + 1);
 		}
 	}
-	return vpDiff - thresholds[thresholds.length - 1];
+
+	return [...candidates].filter((d) => d > 0).sort((a, b) => a - b);
+}
+
+/** VP needed to gain 1 BP. null when already at max (20) or no VP path exists. */
+export function nextBpInfoForPlayer(
+	player: "player1" | "player2",
+	result: BpResult,
+	objectives: ObjectiveState,
+	gameSize: number,
+): NextBpInfo | null {
+	const currentBp = player === "player1" ? result.player1Bp : result.player2Bp;
+	if (currentBp >= 20) return null;
+
+	const targetBp = currentBp + 1;
+	const { player1Vp, player2Vp } = result;
+	const candidates = collectVpDeltaCandidates(player, player1Vp, player2Vp, gameSize);
+
+	for (const delta of candidates) {
+		const testP1Vp = player === "player1" ? player1Vp + delta : player1Vp;
+		const testP2Vp = player === "player2" ? player2Vp + delta : player2Vp;
+		const bp = computeBpFromVp(testP1Vp, testP2Vp, objectives, gameSize);
+		const newBp = player === "player1" ? bp.player1Bp : bp.player2Bp;
+		if (newBp >= targetBp) {
+			return { vpNeeded: delta, nextBp: targetBp };
+		}
+	}
+
+	const thresholds = scaledThresholds(gameSize);
+	const gap = player === "player1" ? player2Vp - player1Vp : player1Vp - player2Vp;
+	const maxDelta = Math.max(0, gap) + thresholds[thresholds.length - 1] + 100;
+
+	for (let delta = 0.5; delta <= maxDelta; delta += 0.5) {
+		const testP1Vp = player === "player1" ? player1Vp + delta : player1Vp;
+		const testP2Vp = player === "player2" ? player2Vp + delta : player2Vp;
+		const bp = computeBpFromVp(testP1Vp, testP2Vp, objectives, gameSize);
+		const newBp = player === "player1" ? bp.player1Bp : bp.player2Bp;
+		if (newBp >= targetBp) {
+			return { vpNeeded: delta, nextBp: targetBp };
+		}
+	}
+
+	return null;
 }
 
 function unitVp(unit: ParsedUnit): number {
@@ -53,29 +166,13 @@ function baseBp(vpDiff: number, gameSize: number): { winner: number; loser: numb
 export function calculateResult(state: MatchState, gameSize: number): BpResult {
 	const player1Vp = state.player2.units.reduce((sum, u) => sum + unitVp(u), 0);
 	const player2Vp = state.player1.units.reduce((sum, u) => sum + unitVp(u), 0);
-
 	const vpDiff = Math.abs(player1Vp - player2Vp);
-	const { winner, loser } = baseBp(vpDiff, gameSize);
+	const objectives: ObjectiveState = {
+		primary: state.primary,
+		player1SecondaryDone: state.player1.secondaryDone,
+		player2SecondaryDone: state.player2.secondaryDone,
+	};
+	const { player1Bp, player2Bp } = computeBpFromVp(player1Vp, player2Vp, objectives, gameSize);
 
-	let p1Bp = player1Vp >= player2Vp ? winner : loser;
-	let p2Bp = player2Vp >= player1Vp ? winner : loser;
-
-	if (state.primary === "player1") {
-		p1Bp += 3;
-		p2Bp -= 3;
-	} else if (state.primary === "player2") {
-		p2Bp += 3;
-		p1Bp -= 3;
-	}
-
-	if (state.player1.secondaryDone) {
-		p1Bp += 1;
-		p2Bp -= 1;
-	}
-	if (state.player2.secondaryDone) {
-		p2Bp += 1;
-		p1Bp -= 1;
-	}
-
-	return { player1Bp: p1Bp, player2Bp: p2Bp, player1Vp, player2Vp, vpDiff };
+	return { player1Bp, player2Bp, player1Vp, player2Vp, vpDiff };
 }

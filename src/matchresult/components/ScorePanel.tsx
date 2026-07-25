@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import type { BpResult, PrimaryObjective } from "../types";
-import { vpToNextLoserTier, vpToNextWinnerTier } from "../utils/scoring";
+import { nextBpInfoForPlayer } from "../utils/scoring";
 
 interface ScorePanelProps {
 	result: BpResult;
@@ -27,21 +27,12 @@ export function ScorePanel({
 	onP1SecondaryChange,
 	onP2SecondaryChange,
 }: Readonly<ScorePanelProps>) {
-	const p1VpWins = result.player1Vp > result.player2Vp;
-	const p2VpWins = result.player2Vp > result.player1Vp;
+	const objectives = { primary, player1SecondaryDone: p1SecondaryDone, player2SecondaryDone: p2SecondaryDone };
+	const p1Next = nextBpInfoForPlayer("player1", result, objectives, gameSize);
+	const p2Next = nextBpInfoForPlayer("player2", result, objectives, gameSize);
+
 	const p1BpAhead = result.player1Bp > result.player2Bp;
 	const p2BpAhead = result.player2Bp > result.player1Bp;
-
-	const p1NextVp = p1VpWins
-		? vpToNextWinnerTier(result.vpDiff, gameSize)
-		: p2VpWins
-			? vpToNextLoserTier(result.vpDiff, gameSize)
-			: vpToNextWinnerTier(result.vpDiff, gameSize);
-	const p2NextVp = p2VpWins
-		? vpToNextWinnerTier(result.vpDiff, gameSize)
-		: p1VpWins
-			? vpToNextLoserTier(result.vpDiff, gameSize)
-			: vpToNextWinnerTier(result.vpDiff, gameSize);
 
 	const formatVp = (vp: number) => (vp % 1 === 0 ? vp.toString() : vp.toFixed(1));
 
@@ -68,12 +59,16 @@ export function ScorePanel({
 					{result.player2Bp} <span className="text-sm font-normal text-muted-foreground">BP</span>
 				</p>
 
-				{/* Next VP row */}
-				{(p1NextVp !== null || p2NextVp !== null) && (
+				{/* Next BP row */}
+				{(p1Next !== null || p2Next !== null) && (
 					<>
-						<p className="text-xs text-muted-foreground/60">{p1NextVp !== null ? `${p1NextVp} VP (+1)` : ""}</p>
+						<p className="text-xs text-muted-foreground/60">
+							{p1Next !== null ? `+${formatVp(p1Next.vpNeeded)} -> ${p1Next.nextBp}` : ""}
+						</p>
 						<div />
-						<p className="text-xs text-muted-foreground/60">{p2NextVp !== null ? `${p2NextVp} VP (+1)` : ""}</p>
+						<p className="text-xs text-muted-foreground/60">
+							{p2Next !== null ? `+${formatVp(p2Next.vpNeeded)} -> ${p2Next.nextBp}` : ""}
+						</p>
 					</>
 				)}
 			</div>
