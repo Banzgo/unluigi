@@ -10,8 +10,11 @@ function RootLayout() {
 	return (
 		<div className="min-h-screen bg-background">
 			<Analytics />
-			<Navbar />
-			<Outlet />
+			{/* Prevent Google from appending UI labels to the search snippet */}
+			<div data-nosnippet>
+				<Navbar />
+				<Outlet />
+			</div>
 		</div>
 	);
 }
