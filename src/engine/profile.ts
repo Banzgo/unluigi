@@ -40,7 +40,7 @@ export interface SpecialRule {
 		reroll?: RerollType;
 		modifier?: ModifierConfig;
 		special?: {
-			ability: "poison" | "poisonOn5Plus" | "lethalStrike" | "fury" | "redFury";
+			ability: "poison" | "poisonOn5Plus" | "lethalStrike" | "fury" | "redFury" | "strengthFromFlesh";
 		};
 	};
 	condition?: string; // For complex conditions (future use)
@@ -71,6 +71,7 @@ export interface UnitProfile {
 	fury?: boolean;
 	redFury?: boolean;
 	multipleWounds?: string | number;
+	strengthFromFlesh?: boolean;
 	hatred?: boolean; // Reroll failed to-hit rolls
 	autoHit?: boolean; // Always hits (no roll needed)
 	autoWound?: boolean; // Always wounds (no roll needed)
@@ -235,6 +236,7 @@ export function profileToSimulationParams(attacker: UnitProfile, defender: UnitP
 		fury: attacker.fury,
 		redFury: attacker.redFury,
 		multipleWounds: attacker.multipleWounds,
+		strengthFromFlesh: attacker.strengthFromFlesh,
 		targetMaxWounds: defender.wounds,
 	};
 }

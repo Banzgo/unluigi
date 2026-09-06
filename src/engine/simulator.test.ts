@@ -486,6 +486,80 @@ describe("runSimulationWithStats", () => {
 		expect(results.mean).toBeGreaterThan(0.5);
 	});
 
+	it("should apply Strength from Flesh as D6 multiple wounds only on natural 6s to wound", () => {
+		const withoutRule = runSimulationWithStats({
+			numAttacks: 1,
+			toHit: "auto",
+			toWound: 2,
+			armorSave: "none",
+			specialSave: "none",
+			targetMaxWounds: 6,
+			iterations: 8000,
+		});
+
+		const withRule = runSimulationWithStats({
+			numAttacks: 1,
+			toHit: "auto",
+			toWound: 2,
+			armorSave: "none",
+			specialSave: "none",
+			strengthFromFlesh: true,
+			targetMaxWounds: 6,
+			iterations: 8000,
+		});
+
+		// About 1/6 of successful wounds are 6s and those average 3.5 wounds instead of 1
+		expect(withRule.mean).toBeGreaterThan(withoutRule.mean);
+		expect(withRule.max).toBeGreaterThanOrEqual(2);
+		expect(withRule.max).toBeLessThanOrEqual(6);
+	});
+
+	it("should not trigger Strength from Flesh on poison auto-wounds", () => {
+		const results = runSimulationWithStats({
+			numAttacks: 1,
+			toHit: 6,
+			toWound: 6,
+			armorSave: "none",
+			specialSave: "none",
+			poison: true,
+			strengthFromFlesh: true,
+			targetMaxWounds: 6,
+			iterations: 4000,
+		});
+
+		// Poison 6s to hit auto-wound without a to-wound roll, so each unsaved hit stays 1 wound
+		expect(results.max).toBeLessThanOrEqual(1);
+	});
+
+	it("should replace regular multiple wounds with D3 when Strength from Flesh triggers", () => {
+		const withMultipleWoundsOnly = runSimulationWithStats({
+			numAttacks: 1,
+			toHit: "auto",
+			toWound: 6,
+			armorSave: "none",
+			specialSave: "none",
+			multipleWounds: 2,
+			targetMaxWounds: 6,
+			iterations: 4000,
+		});
+
+		const withBoth = runSimulationWithStats({
+			numAttacks: 1,
+			toHit: "auto",
+			toWound: 6,
+			armorSave: "none",
+			specialSave: "none",
+			multipleWounds: 2,
+			strengthFromFlesh: true,
+			targetMaxWounds: 6,
+			iterations: 4000,
+		});
+
+		// Successful wounds are always 6s, so D3 (1-6) replaces MW(2)
+		expect(withMultipleWoundsOnly.max).toBe(2);
+		expect(withBoth.max).toBe(3);
+	});
+
 	it("should handle variable multiple wounds with dice expressions", () => {
 		const results = runSimulationWithStats({
 			numAttacks: 5,

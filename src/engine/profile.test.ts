@@ -456,6 +456,35 @@ describe("profileToSimulationParams", () => {
 		expect(params.targetMaxWounds).toBe(3);
 	});
 
+	it("should map special rule: strengthFromFlesh", () => {
+		const attacker: UnitProfile = {
+			offensiveSkill: 4,
+			defensiveSkill: 3,
+			strength: 5,
+			resilience: 3,
+			armorPenetration: 0,
+			attacks: 5,
+			wounds: 1,
+			armor: 3,
+			strengthFromFlesh: true,
+		};
+
+		const defender: UnitProfile = {
+			offensiveSkill: 3,
+			defensiveSkill: 3,
+			strength: 3,
+			resilience: 3,
+			armorPenetration: 0,
+			attacks: 10,
+			wounds: 4,
+			armor: 4,
+		};
+
+		const params = profileToSimulationParams(attacker, defender);
+		expect(params.strengthFromFlesh).toBe(true);
+		expect(params.targetMaxWounds).toBe(4);
+	});
+
 	it("should handle special saves", () => {
 		const attacker: UnitProfile = {
 			offensiveSkill: 4,

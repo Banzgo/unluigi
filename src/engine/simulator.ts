@@ -27,6 +27,7 @@ const DEFAULT_PARAMS = {
 	fury: false,
 	redFury: false,
 	multipleWounds: 1,
+	strengthFromFlesh: false,
 	targetMaxWounds: 3,
 	iterations: 10000,
 };
@@ -169,13 +170,14 @@ function rollToHit(numAttacks: number, params: Required<SimulationParameters>): 
 			const tracker: HitTracker = {
 				isPoison: isPoisonHit,
 				isLethal: false, // Set during wound phase
+				isNaturalSixToWound: false,
 			};
 
 			hits.push(tracker);
 
 			// Fury: 6s generate an additional hit
 			if (params.fury && unmodifiedRoll === 6) {
-				hits.push({ isPoison: false, isLethal: false });
+				hits.push({ isPoison: false, isLethal: false, isNaturalSixToWound: false });
 			}
 		}
 	}
@@ -212,6 +214,7 @@ function rollToWound(hitTrackers: HitTracker[], params: Required<SimulationParam
 			const tracker: HitTracker = {
 				isPoison: hit.isPoison,
 				isLethal: params.lethalStrike && unmodifiedRoll === 6,
+				isNaturalSixToWound: unmodifiedRoll === 6,
 			};
 			wounds.push(tracker);
 		}
@@ -323,8 +326,9 @@ function rollSpecialSaves(woundTrackers: HitTracker[], params: Required<Simulati
 function applyMultipleWounds(woundTrackers: HitTracker[], params: Required<SimulationParameters>): number {
 	let totalWounds = 0;
 
-	for (const _wound of woundTrackers) {
-		const woundsPerHit = parseDiceExpression(params.multipleWounds);
+	for (const wound of woundTrackers) {
+		const woundExpression = params.strengthFromFlesh && wound.isNaturalSixToWound ? "d3" : params.multipleWounds;
+		const woundsPerHit = parseDiceExpression(woundExpression);
 		// Cap each individual hit's wounds, but not the total across all hits
 		const cappedWounds = Math.min(woundsPerHit, params.targetMaxWounds);
 		totalWounds += cappedWounds;

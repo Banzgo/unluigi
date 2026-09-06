@@ -30,6 +30,7 @@ export interface DiceInputState {
 	redFury: boolean;
 	multipleWounds: string;
 	targetMaxWounds: string;
+	strengthFromFlesh: boolean;
 }
 
 interface DiceInputProps {
@@ -125,11 +126,20 @@ function toggleClass(active: boolean): string {
 	return active ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80";
 }
 
+function isMultipleWoundsActive(value: string): boolean {
+	const trimmed = value.trim().toLowerCase();
+	if (trimmed === "" || trimmed === "1") return false;
+	const numeric = Number(trimmed);
+	return Number.isNaN(numeric) || numeric !== 1;
+}
+
 export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputProps) {
 	const [isNumAttacksValid, setIsNumAttacksValid] = useState<boolean>(true);
 	const [showSpecialRules, setShowSpecialRules] = useState<boolean>(false);
 
 	const up = (updates: Partial<DiceInputState>) => onUpdate(input.id, updates);
+	const highlightTargetWounds =
+		input.targetMaxWounds.trim() === "1" && (isMultipleWoundsActive(input.multipleWounds) || input.strengthFromFlesh);
 
 	return (
 		<Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-card border-border relative">
@@ -314,13 +324,21 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 									type="text"
 									value={input.targetMaxWounds}
 									onChange={(e) => up({ targetMaxWounds: e.target.value })}
-									className="bg-input text-foreground placeholder:text-gray-400"
+									className={`bg-input text-foreground placeholder:text-gray-400 ${
+										highlightTargetWounds ? "border-amber-400 border-2 ring-2 ring-amber-400/40" : ""
+									}`}
 									placeholder="e.g. 3"
 								/>
 							</div>
 						</div>
-
 						<div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+							<Button
+								onClick={() => up({ strengthFromFlesh: !input.strengthFromFlesh })}
+								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${toggleClass(input.strengthFromFlesh)}`}
+								variant="outline"
+							>
+								Strength from Flesh
+							</Button>
 							<Button
 								onClick={() => up({ poisonOn5Plus: !input.poisonOn5Plus })}
 								className={`w-full h-7 sm:h-8 text-[10px] sm:text-xs leading-tight ${toggleClass(input.poisonOn5Plus)}`}

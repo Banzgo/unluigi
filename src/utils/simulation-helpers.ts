@@ -39,6 +39,7 @@ export function createDefaultInput(): DiceInputState {
 		redFury: false,
 		multipleWounds: "1",
 		targetMaxWounds: "1",
+		strengthFromFlesh: false,
 	};
 }
 
@@ -86,6 +87,7 @@ function mapInputToSimulationParams(
 		redFury: input.redFury,
 		multipleWounds: input.multipleWounds || "1",
 		targetMaxWounds: Number.parseInt(input.targetMaxWounds, 10) || 1,
+		strengthFromFlesh: input.strengthFromFlesh,
 		iterations,
 	};
 }

@@ -9,25 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PohjolaRouteImport } from './routes/pohjola'
-import { Route as MatchresultRouteImport } from './routes/matchresult'
-import { Route as MagicRouteImport } from './routes/magic'
-import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as MagicRouteImport } from './routes/magic'
+import { Route as MatchresultRouteImport } from './routes/matchresult'
+import { Route as PohjolaRouteImport } from './routes/pohjola'
 
-const PohjolaRoute = PohjolaRouteImport.update({
-  id: '/pohjola',
-  path: '/pohjola',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MatchresultRoute = MatchresultRouteImport.update({
-  id: '/matchresult',
-  path: '/matchresult',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MagicRoute = MagicRouteImport.update({
-  id: '/magic',
-  path: '/magic',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -35,9 +25,19 @@ const AboutRoute = AboutRouteImport.update({
   path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const MagicRoute = MagicRouteImport.update({
+  id: '/magic',
+  path: '/magic',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MatchresultRoute = MatchresultRouteImport.update({
+  id: '/matchresult',
+  path: '/matchresult',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PohjolaRoute = PohjolaRouteImport.update({
+  id: '/pohjola',
+  path: '/pohjola',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -81,25 +81,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/pohjola': {
-      id: '/pohjola'
-      path: '/pohjola'
-      fullPath: '/pohjola'
-      preLoaderRoute: typeof PohjolaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/matchresult': {
-      id: '/matchresult'
-      path: '/matchresult'
-      fullPath: '/matchresult'
-      preLoaderRoute: typeof MatchresultRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/magic': {
-      id: '/magic'
-      path: '/magic'
-      fullPath: '/magic'
-      preLoaderRoute: typeof MagicRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -109,11 +95,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/magic': {
+      id: '/magic'
+      path: '/magic'
+      fullPath: '/magic'
+      preLoaderRoute: typeof MagicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/matchresult': {
+      id: '/matchresult'
+      path: '/matchresult'
+      fullPath: '/matchresult'
+      preLoaderRoute: typeof MatchresultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pohjola': {
+      id: '/pohjola'
+      path: '/pohjola'
+      fullPath: '/pohjola'
+      preLoaderRoute: typeof PohjolaRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
