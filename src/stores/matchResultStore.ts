@@ -1,12 +1,5 @@
 import { create } from "zustand";
-import type { ParsedUnit, PrimaryObjective, UnitStatus } from "@/matchresult/types";
-
-interface PlayerState {
-	header: string;
-	units: ParsedUnit[];
-	secondaryDone: boolean;
-	declaredTotal: number | null;
-}
+import type { ParsedUnit, PlayerState, PrimaryObjective, UnitStatus } from "@/matchresult/types";
 
 function makePlayer(): PlayerState {
 	return { header: "", units: [], secondaryDone: false, declaredTotal: null };
