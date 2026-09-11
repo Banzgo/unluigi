@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { SteppedCycleControl } from "@/components/SteppedCycleControl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -161,117 +162,22 @@ export function PohjolaInput({ initialState, autoRun, onResults }: PohjolaInputP
 
 				{/* AS / DS */}
 				<div className="grid grid-cols-2 gap-3 sm:gap-4">
-					{/* AS */}
-					<div className="flex flex-col space-y-1.5">
-						<Label className="text-sm text-muted-foreground text-center">Attack Skill</Label>
-						<div className="flex sm:hidden gap-1">
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.as);
-									if (idx > 0) set("as", AS_DS_OPTIONS[idx - 1]);
-								}}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-amber-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.as);
-									if (idx < AS_DS_OPTIONS.length - 1) set("as", AS_DS_OPTIONS[idx + 1]);
-								}}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-amber-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								+
-							</button>
-						</div>
-						<div className="relative w-full h-20 sm:h-24 bg-primary border-2 border-amber-500/50 rounded-md overflow-hidden">
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.as);
-									if (idx > 0) set("as", AS_DS_OPTIONS[idx - 1]);
-								}}
-								className="hidden sm:block absolute left-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={() => set("as", cycleNext(AS_DS_OPTIONS, inputs.as))}
-								className="w-full h-full text-3xl sm:text-4xl font-bold hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								{inputs.as}+
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.as);
-									if (idx < AS_DS_OPTIONS.length - 1) set("as", AS_DS_OPTIONS[idx + 1]);
-								}}
-								className="hidden sm:block absolute right-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								+
-							</button>
-						</div>
-					</div>
-
-					{/* DS */}
-					<div className="flex flex-col space-y-1.5">
-						<Label className="text-sm text-muted-foreground text-center">Defence Skill</Label>
-						<div className="flex sm:hidden gap-1">
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.ds);
-									if (idx > 0) set("ds", AS_DS_OPTIONS[idx - 1]);
-								}}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-amber-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.ds);
-									if (idx < AS_DS_OPTIONS.length - 1) set("ds", AS_DS_OPTIONS[idx + 1]);
-								}}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-amber-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								+
-							</button>
-						</div>
-						<div className="relative w-full h-20 sm:h-24 bg-primary border-2 border-amber-500/50 rounded-md overflow-hidden">
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.ds);
-									if (idx > 0) set("ds", AS_DS_OPTIONS[idx - 1]);
-								}}
-								className="hidden sm:block absolute left-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={() => set("ds", cycleNext(AS_DS_OPTIONS, inputs.ds))}
-								className="w-full h-full text-3xl sm:text-4xl font-bold hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								{inputs.ds}+
-							</button>
-							<button
-								type="button"
-								onClick={() => {
-									const idx = AS_DS_OPTIONS.indexOf(inputs.ds);
-									if (idx < AS_DS_OPTIONS.length - 1) set("ds", AS_DS_OPTIONS[idx + 1]);
-								}}
-								className="hidden sm:block absolute right-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								+
-							</button>
-						</div>
-					</div>
+					<SteppedCycleControl
+						label="Attack Skill"
+						value={inputs.as}
+						options={AS_DS_OPTIONS}
+						onChange={(v) => set("as", v)}
+						formatValue={(v) => `${v}+`}
+						accentClassName="border-amber-500/50"
+					/>
+					<SteppedCycleControl
+						label="Defence Skill"
+						value={inputs.ds}
+						options={AS_DS_OPTIONS}
+						onChange={(v) => set("ds", v)}
+						formatValue={(v) => `${v}+`}
+						accentClassName="border-amber-500/50"
+					/>
 				</div>
 
 				{/* Attack modifiers */}

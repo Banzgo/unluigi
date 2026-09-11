@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { SteppedCycleControl } from "@/components/SteppedCycleControl";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
 import {
 	type CastingRerollType,
 	type DispelRerollType,
@@ -74,72 +74,6 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 
 	const updateInput = <K extends keyof MagicSimulatorInputState>(key: K, value: MagicSimulatorInputState[K]) => {
 		setInputs((prev) => ({ ...prev, [key]: value }));
-	};
-
-	const cycleCastingDice = () => {
-		const currentIndex = castingDiceOptions.indexOf(inputs.castingDice as CastingDiceValue);
-		const nextValue = castingDiceOptions[(currentIndex + 1) % castingDiceOptions.length];
-		updateInput("castingDice", nextValue);
-	};
-
-	const decreaseCastingDice = () => {
-		const currentIndex = castingDiceOptions.indexOf(inputs.castingDice as CastingDiceValue);
-		if (currentIndex > 0) {
-			const prevValue = castingDiceOptions[currentIndex - 1];
-			updateInput("castingDice", prevValue);
-		}
-	};
-
-	const increaseCastingDice = () => {
-		const currentIndex = castingDiceOptions.indexOf(inputs.castingDice as CastingDiceValue);
-		if (currentIndex < castingDiceOptions.length - 1) {
-			const nextValue = castingDiceOptions[currentIndex + 1];
-			updateInput("castingDice", nextValue);
-		}
-	};
-
-	const cycleDispelDice = () => {
-		const currentIndex = dispelDiceOptions.indexOf(inputs.dispelDice as DispelDiceValue);
-		const nextValue = dispelDiceOptions[(currentIndex + 1) % dispelDiceOptions.length];
-		updateInput("dispelDice", nextValue);
-	};
-
-	const decreaseDispelDice = () => {
-		const currentIndex = dispelDiceOptions.indexOf(inputs.dispelDice as DispelDiceValue);
-		if (currentIndex > 0) {
-			const prevValue = dispelDiceOptions[currentIndex - 1];
-			updateInput("dispelDice", prevValue);
-		}
-	};
-
-	const increaseDispelDice = () => {
-		const currentIndex = dispelDiceOptions.indexOf(inputs.dispelDice as DispelDiceValue);
-		if (currentIndex < dispelDiceOptions.length - 1) {
-			const nextValue = dispelDiceOptions[currentIndex + 1];
-			updateInput("dispelDice", nextValue);
-		}
-	};
-
-	const cycleCastingValue = () => {
-		const currentIndex = castingValueOptions.indexOf(inputs.castingValue as CastingValueOption);
-		const nextValue = castingValueOptions[(currentIndex + 1) % castingValueOptions.length];
-		updateInput("castingValue", nextValue);
-	};
-
-	const decreaseCastingValue = () => {
-		const currentIndex = castingValueOptions.indexOf(inputs.castingValue as CastingValueOption);
-		if (currentIndex > 0) {
-			const prevValue = castingValueOptions[currentIndex - 1];
-			updateInput("castingValue", prevValue);
-		}
-	};
-
-	const increaseCastingValue = () => {
-		const currentIndex = castingValueOptions.indexOf(inputs.castingValue as CastingValueOption);
-		if (currentIndex < castingValueOptions.length - 1) {
-			const nextValue = castingValueOptions[currentIndex + 1];
-			updateInput("castingValue", nextValue);
-		}
 	};
 
 	const cycleCastingModifier = () => {
@@ -254,49 +188,15 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 				{/* Dice Values Grid - Main Parameters */}
 				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
 					{/* Casting Dice Column */}
-					<div className="flex flex-col space-y-1.5 order-1 sm:order-1">
-						<Label className="text-sm text-muted-foreground text-center">Casting Dice</Label>
-						{/* Mobile: +/- buttons in separate row */}
-						<div className="flex sm:hidden gap-1">
-							<button
-								type="button"
-								onClick={decreaseCastingDice}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={increaseCastingDice}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								+
-							</button>
-						</div>
-						{/* Desktop: +/- buttons inside main button */}
-						<div className="relative w-full h-20 sm:h-24 bg-primary border-2 border-purple-500/50 rounded-md overflow-hidden">
-							<button
-								type="button"
-								onClick={decreaseCastingDice}
-								className="hidden sm:block absolute left-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={cycleCastingDice}
-								className="w-full h-full text-3xl sm:text-4xl font-bold hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								{inputs.castingDice} dice
-							</button>
-							<button
-								type="button"
-								onClick={increaseCastingDice}
-								className="hidden sm:block absolute right-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								+
-							</button>
-						</div>
+					<SteppedCycleControl
+						label="Casting Dice"
+						className="order-1"
+						value={inputs.castingDice}
+						options={castingDiceOptions}
+						onChange={(v) => updateInput("castingDice", v)}
+						formatValue={(v) => `${v} dice`}
+						accentClassName="border-purple-500/50"
+					>
 						<div className="grid grid-cols-2 gap-1">
 							<Button
 								onClick={cycleCastingModifier}
@@ -336,52 +236,18 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 						>
 							{spellType === "learned" ? "Learned Spell" : "Bound Spell"}
 						</Button>
-					</div>
+					</SteppedCycleControl>
 
 					{/* Casting Value Column */}
-					<div className="flex flex-col space-y-1.5 order-3 sm:order-2 col-span-2 sm:col-span-1 justify-self-center w-full max-w-[calc(50%-0.375rem)] sm:max-w-none">
-						<Label className="text-sm text-muted-foreground text-center">Casting Value</Label>
-						{/* Mobile: +/- buttons in separate row */}
-						<div className="flex sm:hidden gap-1">
-							<button
-								type="button"
-								onClick={decreaseCastingValue}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={increaseCastingValue}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								+
-							</button>
-						</div>
-						{/* Desktop: +/- buttons inside main button */}
-						<div className="relative w-full h-20 sm:h-24 bg-primary border-2 border-purple-500/50 rounded-md overflow-hidden">
-							<button
-								type="button"
-								onClick={decreaseCastingValue}
-								className="hidden sm:block absolute left-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={cycleCastingValue}
-								className="w-full h-full text-3xl sm:text-4xl font-bold hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								{inputs.castingValue}+
-							</button>
-							<button
-								type="button"
-								onClick={increaseCastingValue}
-								className="hidden sm:block absolute right-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								+
-							</button>
-						</div>
+					<SteppedCycleControl
+						label="Casting Value"
+						className="order-3 sm:order-2 col-span-2 sm:col-span-1 justify-self-center w-full max-w-[calc(50%-0.375rem)] sm:max-w-none"
+						value={inputs.castingValue}
+						options={castingValueOptions}
+						onChange={(v) => updateInput("castingValue", v)}
+						formatValue={(v) => `${v}+`}
+						accentClassName="border-purple-500/50"
+					>
 						<Button
 							onClick={cycleMagicResistance}
 							className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
@@ -393,52 +259,18 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 						>
 							{getMagicResistanceLabel(inputs.magicResistance)}
 						</Button>
-					</div>
+					</SteppedCycleControl>
 
 					{/* Dispel Dice Column */}
-					<div className="flex flex-col space-y-1.5 order-2 sm:order-3">
-						<Label className="text-sm text-muted-foreground text-center">Dispel Dice</Label>
-						{/* Mobile: +/- buttons in separate row */}
-						<div className="flex sm:hidden gap-1">
-							<button
-								type="button"
-								onClick={decreaseDispelDice}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={increaseDispelDice}
-								className="flex-1 h-10 text-2xl font-bold bg-primary border-2 border-purple-500/50 rounded-md hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								+
-							</button>
-						</div>
-						{/* Desktop: +/- buttons inside main button */}
-						<div className="relative w-full h-20 sm:h-24 bg-primary border-2 border-purple-500/50 rounded-md overflow-hidden">
-							<button
-								type="button"
-								onClick={decreaseDispelDice}
-								className="hidden sm:block absolute left-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								−
-							</button>
-							<button
-								type="button"
-								onClick={cycleDispelDice}
-								className="w-full h-full text-3xl sm:text-4xl font-bold hover:bg-secondary/80 text-foreground transition-colors"
-							>
-								{inputs.dispelDice === 0 ? "NONE" : `${inputs.dispelDice} dice`}
-							</button>
-							<button
-								type="button"
-								onClick={increaseDispelDice}
-								className="hidden sm:block absolute right-0 top-0 h-full px-3 sm:px-4 text-2xl sm:text-3xl font-bold hover:bg-secondary/80 text-foreground transition-colors z-10"
-							>
-								+
-							</button>
-						</div>
+					<SteppedCycleControl
+						label="Dispel Dice"
+						className="order-2 sm:order-3"
+						value={inputs.dispelDice}
+						options={dispelDiceOptions}
+						onChange={(v) => updateInput("dispelDice", v)}
+						formatValue={(v) => (v === 0 ? "NONE" : `${v} dice`)}
+						accentClassName="border-purple-500/50"
+					>
 						<div className="grid grid-cols-2 gap-1">
 							<Button
 								onClick={cycleDispelModifier}
@@ -463,7 +295,7 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 								{getRerollDispelLabel(inputs.rerollDispel)}
 							</Button>
 						</div>
-					</div>
+					</SteppedCycleControl>
 				</div>
 			</Card>
 
