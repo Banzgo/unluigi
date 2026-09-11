@@ -3,50 +3,6 @@
 import type { FailureRerollType, HitValue, SimulationParameters } from "./types";
 
 /**
- * Special rule phases that can be affected by modifiers
- */
-export type RollPhase = "hit" | "wound" | "armorSave" | "specialSave";
-
-/**
- * Types of rerolls that can be applied
- */
-export type RerollType = "failed" | "1s" | "successful" | "all";
-
-/**
- * Modifier operations for numerical changes
- */
-export type ModifierType = "add" | "multiply" | "divide" | "set";
-
-/**
- * Modifier configuration for special rules
- */
-export interface ModifierConfig {
-	operation: ModifierType;
-	value: number;
-	restriction?: {
-		type: "min" | "max";
-		value: number;
-	};
-}
-
-/**
- * Special rule that can affect combat
- */
-export interface SpecialRule {
-	name: string;
-	targetPhases: RollPhase[];
-	effect: {
-		type: "reroll" | "modifier" | "special";
-		reroll?: RerollType;
-		modifier?: ModifierConfig;
-		special?: {
-			ability: "poison" | "poisonOn5Plus" | "lethalStrike" | "fury" | "redFury" | "strengthFromFlesh";
-		};
-	};
-	condition?: string; // For complex conditions (future use)
-}
-
-/**
  * Unit profile with all combat stats and special rules
  */
 export interface UnitProfile {
@@ -75,9 +31,6 @@ export interface UnitProfile {
 	hatred?: boolean; // Reroll failed to-hit rolls
 	autoHit?: boolean; // Always hits (no roll needed)
 	autoWound?: boolean; // Always wounds (no roll needed)
-
-	// Structured special rules (V2 approach - for future expansion)
-	specialRules?: SpecialRule[];
 
 	// Future-proofing (not used in combat calculations yet)
 	discipline?: number;
