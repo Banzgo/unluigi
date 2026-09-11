@@ -3,12 +3,77 @@ import { Axe, Menu, ScrollText, Sparkles, Swords, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
+type NavSize = "desktop" | "mobile";
+
+const SIZE_CLASSES: Record<NavSize, { link: string; icon: string }> = {
+	desktop: { link: "gap-2 px-4 py-2 text-sm", icon: "w-4 h-4" },
+	mobile: { link: "gap-3 px-4 py-3 text-base", icon: "w-5 h-5" },
+};
+
+function linkClassName(size: NavSize, active: boolean): string {
+	return cn(
+		`flex items-center rounded-lg font-medium transition-all duration-200 ${SIZE_CLASSES[size].link}`,
+		active ? "bg-brand-green/20 text-brand-green" : "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
+	);
+}
+
+interface ModeLink {
+	label: string;
+	mobileLabel: string;
+	search?: { mode: "versus" };
+	isActive: (path: string, mode: string | undefined) => boolean;
+}
+
+// The "/" route's two modes (plain combat vs versus) aren't in navLinks below
+// because they share a path and are distinguished by a search param instead.
+const MODE_LINKS: ModeLink[] = [
+	{ label: "Combat", mobileLabel: "Combat Simulator", isActive: (path, mode) => path === "/" && !mode },
+	{
+		label: "Versus",
+		mobileLabel: "Versus Mode",
+		search: { mode: "versus" },
+		isActive: (path, mode) => path === "/" && mode === "versus",
+	},
+];
+
+function ModeNavLink({ link, active, size }: { link: ModeLink; active: boolean; size: NavSize }) {
+	return (
+		<Link to="/" search={link.search} className={linkClassName(size, active)}>
+			<Swords className={SIZE_CLASSES[size].icon} />
+			{size === "desktop" ? link.label : link.mobileLabel}
+		</Link>
+	);
+}
+
 const navLinks = [
 	{ to: "/magic", label: "Magic", icon: Sparkles },
 	{ to: "/pohjola", label: "Pohjola", icon: Axe },
 	{ to: "/matchresult", label: "Match Result", icon: ScrollText },
 	//{ to: "/about", label: "About", icon: Info },
 ] as const;
+
+function AppNavLink({ link, active, size }: { link: (typeof navLinks)[number]; active: boolean; size: NavSize }) {
+	const Icon = link.icon;
+	return (
+		<Link to={link.to} className={linkClassName(size, active)}>
+			<Icon className={SIZE_CLASSES[size].icon} />
+			{link.label}
+		</Link>
+	);
+}
+
+function NavLinks({ currentPath, mode, size }: { currentPath: string; mode: string | undefined; size: NavSize }) {
+	return (
+		<>
+			{MODE_LINKS.map((link) => (
+				<ModeNavLink key={link.label} link={link} active={link.isActive(currentPath, mode)} size={size} />
+			))}
+			{navLinks.map((link) => (
+				<AppNavLink key={link.to} link={link} active={currentPath === link.to} size={size} />
+			))}
+		</>
+	);
+}
 
 export function Navbar() {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -59,51 +124,7 @@ export function Navbar() {
 
 						{/* Desktop Navigation Links */}
 						<div className="flex items-center gap-1">
-							{/* Combat Links */}
-							<Link
-								to="/"
-								className={cn(
-									"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-									currentPath === "/" && !searchParams.mode
-										? "bg-brand-green/20 text-brand-green"
-										: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-								)}
-							>
-								<Swords className="w-4 h-4" />
-								Combat
-							</Link>
-							<Link
-								to="/"
-								search={{ mode: "versus" }}
-								className={cn(
-									"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-									currentPath === "/" && searchParams.mode === "versus"
-										? "bg-brand-green/20 text-brand-green"
-										: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-								)}
-							>
-								<Swords className="w-4 h-4" />
-								Versus
-							</Link>
-
-							{navLinks.map((link) => {
-								const isActive = currentPath === link.to;
-								return (
-									<Link
-										key={link.to}
-										to={link.to}
-										className={cn(
-											"flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-											isActive
-												? "bg-brand-green/20 text-brand-green"
-												: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-										)}
-									>
-										<link.icon className="w-4 h-4" />
-										{link.label}
-									</Link>
-								);
-							})}
+							<NavLinks currentPath={currentPath} mode={searchParams.mode} size="desktop" />
 						</div>
 					</div>
 				</div>
@@ -151,51 +172,7 @@ export function Navbar() {
 				)}
 			>
 				<div className="flex flex-col p-4 space-y-2">
-					{/* Combat Links - Direct for Mobile */}
-					<Link
-						to="/"
-						className={cn(
-							"flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
-							currentPath === "/" && !searchParams.mode
-								? "bg-brand-green/20 text-brand-green"
-								: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-						)}
-					>
-						<Swords className="w-5 h-5" />
-						Combat Simulator
-					</Link>
-					<Link
-						to="/"
-						search={{ mode: "versus" }}
-						className={cn(
-							"flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
-							currentPath === "/" && searchParams.mode === "versus"
-								? "bg-brand-green/20 text-brand-green"
-								: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-						)}
-					>
-						<Swords className="w-5 h-5" />
-						Versus Mode
-					</Link>
-
-					{navLinks.map((link) => {
-						const isActive = currentPath === link.to;
-						return (
-							<Link
-								key={link.to}
-								to={link.to}
-								className={cn(
-									"flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200",
-									isActive
-										? "bg-brand-green/20 text-brand-green"
-										: "text-muted-foreground hover:text-foreground hover:bg-secondary/50",
-								)}
-							>
-								<link.icon className="w-5 h-5" />
-								{link.label}
-							</Link>
-						);
-					})}
+					<NavLinks currentPath={currentPath} mode={searchParams.mode} size="mobile" />
 				</div>
 			</div>
 
