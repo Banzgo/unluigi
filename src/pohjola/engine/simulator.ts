@@ -1,4 +1,5 @@
 import { parseDiceExpression } from "../../engine/dice";
+import type { DefaultsFor } from "../../engine/type-utils";
 import {
 	applyAttackerRerolls,
 	applyBlock,
@@ -11,22 +12,13 @@ import {
 } from "./rules";
 import type { PohjolaAttackParams, PohjolaIterationOutcome } from "./types";
 
+// iterations is PohjolaAttackParams' only optional field — every other field
+// is required, so callers always supply it and there's nothing to default.
+// `satisfies` keeps it that way: adding a default here for a required field
+// (or forgetting one for a newly-optional field) is a compile error.
 const DEFAULTS = {
-	lethality: 0 as const,
-	criticalStrike: 0 as const,
-	crush: 0 as const,
-	block: 0 as const,
-	titanicStrikes: 0 as const,
-	resilient: 0 as const,
-	attackerGoodRerolls: 0 as const,
-	attackerBadTokens: 0 as const,
-	defenderGoodRerolls: 0 as const,
-	defenderBadTokens: 0 as const,
-	divineTruth: 0,
-	defenderDivineTruth: 0,
-	reverberating: false,
 	iterations: 10_000,
-};
+} satisfies DefaultsFor<PohjolaAttackParams>;
 
 function withDefaults(params: PohjolaAttackParams): Required<PohjolaAttackParams> {
 	return { ...DEFAULTS, ...params } as Required<PohjolaAttackParams>;

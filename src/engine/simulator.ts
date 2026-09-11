@@ -4,23 +4,28 @@
 
 import { isSuccess, parseDiceExpression, rollD6, shouldRerollSplit } from "./dice";
 import { calculateStatistics } from "./probability";
+import type { DefaultsFor } from "./type-utils";
 import type { HitTracker, SimulationParameters, SimulationResults } from "./types";
 
 /**
- * Default values for optional simulation parameters
+ * Default values for optional simulation parameters.
+ * `satisfies DefaultsFor<...>` makes it a compile error to add a new optional
+ * field to SimulationParameters without also giving it a default here — see
+ * applyDefaults below, which otherwise relies on this object covering every
+ * optional field before it's cast to Required<SimulationParameters>.
  */
 const DEFAULT_PARAMS = {
-	rerollHitFailures: "none" as const,
-	rerollHitSuccesses: "none" as const,
-	rerollWoundFailures: "none" as const,
-	rerollWoundSuccesses: "none" as const,
-	armorSave: "none" as const,
-	rerollArmorSaveFailures: "none" as const,
-	rerollArmorSaveSuccesses: "none" as const,
-	specialSave: "none" as const,
-	specialSaveType: "aegis" as const,
-	rerollSpecialSaveFailures: "none" as const,
-	rerollSpecialSaveSuccesses: "none" as const,
+	rerollHitFailures: "none",
+	rerollHitSuccesses: "none",
+	rerollWoundFailures: "none",
+	rerollWoundSuccesses: "none",
+	armorSave: "none",
+	rerollArmorSaveFailures: "none",
+	rerollArmorSaveSuccesses: "none",
+	specialSave: "none",
+	specialSaveType: "aegis",
+	rerollSpecialSaveFailures: "none",
+	rerollSpecialSaveSuccesses: "none",
 	poison: false,
 	poisonOn5Plus: false,
 	lethalStrike: false,
@@ -30,7 +35,7 @@ const DEFAULT_PARAMS = {
 	strengthFromFlesh: false,
 	targetMaxWounds: 3,
 	iterations: 10000,
-};
+} satisfies DefaultsFor<SimulationParameters>;
 
 /**
  * Merge user parameters with defaults
