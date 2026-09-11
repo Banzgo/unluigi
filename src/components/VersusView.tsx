@@ -1,5 +1,5 @@
 import { Copy } from "lucide-react";
-import { DiceInput } from "@/components/DiceInput";
+import { AttackerList } from "@/components/AttackerList";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
 import { useVersusStore } from "@/stores/versusStore";
@@ -49,15 +49,7 @@ export function VersusView() {
 				<div className="space-y-4">
 					<h2 className="text-xl sm:text-2xl font-bold text-brand-green">Profile 1</h2>
 
-					{inputs1.map((input) => (
-						<DiceInput
-							key={input.id}
-							input={input}
-							onUpdate={updateInput1}
-							onRemove={removeInput1}
-							showRemove={inputs1.length > 1}
-						/>
-					))}
+					<AttackerList inputs={inputs1} onUpdate={updateInput1} onRemove={removeInput1} />
 
 					<Button
 						onClick={addInput1}
@@ -78,15 +70,7 @@ export function VersusView() {
 						</Button>
 					</div>
 
-					{inputs2.map((input) => (
-						<DiceInput
-							key={input.id}
-							input={input}
-							onUpdate={updateInput2}
-							onRemove={removeInput2}
-							showRemove={inputs2.length > 1}
-						/>
-					))}
+					<AttackerList inputs={inputs2} onUpdate={updateInput2} onRemove={removeInput2} />
 
 					<Button
 						onClick={addInput2}
