@@ -3,6 +3,7 @@
  */
 
 import { rollCastingDice, rollD3, rollD6, rollDispelDice } from "./dice";
+import type { DefaultsFor } from "./type-utils";
 
 /**
  * Reroll type for casting rolls
@@ -50,12 +51,14 @@ export interface MagicSimulationResults {
 }
 
 /**
- * Default values for optional parameters
+ * Default values for optional parameters. `satisfies DefaultsFor<...>` makes
+ * it a compile error to add a new optional field to MagicSimulationParameters
+ * without also giving it a default here.
  */
 const DEFAULT_MAGIC_PARAMS = {
 	iterations: 50000,
 	isBoundSpell: false,
-};
+} satisfies DefaultsFor<MagicSimulationParameters>;
 
 /**
  * Apply reroll logic to casting dice
