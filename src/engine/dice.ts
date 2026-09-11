@@ -113,47 +113,6 @@ export function parseDiceExpression(expression: string | number): number {
 }
 
 /**
- * Check if a die roll should be rerolled based on the reroll type
- * @param roll The original roll value (1-6)
- * @param target The target number needed to succeed
- * @param rerollType Type of reroll to apply
- * @returns True if the roll should be rerolled
- * @deprecated Use shouldRerollSplit instead for the new success/failure reroll system
- */
-export function shouldReroll(
-	roll: number,
-	target: number | "auto" | "none",
-	rerollType: "none" | "1s" | "successes" | "fails",
-): boolean {
-	if (rerollType === "none") {
-		return false;
-	}
-
-	if (target === "auto") {
-		// Auto-success: only reroll successes would apply (but doesn't make sense)
-		return rerollType === "successes";
-	}
-
-	if (target === "none") {
-		// Auto-fail: only reroll fails would apply
-		return rerollType === "fails";
-	}
-
-	const isSuccess = roll >= target;
-
-	switch (rerollType) {
-		case "1s":
-			return roll === 1;
-		case "successes":
-			return isSuccess;
-		case "fails":
-			return !isSuccess;
-		default:
-			return false;
-	}
-}
-
-/**
  * Check if a die roll should be rerolled based on split success/failure reroll types.
  * A die can only be rerolled once - this function determines if ANY reroll applies.
  * @param roll The original roll value (1-6)
