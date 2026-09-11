@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { DiceInputState } from "@/components/DiceInput";
 import type { SimulationResults } from "@/engine";
 import { createDefaultInput } from "@/utils/simulation-helpers";
+import { createDiceInputListActions } from "./diceInputListActions";
 
 interface CombatState {
 	inputs: DiceInputState[];
@@ -14,16 +15,17 @@ interface CombatState {
 	reset: () => void;
 }
 
-export const useCombatStore = create<CombatState>((set) => ({
-	inputs: [createDefaultInput()],
-	simResults: null,
-	addInput: () => set((state) => ({ inputs: [...state.inputs, createDefaultInput()] })),
-	removeInput: (id) => set((state) => ({ inputs: state.inputs.filter((i) => i.id !== id) })),
-	updateInput: (id, updates) =>
-		set((state) => ({
-			inputs: state.inputs.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-		})),
-	setInputs: (inputs) => set({ inputs }),
-	setSimResults: (results) => set({ simResults: results }),
-	reset: () => set({ inputs: [createDefaultInput()], simResults: null }),
-}));
+export const useCombatStore = create<CombatState>((set) => {
+	const inputsActions = createDiceInputListActions<CombatState, "inputs">(set, "inputs");
+
+	return {
+		inputs: [createDefaultInput()],
+		simResults: null,
+		addInput: inputsActions.add,
+		removeInput: inputsActions.remove,
+		updateInput: inputsActions.update,
+		setInputs: inputsActions.set,
+		setSimResults: (results) => set({ simResults: results }),
+		reset: () => set({ inputs: [createDefaultInput()], simResults: null }),
+	};
+});

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { DiceInputState } from "@/components/DiceInput";
 import type { SimulationResults } from "@/engine";
 import { createDefaultInput } from "@/utils/simulation-helpers";
+import { createDiceInputListActions } from "./diceInputListActions";
 
 interface VersusState {
 	inputs1: DiceInputState[];
@@ -20,29 +21,28 @@ interface VersusState {
 	reset: () => void;
 }
 
-export const useVersusStore = create<VersusState>((set) => ({
-	inputs1: [createDefaultInput()],
-	inputs2: [createDefaultInput()],
-	results1: null,
-	results2: null,
-	addInput1: () => set((state) => ({ inputs1: [...state.inputs1, createDefaultInput()] })),
-	addInput2: () => set((state) => ({ inputs2: [...state.inputs2, createDefaultInput()] })),
-	removeInput1: (id) => set((state) => ({ inputs1: state.inputs1.filter((i) => i.id !== id) })),
-	removeInput2: (id) => set((state) => ({ inputs2: state.inputs2.filter((i) => i.id !== id) })),
-	updateInput1: (id, updates) =>
-		set((state) => ({
-			inputs1: state.inputs1.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-		})),
-	updateInput2: (id, updates) =>
-		set((state) => ({
-			inputs2: state.inputs2.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-		})),
-	copyInputs1To2: () =>
-		set((state) => ({
-			inputs2: state.inputs1.map((input) => ({ ...input, id: crypto.randomUUID() })),
-		})),
-	setResults1: (results) => set({ results1: results }),
-	setResults2: (results) => set({ results2: results }),
-	reset: () =>
-		set({ inputs1: [createDefaultInput()], inputs2: [createDefaultInput()], results1: null, results2: null }),
-}));
+export const useVersusStore = create<VersusState>((set) => {
+	const list1 = createDiceInputListActions<VersusState, "inputs1">(set, "inputs1");
+	const list2 = createDiceInputListActions<VersusState, "inputs2">(set, "inputs2");
+
+	return {
+		inputs1: [createDefaultInput()],
+		inputs2: [createDefaultInput()],
+		results1: null,
+		results2: null,
+		addInput1: list1.add,
+		addInput2: list2.add,
+		removeInput1: list1.remove,
+		removeInput2: list2.remove,
+		updateInput1: list1.update,
+		updateInput2: list2.update,
+		copyInputs1To2: () =>
+			set((state) => ({
+				inputs2: state.inputs1.map((input) => ({ ...input, id: crypto.randomUUID() })),
+			})),
+		setResults1: (results) => set({ results1: results }),
+		setResults2: (results) => set({ results2: results }),
+		reset: () =>
+			set({ inputs1: [createDefaultInput()], inputs2: [createDefaultInput()], results1: null, results2: null }),
+	};
+});
