@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { DiceInput, type DiceInputState } from "@/components/DiceInput";
+import { AttackerList } from "@/components/AttackerList";
+import type { DiceInputState } from "@/components/DiceInput";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { Button } from "@/components/ui/button";
 import { useCombatStore } from "@/stores/combatStore";
@@ -83,17 +84,7 @@ export function CombatView({ initialInputs, autoRun }: CombatViewProps = {}) {
 			</h1>
 
 			{/* Input Cards */}
-			<div className="space-y-4">
-				{inputs.map((input) => (
-					<DiceInput
-						key={input.id}
-						input={input}
-						onUpdate={updateInput}
-						onRemove={removeInput}
-						showRemove={inputs.length > 1}
-					/>
-				))}
-			</div>
+			<AttackerList inputs={inputs} onUpdate={updateInput} onRemove={removeInput} />
 
 			{/* Action Buttons */}
 			<div className="flex flex-col sm:flex-row gap-3">
