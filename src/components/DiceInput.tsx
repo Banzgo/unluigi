@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type FailureRerollType, parseDiceExpression, type SpecialSaveType, type SuccessRerollType } from "../engine";
+import { SteppedCycleControl } from "./SteppedCycleControl";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Input } from "./ui/input";
@@ -42,8 +43,10 @@ interface DiceInputProps {
 
 interface DiceColumnProps {
 	label: string;
-	displayValue: string;
-	onCycleValue: () => void;
+	value: ToggleValue;
+	options: readonly ToggleValue[];
+	onChange: (value: ToggleValue) => void;
+	formatValue: (value: ToggleValue) => string;
 	failureReroll: FailureRerollType;
 	successReroll: SuccessRerollType;
 	onCycleFailureReroll: () => void;
@@ -55,8 +58,10 @@ interface DiceColumnProps {
 
 function DiceColumn({
 	label,
-	displayValue,
-	onCycleValue,
+	value,
+	options,
+	onChange,
+	formatValue,
 	failureReroll,
 	successReroll,
 	onCycleFailureReroll,
@@ -66,15 +71,15 @@ function DiceColumn({
 	children,
 }: DiceColumnProps) {
 	return (
-		<div className="flex flex-col space-y-1.5">
-			<Label className="text-sm text-muted-foreground text-center">{label}</Label>
-			<Button
-				onClick={onCycleValue}
-				className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-bold bg-primary border-2 border-brand-green/50 hover:bg-secondary/80 text-foreground"
-				variant="outline"
-			>
-				{displayValue}
-			</Button>
+		<SteppedCycleControl
+			label={label}
+			value={value}
+			options={options}
+			onChange={onChange}
+			formatValue={formatValue}
+			accentClassName="border-brand-green/50"
+			showMobileButtons={false}
+		>
 			<div className="flex flex-col sm:flex-row gap-1">
 				<Button
 					onClick={onCycleFailureReroll}
@@ -96,13 +101,13 @@ function DiceColumn({
 				</Button>
 			</div>
 			{children}
-		</div>
+		</SteppedCycleControl>
 	);
 }
 
-const HIT_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-const WOUND_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "auto"];
-const SAVE_OPTIONS: ToggleValue[] = [2, 3, 4, 5, 6, "none"];
+const HIT_OPTIONS: ToggleValue[] = ["auto", 2, 3, 4, 5, 6];
+const WOUND_OPTIONS: ToggleValue[] = ["auto", 2, 3, 4, 5, 6];
+const SAVE_OPTIONS: ToggleValue[] = ["none", 2, 3, 4, 5, 6];
 const FAILURE_REROLL_OPTIONS: FailureRerollType[] = ["none", "1s", "all"];
 const SUCCESS_REROLL_OPTIONS: SuccessRerollType[] = ["none", "6s", "all"];
 
@@ -181,8 +186,10 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 			<div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
 				<DiceColumn
 					label="To Hit"
-					displayValue={input.hit === "auto" ? "AUTO" : `${input.hit}+`}
-					onCycleValue={() => up({ hit: cycleNext(HIT_OPTIONS, input.hit) })}
+					value={input.hit}
+					options={HIT_OPTIONS}
+					onChange={(v) => up({ hit: v })}
+					formatValue={(v) => (v === "auto" ? "AUTO" : `${v}+`)}
 					failureReroll={input.rerollHitFailures}
 					successReroll={input.rerollHitSuccesses}
 					onCycleFailureReroll={() =>
@@ -212,8 +219,10 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 
 				<DiceColumn
 					label="To Wound"
-					displayValue={input.wound === "auto" ? "AUTO" : `${input.wound}+`}
-					onCycleValue={() => up({ wound: cycleNext(WOUND_OPTIONS, input.wound) })}
+					value={input.wound}
+					options={WOUND_OPTIONS}
+					onChange={(v) => up({ wound: v })}
+					formatValue={(v) => (v === "auto" ? "AUTO" : `${v}+`)}
 					failureReroll={input.rerollWoundFailures}
 					successReroll={input.rerollWoundSuccesses}
 					onCycleFailureReroll={() =>
@@ -236,8 +245,10 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 
 				<DiceColumn
 					label="Armor Save"
-					displayValue={input.armorSave === "none" ? "NONE" : `${input.armorSave}+`}
-					onCycleValue={() => up({ armorSave: cycleNext(SAVE_OPTIONS, input.armorSave) })}
+					value={input.armorSave}
+					options={SAVE_OPTIONS}
+					onChange={(v) => up({ armorSave: v })}
+					formatValue={(v) => (v === "none" ? "NONE" : `${v}+`)}
 					failureReroll={input.rerollArmorSaveFailures}
 					successReroll={input.rerollArmorSaveSuccesses}
 					onCycleFailureReroll={() =>
@@ -252,8 +263,10 @@ export function DiceInput({ input, onUpdate, onRemove, showRemove }: DiceInputPr
 
 				<DiceColumn
 					label="Special Save"
-					displayValue={input.specialSave === "none" ? "NONE" : `${input.specialSave}+`}
-					onCycleValue={() => up({ specialSave: cycleNext(SAVE_OPTIONS, input.specialSave) })}
+					value={input.specialSave}
+					options={SAVE_OPTIONS}
+					onChange={(v) => up({ specialSave: v })}
+					formatValue={(v) => (v === "none" ? "NONE" : `${v}+`)}
 					failureReroll={input.rerollSpecialSaveFailures}
 					successReroll={input.rerollSpecialSaveSuccesses}
 					onCycleFailureReroll={() =>
