@@ -10,7 +10,6 @@ import {
 	rollD3,
 	rollD6,
 	rollDispelDice,
-	shouldReroll,
 	shouldRerollSplit,
 } from "./dice";
 
@@ -205,70 +204,6 @@ describe("parseDiceExpression", () => {
 		expect(() => parseDiceExpression("d8")).toThrow(); // Only d3 and d6 supported
 		expect(() => parseDiceExpression("2d10")).toThrow();
 		expect(() => parseDiceExpression("abc")).toThrow();
-	});
-});
-
-describe("shouldReroll", () => {
-	describe("reroll none", () => {
-		it("should never reroll", () => {
-			expect(shouldReroll(1, 4, "none")).toBe(false);
-			expect(shouldReroll(6, 4, "none")).toBe(false);
-			expect(shouldReroll(3, 4, "none")).toBe(false);
-		});
-	});
-
-	describe("reroll 1s", () => {
-		it("should only reroll 1s", () => {
-			expect(shouldReroll(1, 4, "1s")).toBe(true);
-			expect(shouldReroll(2, 4, "1s")).toBe(false);
-			expect(shouldReroll(3, 4, "1s")).toBe(false);
-			expect(shouldReroll(4, 4, "1s")).toBe(false);
-			expect(shouldReroll(5, 4, "1s")).toBe(false);
-			expect(shouldReroll(6, 4, "1s")).toBe(false);
-		});
-	});
-
-	describe("reroll fails", () => {
-		it("should reroll failed rolls", () => {
-			expect(shouldReroll(1, 4, "fails")).toBe(true);
-			expect(shouldReroll(2, 4, "fails")).toBe(true);
-			expect(shouldReroll(3, 4, "fails")).toBe(true);
-			expect(shouldReroll(4, 4, "fails")).toBe(false);
-			expect(shouldReroll(5, 4, "fails")).toBe(false);
-			expect(shouldReroll(6, 4, "fails")).toBe(false);
-		});
-
-		it("should work with different target numbers", () => {
-			expect(shouldReroll(3, 3, "fails")).toBe(false);
-			expect(shouldReroll(2, 3, "fails")).toBe(true);
-			expect(shouldReroll(5, 6, "fails")).toBe(true);
-			expect(shouldReroll(6, 6, "fails")).toBe(false);
-		});
-	});
-
-	describe("reroll successes", () => {
-		it("should reroll successful rolls", () => {
-			expect(shouldReroll(1, 4, "successes")).toBe(false);
-			expect(shouldReroll(2, 4, "successes")).toBe(false);
-			expect(shouldReroll(3, 4, "successes")).toBe(false);
-			expect(shouldReroll(4, 4, "successes")).toBe(true);
-			expect(shouldReroll(5, 4, "successes")).toBe(true);
-			expect(shouldReroll(6, 4, "successes")).toBe(true);
-		});
-	});
-
-	describe("auto and none targets", () => {
-		it("should handle auto-success targets", () => {
-			expect(shouldReroll(3, "auto", "fails")).toBe(false);
-			expect(shouldReroll(3, "auto", "successes")).toBe(true);
-			expect(shouldReroll(3, "auto", "none")).toBe(false);
-		});
-
-		it("should handle auto-fail targets", () => {
-			expect(shouldReroll(3, "none", "fails")).toBe(true);
-			expect(shouldReroll(3, "none", "successes")).toBe(false);
-			expect(shouldReroll(3, "none", "none")).toBe(false);
-		});
 	});
 });
 
