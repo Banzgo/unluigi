@@ -146,7 +146,7 @@ export function nextBpInfoForPlayer(
 	return null;
 }
 
-function unitVp(unit: ParsedUnit): number {
+export function unitVp(unit: ParsedUnit): number {
 	if (unit.status === "dead") return unit.points;
 	if (unit.status === "half") return unit.points * 0.5;
 	return 0;
