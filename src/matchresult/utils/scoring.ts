@@ -164,6 +164,8 @@ function baseBp(vpDiff: number, gameSize: number): { winner: number; loser: numb
 }
 
 export function calculateResult(state: MatchState, gameSize: number): BpResult {
+	// Swapped on purpose: a player's VP comes from the points they destroyed in the
+	// *opponent's* army, so player1's VP is scored off player2's casualties.
 	const player1Vp = state.player2.units.reduce((sum, u) => sum + unitVp(u), 0);
 	const player2Vp = state.player1.units.reduce((sum, u) => sum + unitVp(u), 0);
 	const vpDiff = Math.abs(player1Vp - player2Vp);
