@@ -1,7 +1,8 @@
-import { cn } from "@/lib/utils";
 import { Check, CirclePlus, Skull } from "lucide-react";
 import type React from "react";
+import { cn } from "@/lib/utils";
 import type { ParsedUnit, UnitStatus } from "../types";
+import { unitVp } from "../utils/scoring";
 
 interface UnitRowProps {
 	unit: ParsedUnit;
@@ -30,7 +31,7 @@ const STATUS_BUTTONS: { status: UnitStatus; icon: React.ReactNode; active: strin
 ];
 
 export function UnitRow({ unit, onStatusChange }: Readonly<UnitRowProps>) {
-	const vpContrib = unit.status === "dead" ? unit.points : unit.status === "half" ? unit.points * 0.5 : 0;
+	const vpContrib = unitVp(unit);
 
 	return (
 		<div className="flex items-start gap-2 py-2 border-b border-border/50 last:border-0">
