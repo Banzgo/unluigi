@@ -179,8 +179,10 @@ export function profileToSimulationParams(attacker: UnitProfile, defender: UnitP
 
 		// Rerolls
 		rerollHitFailures,
-		rerollWoundFailures: "none", // TODO: map from special rules
-		rerollArmorSaveFailures: "none", // TODO: map from defender special rules
+		// UnitProfile has no field yet for a wound-reroll or defender armor-save-reroll
+		// special rule, so these always come out "none" regardless of the profiles passed in.
+		rerollWoundFailures: "none",
+		rerollArmorSaveFailures: "none",
 
 		// Attacker special rules (direct mapping)
 		poison: attacker.poison,
