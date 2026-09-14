@@ -184,120 +184,116 @@ export function MagicSimulatorInput({ initialState, initialSpellType, autoRun }:
 
 	return (
 		<div className="space-y-4">
-			<Card className="p-4 sm:p-6 space-y-4 sm:space-y-6 bg-card border-border">
-				{/* Dice Values Grid - Main Parameters */}
-				<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-					{/* Casting Dice Column */}
-					<SteppedCycleControl
-						label="Casting Dice"
-						className="order-1"
-						value={inputs.castingDice}
-						options={castingDiceOptions}
-						onChange={(v) => updateInput("castingDice", v)}
-						formatValue={(v) => `${v} dice`}
-						accentClassName="border-purple-500/50"
-					>
-						<div className="grid grid-cols-2 gap-1">
-							<Button
-								onClick={cycleCastingModifier}
-								className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
-									inputs.castingModifier !== 0
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
-								variant="outline"
-							>
-								{getModifierLabel(inputs.castingModifier)}
-							</Button>
-							<Button
-								onClick={cycleRerollCasting}
-								className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
-									inputs.rerollCasting !== "none"
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
-								variant="outline"
-							>
-								{getRerollCastingLabel(inputs.rerollCasting)}
-							</Button>
-						</div>
+			{/* Dice Values Grid - Main Parameters */}
+			<div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+				{/* Casting Dice Column */}
+				<SteppedCycleControl
+					label="Casting Dice"
+					className="order-1"
+					value={inputs.castingDice}
+					options={castingDiceOptions}
+					onChange={(v) => updateInput("castingDice", v)}
+					formatValue={(v) => `${v} dice`}
+					accentClassName="border-purple-500/50"
+				>
+					<div className="grid grid-cols-2 gap-1">
 						<Button
-							onClick={() => {
-								const newSpellType = spellType === "learned" ? "bound" : "learned";
-								setSpellType(newSpellType);
-								updateInput("isBoundSpell", newSpellType === "bound");
-							}}
+							onClick={cycleCastingModifier}
 							className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
-								spellType === "bound"
+								inputs.castingModifier !== 0
 									? "bg-blue-600 hover:bg-blue-700 text-white"
 									: "bg-secondary hover:bg-secondary/80"
 							}`}
 							variant="outline"
 						>
-							{spellType === "learned" ? "Learned Spell" : "Bound Spell"}
+							{getModifierLabel(inputs.castingModifier)}
 						</Button>
-					</SteppedCycleControl>
-
-					{/* Casting Value Column */}
-					<SteppedCycleControl
-						label="Casting Value"
-						className="order-3 sm:order-2 col-span-2 sm:col-span-1 justify-self-center w-full max-w-[calc(50%-0.375rem)] sm:max-w-none"
-						value={inputs.castingValue}
-						options={castingValueOptions}
-						onChange={(v) => updateInput("castingValue", v)}
-						formatValue={(v) => `${v}+`}
-						accentClassName="border-purple-500/50"
-					>
 						<Button
-							onClick={cycleMagicResistance}
-							className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
-								inputs.magicResistance !== 0
+							onClick={cycleRerollCasting}
+							className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
+								inputs.rerollCasting !== "none"
 									? "bg-blue-600 hover:bg-blue-700 text-white"
 									: "bg-secondary hover:bg-secondary/80"
 							}`}
 							variant="outline"
 						>
-							{getMagicResistanceLabel(inputs.magicResistance)}
+							{getRerollCastingLabel(inputs.rerollCasting)}
 						</Button>
-					</SteppedCycleControl>
-
-					{/* Dispel Dice Column */}
-					<SteppedCycleControl
-						label="Dispel Dice"
-						className="order-2 sm:order-3"
-						value={inputs.dispelDice}
-						options={dispelDiceOptions}
-						onChange={(v) => updateInput("dispelDice", v)}
-						formatValue={(v) => (v === 0 ? "NONE" : `${v} dice`)}
-						accentClassName="border-purple-500/50"
+					</div>
+					<Button
+						onClick={() => {
+							const newSpellType = spellType === "learned" ? "bound" : "learned";
+							setSpellType(newSpellType);
+							updateInput("isBoundSpell", newSpellType === "bound");
+						}}
+						className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
+							spellType === "bound" ? "bg-blue-600 hover:bg-blue-700 text-white" : "bg-secondary hover:bg-secondary/80"
+						}`}
+						variant="outline"
 					>
-						<div className="grid grid-cols-2 gap-1">
-							<Button
-								onClick={cycleDispelModifier}
-								className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
-									inputs.dispelModifier !== 0
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
-								variant="outline"
-							>
-								{getModifierLabel(inputs.dispelModifier)}
-							</Button>
-							<Button
-								onClick={cycleRerollDispel}
-								className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
-									inputs.rerollDispel !== "none"
-										? "bg-blue-600 hover:bg-blue-700 text-white"
-										: "bg-secondary hover:bg-secondary/80"
-								}`}
-								variant="outline"
-							>
-								{getRerollDispelLabel(inputs.rerollDispel)}
-							</Button>
-						</div>
-					</SteppedCycleControl>
-				</div>
-			</Card>
+						{spellType === "learned" ? "Learned Spell" : "Bound Spell"}
+					</Button>
+				</SteppedCycleControl>
+
+				{/* Casting Value Column */}
+				<SteppedCycleControl
+					label="Casting Value"
+					className="order-3 sm:order-2 col-span-2 sm:col-span-1 justify-self-center w-full max-w-[calc(50%-0.375rem)] sm:max-w-none"
+					value={inputs.castingValue}
+					options={castingValueOptions}
+					onChange={(v) => updateInput("castingValue", v)}
+					formatValue={(v) => `${v}+`}
+					accentClassName="border-purple-500/50"
+				>
+					<Button
+						onClick={cycleMagicResistance}
+						className={`w-full h-7 sm:h-7 text-[10px] sm:text-xs leading-tight ${
+							inputs.magicResistance !== 0
+								? "bg-blue-600 hover:bg-blue-700 text-white"
+								: "bg-secondary hover:bg-secondary/80"
+						}`}
+						variant="outline"
+					>
+						{getMagicResistanceLabel(inputs.magicResistance)}
+					</Button>
+				</SteppedCycleControl>
+
+				{/* Dispel Dice Column */}
+				<SteppedCycleControl
+					label="Dispel Dice"
+					className="order-2 sm:order-3"
+					value={inputs.dispelDice}
+					options={dispelDiceOptions}
+					onChange={(v) => updateInput("dispelDice", v)}
+					formatValue={(v) => (v === 0 ? "NONE" : `${v} dice`)}
+					accentClassName="border-purple-500/50"
+				>
+					<div className="grid grid-cols-2 gap-1">
+						<Button
+							onClick={cycleDispelModifier}
+							className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
+								inputs.dispelModifier !== 0
+									? "bg-blue-600 hover:bg-blue-700 text-white"
+									: "bg-secondary hover:bg-secondary/80"
+							}`}
+							variant="outline"
+						>
+							{getModifierLabel(inputs.dispelModifier)}
+						</Button>
+						<Button
+							onClick={cycleRerollDispel}
+							className={`w-full h-7 text-[9px] sm:text-xs leading-tight ${
+								inputs.rerollDispel !== "none"
+									? "bg-blue-600 hover:bg-blue-700 text-white"
+									: "bg-secondary hover:bg-secondary/80"
+							}`}
+							variant="outline"
+						>
+							{getRerollDispelLabel(inputs.rerollDispel)}
+						</Button>
+					</div>
+				</SteppedCycleControl>
+			</div>
 
 			{/* Simulate Button */}
 			<Button
