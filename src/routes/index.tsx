@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { CombatView } from "@/components/CombatView";
+import type { DiceInputState } from "@/components/DiceInput";
 import { ProfileView } from "@/components/ProfileView";
 import { VersusView } from "@/components/VersusView";
-import type { DiceInputState } from "@/components/DiceInput";
 import { decodeCombatShareState } from "@/utils/share";
 import { createDefaultInput } from "@/utils/simulation-helpers";
 

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
 import { Shield, Sparkles } from "lucide-react";
+import { z } from "zod";
 import { MagicCastingTables } from "@/components/MagicCastingTables";
 import { MagicSimulatorInput, type MagicSimulatorInputState, type SpellType } from "@/components/MagicSimulatorInput";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
