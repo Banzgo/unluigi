@@ -23,6 +23,10 @@ export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchRe
 		setPrimary,
 		setP1SecondaryDone,
 		setP2SecondaryDone,
+		setP1RawText,
+		setP2RawText,
+		resetP1Round,
+		resetP2Round,
 	} = useMatchResultStore();
 
 	const hasInitializedFromUrl = useRef(false);
@@ -98,16 +102,22 @@ export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchRe
 						units={p1.units}
 						header={p1.header}
 						declaredTotal={p1.declaredTotal}
+						rawText={p1.rawText}
+						onRawTextChange={setP1RawText}
 						onListParsed={handleP1Parsed}
 						onStatusChange={handleP1Status}
+						onReset={resetP1Round}
 					/>
 					<ArmyPanel
 						playerLabel="Player 2"
 						units={p2.units}
 						header={p2.header}
 						declaredTotal={p2.declaredTotal}
+						rawText={p2.rawText}
+						onRawTextChange={setP2RawText}
 						onListParsed={handleP2Parsed}
 						onStatusChange={handleP2Status}
+						onReset={resetP2Round}
 					/>
 				</div>
 

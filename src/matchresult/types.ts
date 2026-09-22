@@ -13,6 +13,7 @@ export interface PlayerState {
 	units: ParsedUnit[];
 	secondaryDone: boolean;
 	declaredTotal: number | null;
+	rawText: string;
 }
 
 export type PrimaryObjective = "player1" | "neither" | "player2";

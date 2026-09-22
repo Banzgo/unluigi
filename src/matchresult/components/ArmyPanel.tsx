@@ -1,4 +1,4 @@
-import { Pencil } from "lucide-react";
+import { Pencil, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,11 @@ interface ArmyPanelProps {
 	units: ParsedUnit[];
 	header: string;
 	declaredTotal: number | null;
+	rawText: string;
+	onRawTextChange: (text: string) => void;
 	onListParsed: (header: string, units: ParsedUnit[], declaredTotal: number | null) => void;
 	onStatusChange: (id: string, status: UnitStatus) => void;
+	onReset: () => void;
 }
 
 export function ArmyPanel({
@@ -20,10 +23,12 @@ export function ArmyPanel({
 	units,
 	header,
 	declaredTotal,
+	rawText,
+	onRawTextChange,
 	onListParsed,
 	onStatusChange,
+	onReset,
 }: Readonly<ArmyPanelProps>) {
-	const [rawText, setRawText] = useState("");
 	const [editing, setEditing] = useState(units.length === 0);
 	const [error, setError] = useState("");
 	const prevUnitsLen = useRef(units.length);
@@ -57,7 +62,7 @@ export function ArmyPanel({
 				<div className="space-y-2">
 					<textarea
 						value={rawText}
-						onChange={(e) => setRawText(e.target.value)}
+						onChange={(e) => onRawTextChange(e.target.value)}
 						placeholder="Paste army list here..."
 						className="w-full h-48 p-3 text-sm font-mono bg-secondary/30 border border-border rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-ring"
 					/>
@@ -85,11 +90,42 @@ export function ArmyPanel({
 	const editButton = !editing && units.length > 0 && (
 		<button
 			type="button"
-			onClick={() => setEditing(true)}
+			onClick={(e) => {
+				e.stopPropagation();
+				setEditing(true);
+			}}
 			className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
 		>
 			<Pencil className="w-3 h-3" />
 			Edit list
+		</button>
+	);
+
+	const resetButton = !editing && units.length > 0 && (
+		<button
+			type="button"
+			onClick={(e) => {
+				e.stopPropagation();
+				onReset();
+			}}
+			className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+		>
+			<RotateCcw className="w-3 h-3" />
+			Reset
+		</button>
+	);
+
+	const clearButton = editing && rawText.length > 0 && (
+		<button
+			type="button"
+			onClick={(e) => {
+				e.stopPropagation();
+				onRawTextChange("");
+			}}
+			className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+		>
+			<X className="w-3 h-3" />
+			Clear
 		</button>
 	);
 
@@ -102,7 +138,11 @@ export function ArmyPanel({
 						<AccordionTrigger className="px-3 py-2 bg-secondary/40 hover:bg-secondary/60 hover:no-underline transition-colors">
 							<div className="flex items-center gap-3">
 								<h2 className="text-lg font-bold uppercase tracking-wide">{displayName}</h2>
-								{editButton}
+								<div className="flex items-center gap-2">
+									{editButton}
+									{resetButton}
+									{clearButton}
+								</div>
 							</div>
 						</AccordionTrigger>
 						<AccordionContent className="px-3 pb-3 pt-2">{panelContent}</AccordionContent>
@@ -114,7 +154,11 @@ export function ArmyPanel({
 			<div className="hidden md:flex md:flex-col md:gap-3">
 				<div className="flex items-center justify-between">
 					<h2 className="text-lg font-bold text-muted-foreground uppercase tracking-wide">{displayName}</h2>
-					{editButton}
+					<div className="flex items-center gap-2">
+						{editButton}
+						{resetButton}
+						{clearButton}
+					</div>
 				</div>
 				{panelContent}
 			</div>
