@@ -1,8 +1,11 @@
-import { useEffect, useRef } from "react";
+import { ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { useMatchResultStore } from "@/stores/matchResultStore";
 import type { UnitStatus } from "../types";
 import { extractPlayerName, parseArmyList } from "../utils/parseList";
 import { calculateResult, detectGameSize } from "../utils/scoring";
+import { isTrackerMember, trackerReportUrl } from "../utils/trackerLink";
 import { ArmyPanel } from "./ArmyPanel";
 import { ScorePanel } from "./ScorePanel";
 
@@ -39,15 +42,20 @@ export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchRe
 			const parsed = parseArmyList(initialList1);
 			if (parsed.units.length > 0) {
 				setP1Parsed(parsed.header, parsed.units, parsed.declaredTotal);
+				setP1RawText(initialList1);
 			}
 		}
 		if (initialList2) {
 			const parsed = parseArmyList(initialList2);
 			if (parsed.units.length > 0) {
 				setP2Parsed(parsed.header, parsed.units, parsed.declaredTotal);
+				setP2RawText(initialList2);
 			}
 		}
-	}, [initialList1, initialList2, setP1Parsed, setP2Parsed]);
+	}, [initialList1, initialList2, setP1Parsed, setP2Parsed, setP1RawText, setP2RawText]);
+
+	// Only players signed in to the tracker get its hint cookie, so everyone else never sees the link.
+	const [trackerMember] = useState(() => isTrackerMember());
 
 	const handleP1Parsed = (header: string, units: Parameters<typeof setP1Parsed>[1], declaredTotal: number | null) =>
 		setP1Parsed(header, units, declaredTotal);
@@ -65,6 +73,7 @@ export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchRe
 	const result = calculateResult({ player1: p1, player2: p2, primary }, gameSize);
 	const p1Name = extractPlayerName(p1.header, "Player 1");
 	const p2Name = extractPlayerName(p2.header, "Player 2");
+	const canReport = trackerMember && p1.units.length > 0 && p2.units.length > 0;
 
 	return (
 		<div className="p-4 sm:p-6 lg:p-8">
@@ -85,6 +94,17 @@ export function MatchResultPage({ initialList1, initialList2 }: Readonly<MatchRe
 					onP1SecondaryChange={setP1SecondaryDone}
 					onP2SecondaryChange={setP2SecondaryDone}
 				/>
+
+				{canReport && (
+					<div className="flex justify-center">
+						<Button asChild variant="outline">
+							<a href={trackerReportUrl({ player1: p1, player2: p2, primary }, result)} target="_blank" rel="noopener">
+								<ExternalLink />
+								Report in tracker
+							</a>
+						</Button>
+					</div>
+				)}
 
 				{suspiciousTotal && (
 					<div className="border-2 border-yellow-500/60 bg-yellow-500/10 rounded-xl p-4 text-center space-y-1">
